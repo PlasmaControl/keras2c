@@ -1,15 +1,28 @@
+
 FLAGS = -Ofast
-all: test_suite clean
+CC = gcc $(FLAGS)
+
+K2C = k2c_include.h \
+	k2c_activations.h \
+	k2c_convolution_layers.h \
+	k2c_core_layers.h \
+	k2c_helper_functions.h \
+	k2c_merge_layers.h \
+	k2c_pooling_layers.h \
+	k2c_recurrent_layers.h \
+FNAME = test1
+
+all: predictor test_suite clean
 
 
 
-test_suite: test1.o test1_test_suite.o
-	gcc $(FLAGS) -o test_suite test1_test_suite.o test1.o -lm
+test_suite: predictor.o test_suite.o 
+	$(CC) $(FLAGS) -o test_suite test_suite.o predictor.o -lm
 
-test1_test_suite.o: test1_test_suite.c
-	gcc $(FLAGS) -c test1_test_suite.c
+test_suite.o: $(FNAME)_test_suite.c $(K2C)
+	$(CC) -c $(FNAME)_test_suite.c
 
-test1.o: test1.c
+test1.o: $(FNAME).c
 	gcc $(FLAGS) -c test1.c
 
 clean:

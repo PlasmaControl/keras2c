@@ -1,0 +1,6 @@
+#*
+*#
+*~
+*.o
+*.out
+.ipynb_checkpoints/
