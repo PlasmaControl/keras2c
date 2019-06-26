@@ -4,22 +4,23 @@
 #include <stddef.h>
 #include <math.h>
 #include <stdio.h>
+#include "k2c_helper_functions.h"
 
-
-void keras2c_pad1d(float input[], float padded_input[], float fill[],
-	       size_t in_height, size_t in_width, size_t pad_top,
-	       size_t pad_bottom) {
+void k2c_pad1d(k2c_tensor *padded_input, k2c_tensor *input, float fill,
+	       size_t pad_top, size_t pad_bottom) {
   /* pads array in height dimension. 
-     fill = 1xW array, where W is the width of the input array
-     pad_top: number of copies of fill to concatenate on top of input
-     pad_bottom: number of copies of fill to cat on bottom of input */
-  // printf("in padding1d \n");
+     fill = fill value
+     pad_top: number of rows of fill to concatenate on top of input
+     pad_bottom: number of rows of fill to cat on bottom of input */
 
   // pad the "top", ie, beginning of array
+  size_t in_height = input->shape[0];
+  size_t in_width = input->shape[1];
+  
   for (size_t i=0; i<pad_top; i++) {
     size_t idx = i*in_width;
     for (size_t j=0; j<in_width; j++){
-      padded_input[idx+j] = fill[j];
+      padded_input->array[idx+j] = fill;
     }
   }
   // put the original values in the middle
@@ -27,7 +28,7 @@ void keras2c_pad1d(float input[], float padded_input[], float fill[],
     size_t padidx = i*in_width;
     size_t inidx = k*in_width;
     for (size_t j=0; j<in_width; j++){
-      padded_input[padidx+j] = input[inidx+j];
+      padded_input->array[padidx+j] = input->array[inidx+j];
     }
   }
   // pad the "bottom", ie the end of the array  
@@ -35,27 +36,24 @@ void keras2c_pad1d(float input[], float padded_input[], float fill[],
 	 pad_bottom; i++) {
     size_t idx = i*in_width;
     for (size_t j=0; j<in_width; j++){
-      padded_input[idx+j] = fill[j];
+      padded_input->array[idx+j] = fill;
     }
   }
 }
 	       
 
-
-
-void keras2c_conv1d(float input[], float output[], float kernel[],
-		   float bias[], size_t out_height, size_t out_width,
-		   size_t kernel_size, size_t padded_in_height,
-		   size_t in_width, size_t stride, size_t dilation,
+void k2c_conv1d(k2c_tensor *output, k2c_tensor *input, k2c_tensor *kernel,
+		k2c_tensor *bias, size_t stride, size_t dilation,
 		   void (*activation) (float[], size_t)) {
   /* 1D (temporal) convolution. Assumes a "channels last" structure
    */
 
-  /*  idx = (3,2,5) */
-  /* b[idx] - a[idx[0] * (in_width * out_width) + (idx[1] * in_width) + idx[2]] */
-    
-  // printf("in conv1d \n");
-  int out_size = out_height*out_width;
+  size_t out_height = output->shape[0];
+  size_t out_width = output->shape[1];
+  size_t out_size = out_height*out_width;
+  size_t in_width = input->shape[1];
+  size_t kernel_size = kernel->shape[0];
+  
   for (size_t p=0; p < out_height; p++){
     size_t outrowidx = p*out_width;
     for (size_t k=0; k < out_width; k++) {
@@ -63,15 +61,15 @@ void keras2c_conv1d(float input[], float output[], float kernel[],
 	size_t kernelidx = z*in_width*out_width;
 	for (size_t q=0; q < in_width; q++) {
 	  size_t inheightidx = q*out_width;
-	  output[outrowidx+k] +=
-	    kernel[kernelidx+inheightidx+k]*
-	    input[(p*stride+z*dilation)*in_width+q];
+	  output->array[outrowidx+k] +=
+	    kernel->array[kernelidx+inheightidx+k]*
+	    input->array[(p*stride+z*dilation)*in_width+q];
 	}
       }
-      output[outrowidx+k] += bias[k];
+      output->array[outrowidx+k] += bias->array[k];
     }
   }
-  activation(output,out_size);
+  activation(output->array,out_size);
 }
 
 #endif /* KERAS2C_CONVOLUTIONS_H */

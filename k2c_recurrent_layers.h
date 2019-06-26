@@ -4,30 +4,32 @@
 #include <stddef.h>
 #include <math.h>
 #include <stdio.h>
-#include "keras2c_helper_functions.h"
+#include "k2c_helper_functions.h"
 
-void keras2c_lstmcell(float input[], float state[], float kernel[],
-		      float recurrent_kernel[], float bias[], size_t units,
-		      size_t in_height, size_t in_width, float fwork[],
-		      void (*recurrent_activation) (float*, size_t),
-		      void (*output_activation)(float*, size_t)){
+void k2c_lstmcell(float state[], float input[], k2c_tensor *kernel,
+		  k2c_tensor *recurrent_kernel, k2c_tensor *bias, float fwork[],
+		  void (*recurrent_activation) (float*, size_t),
+		  void (*output_activation)(float*, size_t)){
 
 
+  size_t units = recurrent_kernel->shape[1];
+  size_t in_width = kernel->shape[0]/4;
+  
   float *h_tm1 = &state[0];  // previous memory state
   float *c_tm1 = &state[units];  // previous carry state
   size_t outrows = 1;
-  float *Wi = &kernel[0];
-  float *Wf = &kernel[in_width*units];
-  float *Wc = &kernel[2*in_width*units];
-  float *Wo = &kernel[3*in_width*units];
-  float *Ui = &recurrent_kernel[0];
-  float *Uf = &recurrent_kernel[units*units];
-  float *Uc = &recurrent_kernel[2*units*units];
-  float *Uo = &recurrent_kernel[3*units*units];
-  float *bi = &bias[0];
-  float *bf = &bias[units];
-  float *bc = &bias[2*units];
-  float *bo = &bias[3*units];
+  float *Wi = &kernel->array[0];
+  float *Wf = &kernel->array[in_width*units];
+  float *Wc = &kernel->array[2*in_width*units];
+  float *Wo = &kernel->array[3*in_width*units];
+  float *Ui = &recurrent_kernel->array[0];
+  float *Uf = &recurrent_kernel->array[units*units];
+  float *Uc = &recurrent_kernel->array[2*units*units];
+  float *Uo = &recurrent_kernel->array[3*units*units];
+  float *bi = &bias->array[0];
+  float *bf = &bias->array[units];
+  float *bc = &bias->array[2*units];
+  float *bo = &bias->array[3*units];
   float *xi = &fwork[0];
   float *xf = &fwork[units];
   float *xc = &fwork[2*units];
@@ -39,31 +41,31 @@ void keras2c_lstmcell(float input[], float state[], float kernel[],
  
 
   //xi = input*Wi + bi;
-  keras2c_affine_matmul(xi, input, Wi, bi, outrows, units, in_width);
+  k2c_affine_matmul(xi, input, Wi, bi, outrows, units, in_width);
   //xf = input*Wf + bf;
-  keras2c_affine_matmul(xf, input, Wf, bf, outrows, units, in_width);
+  k2c_affine_matmul(xf, input, Wf, bf, outrows, units, in_width);
   //xc = input*Wc + bc;
-  keras2c_affine_matmul(xc, input, Wc, bc, outrows, units, in_width);
+  k2c_affine_matmul(xc, input, Wc, bc, outrows, units, in_width);
   //xo = input*Wo + bo;
-  keras2c_affine_matmul(xo, input, Wo, bo, outrows, units, in_width);
+  k2c_affine_matmul(xo, input, Wo, bo, outrows, units, in_width);
  
   // yi = recurrent_activation(xi + h_tm1*Ui);
-  keras2c_affine_matmul(yi, h_tm1, Ui, xi, outrows, units, units);
+  k2c_affine_matmul(yi, h_tm1, Ui, xi, outrows, units, units);
   recurrent_activation(yi, units);
 
   // yf = recurrent_activation(xf + h_tm1*Uf); 
-  keras2c_affine_matmul(yf, h_tm1, Uf, xf, outrows, units, units);
+  k2c_affine_matmul(yf, h_tm1, Uf, xf, outrows, units, units);
   recurrent_activation(yf, units);
 
   // yc = yf.*c_tm1 + yi.*output_activation(xc + h_tm1*Uc);
-  keras2c_affine_matmul(yc, h_tm1, Uc, xc, outrows, units, units);
+  k2c_affine_matmul(yc, h_tm1, Uc, xc, outrows, units, units);
   output_activation(yc, units);
   for (size_t i=0; i < units; i++){
     yc[i] = yf[i]*c_tm1[i] + yi[i]*yc[i];}
 
   
   // yo = recurrent_activation(xo + h_tm1*Uo); 
-  keras2c_affine_matmul(yo, h_tm1, Uo, xo, outrows, units, units);
+  k2c_affine_matmul(yo, h_tm1, Uo, xo, outrows, units, units);
   recurrent_activation(yo, units);
 
   // h = yo.*output_activation(yc); 
@@ -78,103 +80,127 @@ void keras2c_lstmcell(float input[], float state[], float kernel[],
 
 }
 
-void keras2c_lstm(float input[], float state[], float kernel[],
-		  float recurrent_kernel[], float bias[], size_t units,
-		  size_t in_height, size_t in_width, float fwork[],
-		  void (*recurrent_activation) (float*, size_t),
-		  void (*output_activation)(float*, size_t), float *output){
+void k2c_lstm(k2c_tensor *output, k2c_tensor *input, float state[],
+	      k2c_tensor *kernel, k2c_tensor *recurrent_kernel,
+	      k2c_tensor *bias, float fwork[], int go_backwards,
+	      int return_sequences,
+	      void (*recurrent_activation) (float*, size_t),
+	      void (*output_activation)(float*, size_t)){
 
 
-    
-    
-  for (size_t i=0; i < in_height; i++){
-    keras2c_lstmcell(&input[i*in_width], state, kernel, recurrent_kernel,
-		     bias, units, in_height, in_width, fwork,
-		     recurrent_activation, output_activation);
+  size_t in_height = input->shape[0];
+  size_t in_width = input->shape[1];
+  size_t units = recurrent_kernel->shape[1];
+  if (go_backwards) {
+    for (int i=in_height-1; i>-1; i--) {
+      k2c_lstmcell(state, &input->array[i*in_width], kernel, recurrent_kernel,
+		   bias, fwork, recurrent_activation, output_activation);
+      if (return_sequences) {
+	for (size_t j=0; j<units; j++) {
+	  output->array[(in_height-1-i)*units+j] = state[j];}
+      }
+    }
   }
-  for (size_t i=0; i < units; i++){
-    output[i] = state[i];
+  else{   
+    for (size_t i=0; i < in_height; i++){
+      k2c_lstmcell(state, &input->array[i*in_width], kernel, recurrent_kernel,
+		   bias, fwork, recurrent_activation, output_activation);
+      if (return_sequences) {
+	for (size_t j=0; j<units; j++) {
+	  output->array[i*units+j] = state[j];}
+      }
+    }
+  }
+  if (!return_sequences) {
+    for (size_t i=0; i < units; i++){
+      output->array[i] = state[i];}
   }
 }
 
 
-void keras2c_simpleRNNcell(float input[], float state[], float kernel[],
-			   float recurrent_kernel[], float bias[], size_t units,
-			   size_t in_height, size_t in_width, float fwork[],
-			   void (*output_activation)(float*, size_t)) {
-      printf("start rnn_cell, input: \n");
-  for (int i=0; i<in_width;i++){
-    printf("%.2f  ", input[i]);}
-  printf("\n");
-        printf("start rnn_cell, state: \n");
-  for (int i=0; i<units;i++){
-    printf("%.2f  ", state[i]);}
-  printf("\n");
+void k2c_simpleRNNcell(float state[], float input[], k2c_tensor *kernel,
+		       k2c_tensor *recurrent_kernel, k2c_tensor *bias,
+		       float fwork[], void (*output_activation)(float*, size_t)) {
+
+  size_t units = recurrent_kernel->shape[1];
+  size_t in_width = kernel->shape[0];
   
   size_t outrows = 1;
   float *h1 = &fwork[0];
   float *h2 = &fwork[units];
   // h1 = input*kernel+bias
-  keras2c_affine_matmul(h1,input,kernel,bias,outrows,units,in_width);
-        printf("after first matmul, h1=: \n");
-  for (int i=0; i<units;i++){
-    printf("%.2f  ", h1[i]);}
-  printf("\n");
+  k2c_affine_matmul(h1,input,kernel->array,bias->array,outrows,units,in_width);
+
   // h2 = state*recurrent_kernel + h1
-  keras2c_affine_matmul(h2,state,recurrent_kernel,h1,outrows,units,units);
-          printf("after second matmul, h2=: \n");
-  for (int i=0; i<units;i++){
-    printf("%.2f  ", h2[i]);}
-  printf("\n");
+  k2c_affine_matmul(h2,state,recurrent_kernel->array,h1,outrows,units,units);
   output_activation(h2,units);
-          printf("after activation, h2=: \n");
-  for (int i=0; i<units;i++){
-    printf("%.2f  ", h2[i]);}
-  printf("\n");
+ 
   for (size_t i=0;i<units;i++) {
     state[i] = h2[i];
   }
-
-          printf("end rnn_cell, state: \n");
-  for (int i=0; i<units;i++){
-    printf("%.2f  ", state[i]);}
-  printf("\n");
+   
 }
 
-void keras2c_simpleRNN(float input[], float state[], float kernel[],
-		       float recurrent_kernel[], float bias[], size_t units,
-		       size_t in_height, size_t in_width, float fwork[],
-		       void (*output_activation)(float*, size_t), float *output) {
-  for (size_t i=0; i<in_height; i++) {
-    keras2c_simpleRNNcell(&input[i*in_width],state,kernel,recurrent_kernel,bias,
-			  units,in_height,in_width,fwork, output_activation);
+void k2c_simpleRNN(k2c_tensor *output, k2c_tensor *input, float state[],
+		   k2c_tensor *kernel, k2c_tensor *recurrent_kernel,
+		   k2c_tensor *bias, float fwork[], int go_backwards,
+		   int return_sequences,
+		   void (*output_activation)(float*, size_t)) {
+
+  size_t in_width = input->shape[1];
+  size_t in_height = input->shape[0];
+  size_t units = recurrent_kernel->shape[1];
+  
+  if (go_backwards) {
+    for (int i=in_height-1; i>-1; i--) {
+      k2c_simpleRNNcell(state,&input->array[i*in_width],kernel,recurrent_kernel,bias,
+			fwork, output_activation);
+      if (return_sequences) {
+	for (size_t j=0; j<units; j++) {
+	  output->array[(in_height-1-i)*units+j] = state[j];}
+      }
+    }
   }
-  for (size_t i=0; i < units; i++){
-    output[i] = state[i];
+  else {
+    for (size_t i=0; i<in_height; i++) {
+      k2c_simpleRNNcell(state,&input->array[i*in_width],kernel,recurrent_kernel,bias,
+			fwork, output_activation);
+      if (return_sequences) {
+	for (size_t j=0; j<units; j++) {
+	  output->array[i*units+j] = state[j];}
+      }
+    }
+  }
+  if (!return_sequences) {
+    for (size_t i=0; i < units; i++){
+      output->array[i] = state[i];}
   }
 }
 
 
-void keras2c_grucell(float input[], float state[], float kernel[],
-		     float recurrent_kernel[], float bias[], size_t units,
-		     size_t in_height, size_t in_width, float fwork[],
-		     void (*recurrent_activation)(float*, size_t),
-		     void (*output_activation)(float*, size_t), int reset_after) {
+void k2c_grucell(float state[], float input[], k2c_tensor *kernel,
+		 k2c_tensor *recurrent_kernel, k2c_tensor *bias, float fwork[],
+		 int reset_after,
+		 void (*recurrent_activation) (float*, size_t),
+		 void (*output_activation)(float*, size_t)) {
 
+  size_t units = recurrent_kernel->shape[1];
+  size_t in_width = kernel->shape[0]/3;
+  
   float *h_tm1 = &state[0];
   size_t outrows = 1;
-  float *Wz = &kernel[0];
-  float *Wr = &kernel[in_width*units];
-  float *Wh = &kernel[2*in_width*units];
-  float *Uz = &recurrent_kernel[0];
-  float *Ur = &recurrent_kernel[units*units];
-  float *Uh = &recurrent_kernel[2*units*units];
-  float *bz = &bias[0];
-  float *br = &bias[units];
-  float *bh = &bias[2*units];
-  float *rbz = &bias[3*units];
-  float *rbr = &bias[4*units];
-  float *rbh = &bias[5*units];
+  float *Wz = &kernel->array[0];
+  float *Wr = &kernel->array[in_width*units];
+  float *Wh = &kernel->array[2*in_width*units];
+  float *Uz = &recurrent_kernel->array[0];
+  float *Ur = &recurrent_kernel->array[units*units];
+  float *Uh = &recurrent_kernel->array[2*units*units];
+  float *bz = &bias->array[0];
+  float *br = &bias->array[units];
+  float *bh = &bias->array[2*units];
+  float *rbz = &bias->array[3*units];
+  float *rbr = &bias->array[4*units];
+  float *rbh = &bias->array[5*units];
   float *xz = &fwork[0];
   float *xr = &fwork[units];
   float *xh = &fwork[2*units];
@@ -183,16 +209,16 @@ void keras2c_grucell(float input[], float state[], float kernel[],
   float *yh = &fwork[5*units];
 
   //     x_z = input*kernel_z + input_bias_z
-  keras2c_affine_matmul(xz, input, Wz, bz, outrows, units, in_width);
+  k2c_affine_matmul(xz, input, Wz, bz, outrows, units, in_width);
   //    x_r = input@kernel_r + input_bias_r
-  keras2c_affine_matmul(xr, input, Wr, br, outrows, units, in_width);
+  k2c_affine_matmul(xr, input, Wr, br, outrows, units, in_width);
   //    x_h = input@kernel_h + input_bias_h
-  keras2c_affine_matmul(xh, input, Wh, bh, outrows, units, in_width);
+  k2c_affine_matmul(xh, input, Wh, bh, outrows, units, in_width);
 
   //   recurrent_z = h_tm1@recurrent_kernel_z
-  keras2c_affine_matmul(yz, h_tm1, Uz, rbz, outrows, units, units);
+  k2c_affine_matmul(yz, h_tm1, Uz, rbz, outrows, units, units);
   //    recurrent_r = h_tm1@recurrent_kernel_r
-  keras2c_affine_matmul(yr, h_tm1, Ur, rbr, outrows, units, units);
+  k2c_affine_matmul(yr, h_tm1, Ur, rbr, outrows, units, units);
 
   //    z = np.tanh(x_z + recurrent_z)
   //    r = np.tanh(x_r + recurrent_r)
@@ -206,7 +232,7 @@ void keras2c_grucell(float input[], float state[], float kernel[],
   //    reset gate applied after/before matrix multiplication
   if (reset_after) {
   //        recurrent_h = h_tm1@recurrent_kernel_h + recurrent_bias_h
-    keras2c_affine_matmul(yh, h_tm1, Uh, rbh, outrows, units, units);
+    k2c_affine_matmul(yh, h_tm1, Uh, rbh, outrows, units, units);
     //        recurrent_h = r .* recurrent_h
     for (size_t i=0; i<units; i++) {
       yh[i] = yr[i] * yh[i];}
@@ -215,7 +241,7 @@ void keras2c_grucell(float input[], float state[], float kernel[],
     //        recurrent_h = (r .* h_tm1)@recurrent_kernel_h
     for (size_t i=0; i<units; i++) {
       yh[i] = yr[i]*h_tm1[i];}
-    keras2c_matmul(xz, yh, Uh, outrows, units, units); //reuse xz as new yh
+    k2c_matmul(xz, yh, Uh, outrows, units, units); //reuse xz as new yh
   }
   //    hh = np.tanh(x_h + recurrent_h)
   for (size_t i=0; i<units; i++) {
@@ -228,20 +254,42 @@ void keras2c_grucell(float input[], float state[], float kernel[],
 }
 
 
-void keras2c_gru(float input[], float state[], float kernel[],
-		 float recurrent_kernel[], float bias[], size_t units,
-		 size_t in_height, size_t in_width, float fwork[],
-		 void (*recurrent_activation)(float*, size_t),
-		 void (*output_activation)(float*, size_t), int reset_after,
-		 float output[]) {
+void k2c_gru(k2c_tensor *output, k2c_tensor *input, float state[],
+	     k2c_tensor *kernel, k2c_tensor *recurrent_kernel,
+	     k2c_tensor *bias, float fwork[], int reset_after,
+	     int go_backwards, int return_sequences,
+	     void (*recurrent_activation) (float*, size_t),
+	     void (*output_activation)(float*, size_t)){
+  
 
-  for (size_t i=0; i<in_height; i++) {
-    keras2c_grucell(&input[i*in_width], state, kernel, recurrent_kernel, bias,
-		    units, in_height, in_width, fwork, recurrent_activation,
-		    output_activation, reset_after);
+  size_t in_width = input->shape[1];
+  size_t in_height = input->shape[0];
+  size_t units = recurrent_kernel->shape[1];
+
+  if (go_backwards) {
+    for (int i=in_height-1; i>-1; i--) {
+      k2c_grucell(state, &input->array[i*in_width], kernel, recurrent_kernel, bias,
+		  fwork, reset_after, recurrent_activation, output_activation);
+      if (return_sequences) {
+	for (size_t j=0; j<units; j++) {
+	  output->array[(in_height-1-i)*units+j] = state[j];}
+      }
+    }
   }
-  for (size_t i=0; i<units; i++) {
-    output[i] = state[i];
+  else {
+    for (int i=0; i<in_height; i++) {
+      k2c_grucell(state, &input->array[i*in_width], kernel, recurrent_kernel, bias,
+		  fwork, reset_after, recurrent_activation, output_activation);
+      if (return_sequences) {
+	for (size_t j=0; j<units; j++) {
+	  output->array[i*units+j] = state[j];}
+      }
+    }
+  }
+  
+  if (!return_sequences) {
+    for (size_t i=0; i<units; i++) {
+      output->array[i] = state[i];}
   }
 }
 
