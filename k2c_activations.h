@@ -18,7 +18,7 @@ void k2c_exponential(float x[], size_t size){
   /* y = exp(x) */
   /* x is overwritten with the activated values */
 
-  for (size_t i; i<size; i++) {
+  for (size_t i=0; i<size; i++) {
     x[i] = exp(x[i]);}
 }
 
@@ -99,7 +99,7 @@ void k2c_softplus(float x[], size_t size) {
   /*   y = ln(1+exp(x)) */
   /*   x is overwritten with the activated values */
   for (size_t i=0; i < size; i++) {
-    x[i] = log(1.0f + exp(x[i]));
+    x[i] = log1p(exp(x[i]));
   }
 }
 
@@ -148,7 +148,7 @@ void k2c_ELU(float x[], size_t size, float alpha) {
     
   for (size_t i=0; i < size; i++) {
     if (x[i] <= 0.0f){
-      x[i] = alpha*(exp(x[i])-1.0f);
+      x[i] = alpha*expm1(x[i]);
     }
   }
 }

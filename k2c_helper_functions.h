@@ -107,8 +107,6 @@ void k2c_dot(k2c_tensor *C, k2c_tensor *A, k2c_tensor *B, size_t axesA[],
 
   size_t permA[K2C_MAX_NDIM];
   size_t permB[K2C_MAX_NDIM];
-  size_t numelsA = 1;
-  size_t numelsB = 1;
   size_t prod_axesA = 1;
   size_t prod_axesB = 1;
   size_t free_axesA, free_axesB;
@@ -170,7 +168,7 @@ void k2c_dot(k2c_tensor *C, k2c_tensor *A, k2c_tensor *B, size_t axesA[],
 
   size_t Asub[K2C_MAX_NDIM];
   size_t Bsub[K2C_MAX_NDIM];
-  size_t bidx;
+  size_t bidx=0;
   for (i=0; i<A->ndim; i++) {
     newshpA[i] = A->shape[permA[i]];
   }

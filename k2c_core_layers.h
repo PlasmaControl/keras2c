@@ -53,7 +53,7 @@ void k2c_permute_dims(k2c_tensor *output, k2c_tensor *input,
   size_t newshp[K2C_MAX_NDIM];
   size_t oldshp[K2C_MAX_NDIM];
   size_t ndim = input->ndim;
-  size_t bidx;
+  size_t bidx=0;
   for (size_t i=0; i<ndim; i++) {
     oldshp[i] = input->shape[i];}  
   for (size_t i=0; i<ndim; i++) {
