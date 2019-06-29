@@ -1,7 +1,6 @@
 """test_layers.py
 This file is part of the test suite for keras2c
-Author: Rory Conlin
-License: GNU GPLv3
+Implements tests for individual layers
 """
 
 #!/usr/bin/env python3
@@ -11,6 +10,12 @@ import keras
 from keras2c import keras2c_main
 import subprocess
 import time
+
+__author__ = "Rory Conlin"
+__copyright__ = "Copyright 2019, Rory Conlin"
+__license__ = "GNU GPLv3"
+__maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
+__email__ = "wconlin@princeton.edu"
 
 
 class TestRecurrentLayers(unittest.TestCase):
@@ -24,8 +29,9 @@ class TestRecurrentLayers(unittest.TestCase):
         model = keras.models.Model(inputs=a, outputs=b)
         name = 'SimpleRNN' + str(int(time.time()))
         keras2c_main.k2c(model, name)
-        subprocess.run(['gcc', '-fprofile-arcs', '-ftest-coverage',
-                        '-I./include/', '-o', name, name + '_test_suite.c', '-lm'])
+        cc = 'gcc -std=c99 -fprofile-arcs -ftest-coverage -I./include/ -o '\
+            + name + ' ' + name + '_test_suite.c -lm'
+        subprocess.run(cc.split())
         rcode = subprocess.run(['./' + name])
         self.assertEqual(rcode.returncode, 0)
         subprocess.run(['rm', './' + name, './' + name + '.h',
@@ -39,8 +45,9 @@ class TestRecurrentLayers(unittest.TestCase):
         model = keras.models.Model(inputs=a, outputs=b)
         name = 'LSTM' + str(int(time.time()))
         keras2c_main.k2c(model, name)
-        subprocess.run(['gcc', '-fprofile-arcs', '-ftest-coverage',
-                        '-I./include/', '-o', name, name + '_test_suite.c', '-lm'])
+        cc = 'gcc -std=c99 -fprofile-arcs -ftest-coverage -I./include/ -o '\
+            + name + ' ' + name + '_test_suite.c -lm'
+        subprocess.run(cc.split())
         rcode = subprocess.run(['./' + name])
         self.assertEqual(rcode.returncode, 0)
         subprocess.run(['rm', './' + name, './' + name + '.h',
@@ -54,8 +61,9 @@ class TestRecurrentLayers(unittest.TestCase):
         model = keras.models.Model(inputs=a, outputs=b)
         name = 'GRU' + str(int(time.time()))
         keras2c_main.k2c(model, name)
-        subprocess.run(['gcc', '-fprofile-arcs', '-ftest-coverage',
-                        '-I./include/', '-o', name, name + '_test_suite.c', '-lm'])
+        cc = 'gcc -std=c99 -fprofile-arcs -ftest-coverage -I./include/ -o '\
+            + name + ' ' + name + '_test_suite.c -lm'
+        subprocess.run(cc.split())
         rcode = subprocess.run(['./' + name])
         self.assertEqual(rcode.returncode, 0)
         subprocess.run(['rm', './' + name, './' + name + '.h',

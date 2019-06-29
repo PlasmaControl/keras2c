@@ -1,7 +1,20 @@
+"""keras2c_main.py
+This file is part of keras2c
+Converts keras model to C code
+"""
+
 # imports
 import numpy as np
 import keras
 maxndim = 4
+
+
+__author__ = "Rory Conlin"
+__copyright__ = "Copyright 2019, Rory Conlin"
+__license__ = "GNU GPLv3"
+__maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
+__email__ = "wconlin@princeton.edu"
+
 
 # array2c
 
@@ -37,7 +50,7 @@ def array2c(array, name):
 # weights2c
 
 def write_outputs(layer, file, model_io):
-    inputs, outputs = get_layer_io_names(layer)
+    _, outputs = get_layer_io_names(layer)
     for i, outp in enumerate(outputs):
         outshp = layer.get_output_at(i).shape[1:]
         if outp not in model_io[1]:
@@ -168,7 +181,7 @@ def write_weights_Conv1D(layer, file, model_io):
     file.write(s)
 
     inputs, outputs = get_layer_io_names(layer)
-    for i, (inp, outp) in enumerate(zip(inputs, outputs)):
+    for i, outp in enumerate(outputs):
         inshp = layer.get_input_at(i).shape[1:]
         outshp = layer.get_output_at(i).shape[1:]
         inrows = inshp[0]
@@ -217,7 +230,7 @@ def write_weights_Pooling1D(layer, file, model_io):
     file.write(s)
 
     inputs, outputs = get_layer_io_names(layer)
-    for i, (inp, outp) in enumerate(zip(inputs, outputs)):
+    for i, outp in enumerate(outputs):
         inshp = layer.get_input_at(i).shape[1:]
         outshp = layer.get_output_at(i).shape[1:]
         inrows = inshp[0]
@@ -919,7 +932,7 @@ def make_test_suite(model, function_name, num_tests=10):
     for i in range(num_tests):
         # generate random input and write to file
         rand_inputs = []
-        for j, inpt in enumerate(model_inputs):
+        for j in range(len(model_inputs)):
             rand_input = np.random.random(input_shape[j])
             file.write(array2c(rand_input, 'test' + str(i+1) +
                                '_' + model_inputs[j] + '_input'))
@@ -930,7 +943,7 @@ def make_test_suite(model, function_name, num_tests=10):
         # write predictions
         if not isinstance(outputs, list):
             outputs = [outputs]
-        for j, outpt in enumerate(model_outputs):
+        for j in range(len(model_outputs)):
             output = outputs[j][0, :]
             file.write(array2c(output, 'keras_' +
                                model_outputs[j] + '_test' + str(i+1)))
