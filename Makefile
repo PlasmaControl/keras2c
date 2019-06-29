@@ -1,5 +1,5 @@
 
-FLAGS = -Ofast
+FLAGS = -gcov
 CC = gcc $(FLAGS)
 
 K2C = k2c_include.h \
@@ -12,19 +12,16 @@ K2C = k2c_include.h \
 	k2c_recurrent_layers.h \
 FNAME = test1
 
-all: predictor test_suite clean
+all: test_suite clean
 
 
 
-test_suite: predictor.o test_suite.o 
-	$(CC) $(FLAGS) -o test_suite test_suite.o predictor.o -lm
-
-test_suite.o: $(FNAME)_test_suite.c $(K2C)
-	$(CC) -c $(FNAME)_test_suite.c
-
-test1.o: $(FNAME).c
-	gcc $(FLAGS) -c test1.c
+test_suite: model_test_suite.c
+	$(CC) -o test_suite model1_test_suite.c -lm
 
 clean:
 	rm -f *.o
 	echo Clean done
+
+delete:
+	rm ./test_suite

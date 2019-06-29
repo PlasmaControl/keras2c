@@ -102,7 +102,7 @@ float k2c_vec_dot(float A[], float B[], size_t numels, size_t offsetA,
   return sum;
 }
 
-void k2c_dot(k2c_tensor *C, k2c_tensor *A, k2c_tensor *B, size_t axesA[],
+void k2c_dot(k2c_tensor C, k2c_tensor A, k2c_tensor B, size_t axesA[],
 	     size_t axesB[], size_t naxes, int normalize, float fwork[]) {
 
   size_t permA[K2C_MAX_NDIM];
@@ -117,12 +117,12 @@ void k2c_dot(k2c_tensor *C, k2c_tensor *A, k2c_tensor *B, size_t axesA[],
   size_t i,j;
   size_t newshpA[K2C_MAX_NDIM];
   size_t newshpB[K2C_MAX_NDIM];
-  size_t ndimA = A->ndim;
-  size_t ndimB = B->ndim;
+  size_t ndimA = A.ndim;
+  size_t ndimB = B.ndim;
   float *reshapeA, *reshapeB;
 
   // find which axes are free (ie, not being summed over)
-  for (i=0; i<A->ndim; i++) {
+  for (i=0; i<A.ndim; i++) {
     isin = 0;
     for (j=0; j<naxes; j++) {
       if (i==axesA[j]) {
@@ -147,15 +147,15 @@ void k2c_dot(k2c_tensor *C, k2c_tensor *A, k2c_tensor *B, size_t axesA[],
 
   // temp working storage
   reshapeA = &fwork[0];
-  reshapeB = &fwork[A->numel];
+  reshapeB = &fwork[A.numel];
     // number of elements in inner dimension
   for (i=0; i < naxes; i++) {
-    prod_axesA *= A->shape[axesA[i]];}
+    prod_axesA *= A.shape[axesA[i]];}
   for (i=0; i < naxes; i++) {
-    prod_axesB *= B->shape[axesB[i]];}
+    prod_axesB *= B.shape[axesB[i]];}
   // number of elements in free dimension
-  free_axesA = A->numel/prod_axesA;
-  free_axesB = B->numel/prod_axesB;
+  free_axesA = A.numel/prod_axesA;
+  free_axesB = B.numel/prod_axesB;
   // find permutation of axes to get into matmul shape
   for (i=0; i<ndimA-naxes; i++) {
     permA[i] = freeA[i];}
@@ -169,28 +169,28 @@ void k2c_dot(k2c_tensor *C, k2c_tensor *A, k2c_tensor *B, size_t axesA[],
   size_t Asub[K2C_MAX_NDIM];
   size_t Bsub[K2C_MAX_NDIM];
   size_t bidx=0;
-  for (i=0; i<A->ndim; i++) {
-    newshpA[i] = A->shape[permA[i]];
+  for (i=0; i<A.ndim; i++) {
+    newshpA[i] = A.shape[permA[i]];
   }
-  for (i=0; i<B->ndim; i++) {
-    newshpB[i] = B->shape[permB[i]];
+  for (i=0; i<B.ndim; i++) {
+    newshpB[i] = B.shape[permB[i]];
   }
 
   // reshape arrays
-  for (i=0; i<A->numel; i++) {
-    k2c_idx2sub(i,Asub,A->shape,ndimA);
+  for (i=0; i<A.numel; i++) {
+    k2c_idx2sub(i,Asub,A.shape,ndimA);
     for (j=0; j<ndimA; j++) {
       Bsub[j] = Asub[permA[j]];}
     k2c_sub2idx(bidx,Bsub,newshpA,ndimA);
-    reshapeA[bidx] = A->array[i];
+    reshapeA[bidx] = A.array[i];
   }
 
-  for (i=0; i<B->numel; i++) {
-    k2c_idx2sub(i,Asub,B->shape,ndimA);
+  for (i=0; i<B.numel; i++) {
+    k2c_idx2sub(i,Asub,B.shape,ndimA);
     for (j=0; j<ndimB; j++) {
       Bsub[j] = Asub[permB[j]];}
     k2c_sub2idx(bidx,Bsub,newshpA,ndimA);
-    reshapeB[bidx] = B->array[i];
+    reshapeB[bidx] = B.array[i];
   }
   if (normalize) { 
     float sum;
@@ -212,16 +212,16 @@ void k2c_dot(k2c_tensor *C, k2c_tensor *A, k2c_tensor *B, size_t axesA[],
 	reshapeB[i + free_axesB*j] *= inorm;}
     }
   }
-  k2c_matmul(C->array, reshapeA, reshapeB, free_axesA,
+  k2c_matmul(C.array, reshapeA, reshapeB, free_axesA,
 	     free_axesB, prod_axesA);
 }
 
-void k2c_bias_add(k2c_tensor *A, k2c_tensor *b) {
+void k2c_bias_add(k2c_tensor A, k2c_tensor b) {
   /* adds bias vector b to tensor A. Assumes b is a rank 1 tensor */
   /* that is added to the last dimension of A */
-  for (size_t i=0; i<A->numel; i+=b->numel) {
-    for (size_t j=0; j<b->numel; j++) {
-      A->array[i+j] += b->array[j];}
+  for (size_t i=0; i<A.numel; i+=b.numel) {
+    for (size_t j=0; j<b.numel; j++) {
+      A.array[i+j] += b.array[j];}
   }
 }
 

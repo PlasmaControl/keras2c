@@ -4,3 +4,10 @@
 *.o
 *.out
 .ipynb_checkpoints/
+__pycache__/
+*.pdf
+*.pyc
+.coverage
+*.gcov
+*.gcda
+*.gcno
