@@ -108,15 +108,15 @@ def write_weights_GRU(layer, file, model_io):
     if layer.get_config()['use_bias']:
         bias = weights[2]
         if layer.get_config()['reset_after']:
-            bias = b[0]
-            rbias = b[1]
+            rbias = bias[1]
+            bias = bias[0]
         else:
             bias = bias
             rbias = np.zeros(3*units)
     else:
         bias = np.zeros(3*units)
         rbias = np.zeros(3*units)
-    bias = np.concatenate([bias, rbias], axis=0)
+    cbias = np.concatenate([bias, rbias], axis=0)
     ckernel = np.concatenate([kernel[:, :units],
                               kernel[:, units:2*units],
                               kernel[:, 2*units:]], axis=0)
@@ -125,7 +125,7 @@ def write_weights_GRU(layer, file, model_io):
                                         recurrent_kernel[:, 2*units:3*units]], axis=0)
     file.write(array2c(ckernel, layer.name + '_kernel'))
     file.write(array2c(crecurrent_kernel, layer.name + '_recurrent_kernel'))
-    file.write(array2c(bias, layer.name + '_bias'))
+    file.write(array2c(cbias, layer.name + '_bias'))
     file.write('\n \n')
 
 
@@ -909,17 +909,17 @@ def check_model(model, function_name):
 # make test suite
 
 
-def make_test_suite(model, function_name, num_tests=10):
+def make_test_suite(model, function_name, num_tests=10, tol=1e-5):
     print('Writing tests')
     input_shape = []
-    output_shape = []
+    #output_shape = []
     model_inputs, model_outputs = get_model_io_names(model)
     num_inputs = len(model_inputs)
     num_outputs = len(model_outputs)
     for i in range(num_inputs):
         input_shape.insert(i, model.inputs[i].shape[1:])
-    for i in range(num_outputs):
-        output_shape.insert(i, model.outputs[i].shape[1:])
+  #  for i in range(num_outputs):
+  #      output_shape.insert(i, model.outputs[i].shape[1:])
 
     file = open(function_name + '_test_suite.c', "x+")
     s = '#include <stdio.h> \n#include <math.h> \n#include <sys/time.h> \n#include "' + \
@@ -931,24 +931,33 @@ def make_test_suite(model, function_name, num_tests=10):
     file.write(s)
     for i in range(num_tests):
         # generate random input and write to file
-        rand_inputs = []
+        ct = 0
+        while True:
+            rand_inputs = []
+            for j in range(len(model_inputs)):
+                rand_input = np.random.random(input_shape[j])
+                rand_input = rand_input[np.newaxis, ...]
+                rand_inputs.insert(j, rand_input)
+                # make predictions
+            outputs = model.predict(rand_inputs)
+            if np.isfinite(outputs).all():
+                break
+            if ct > 20:
+                raise Exception('Cannot find inputs to the \
+                network that result in a finite output')
         for j in range(len(model_inputs)):
-            rand_input = np.random.random(input_shape[j])
-            file.write(array2c(rand_input, 'test' + str(i+1) +
+            file.write(array2c(np.squeeze(rand_inputs[j]), 'test' + str(i+1) +
                                '_' + model_inputs[j] + '_input'))
-            rand_input = rand_input[np.newaxis, ...]
-            rand_inputs.insert(j, rand_input)
-        # make predictions
-        outputs = model.predict(rand_inputs)
-        # write predictions
+
+            # write predictions
         if not isinstance(outputs, list):
             outputs = [outputs]
-        for j in range(len(model_outputs)):
-            output = outputs[j][0, :]
-            file.write(array2c(output, 'keras_' +
-                               model_outputs[j] + '_test' + str(i+1)))
-            file.write(array2c(
-                np.zeros(output_shape[j]), 'c_' + model_outputs[j] + '_test' + str(i+1)))
+            for j in range(len(model_outputs)):
+                output = outputs[j][0, :]
+                file.write(array2c(output, 'keras_' +
+                                   model_outputs[j] + '_test' + str(i+1)))
+                file.write(array2c(np.zeros(output.shape), 'c_' +
+                                   model_outputs[j] + '_test' + str(i+1)))
     s = ' float errors[' + str(num_tests*num_outputs) + '];\n'
     s += ' size_t num_tests = ' + str(num_tests) + '; \n'
     s += 'size_t num_outputs = ' + str(num_outputs) + '; \n'
@@ -984,7 +993,7 @@ def make_test_suite(model, function_name, num_tests=10):
     s += 'printf("Max L2 norm of output errors for ' + \
         str(num_tests) + ' tests: %f \\n", maxerror);\n'
     file.write(s)
-    s = 'if (maxerror > 1e-6) { \n'
+    s = 'if (maxerror > ' + str(tol) + ') { \n'
     s += 'return 1;} \n'
     s += 'return 0;\n} \n\n'
     file.write(s)

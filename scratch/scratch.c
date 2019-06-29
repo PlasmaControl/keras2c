@@ -40,7 +40,10 @@ int main(){
   int rows = 3;
   int cols = 4;
 
-
+  size_t in_height = 10;
+  for (int i=in_height-1; i>-1; i--) {
+    printf("%d %d \n",i,in_height-1-i);}
+  
   float foo_array[20] = {
 7.6266743486e-01,8.5218802371e-01,7.4291503115e-01,7.5633826592e-01,
 3.9278868836e-01,9.5637243036e-01,2.7966619768e-01,3.6879664082e-01,
@@ -53,8 +56,8 @@ struct k2c_tensor foo = {&foo_array[0], {4,5,1,1},2};
  
 //min(output,12,3,x1,x2,x3);
 
- for (size_t i=0; i<foo.shape[0]; i++){
-   printf("%f ", foo.array[i]);}
+ /* for (size_t i=0; i<foo.shape[0]; i++){ */
+ /*   printf("%f ", foo.array[i]);} */
 
   //dense(C,x,y,d,outrows,outcols,innerdim,linear);
   //  affine_matmul(C,x,y,d,outrows,outcols,innerdim);

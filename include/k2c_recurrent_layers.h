@@ -242,10 +242,12 @@ void k2c_grucell(float state[], float input[], k2c_tensor kernel,
     for (size_t i=0; i<units; i++) {
       yh[i] = yr[i]*h_tm1[i];}
     k2c_matmul(xz, yh, Uh, outrows, units, units); //reuse xz as new yh
+    for (size_t i=0; i<units; i++) {
+      yh[i] = xz[i];}
   }
   //    hh = np.tanh(x_h + recurrent_h)
   for (size_t i=0; i<units; i++) {
-    xr[i] = xh[i] + xz[i];} // reuse xr = hh
+    xr[i] = xh[i] + yh[i];} // reuse xr = hh
   output_activation(xr, units);
 
   //    h = z .* h_tm1 + (1 - z) .* hh
