@@ -1,0 +1,2 @@
+# keras2c
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/33d53a07efb140d98c079d0e1533333c)](https://app.codacy.com/app/f0uriest/keras2c?utm_source=github.com&utm_medium=referral&utm_content=f0uriest/keras2c&utm_campaign=Badge_Grade_Settings)
