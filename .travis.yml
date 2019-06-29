@@ -3,12 +3,15 @@ python:
   - "3.5"
   - "3.6"
 env:
-    - COVERALLS_PARALLEL=true
+    - CODECOV_TOKEN="24cf7341-7201-48d7-acfc-e3208302a2b6"
 matrix:
   include:
     - python: 3.7
       dist: xenial
       sudo: true
+  allow_failures:
+    - python: 3.5
+    - python: 3.6
 
 install:
   - pip install -r requirements.txt
@@ -16,9 +19,9 @@ install:
 script:
   - python -m pytest --cov=keras2c/
 
-after_script:
-  - coveralls
-  - cpp-coveralls -i include  
+after_success:
+  - gcov *.gcda
+  - rm test_*{.gcov,.gcda,.gcno}
+  - bash <(curl -s https://codecov.io/bash)
 
 notifications:
-  webhooks: https://coveralls.io/webhook	

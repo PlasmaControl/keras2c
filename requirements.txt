@@ -4,8 +4,5 @@
 numpy >= 1.13.0
 pytest >= 3.6.0
 pytest-cov >= 2.6.0
-coveralls
-cpp-coveralls
-codecov
 tensorflow >= 1.13
 keras >= 2.2.4
