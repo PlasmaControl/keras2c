@@ -483,8 +483,8 @@ def write_layer_Merge(layer, file, inputs, outputs, i):
         s = 'k2c_max('
     elif 'Minimum' == layer_type(layer):
         s = 'k2c_min('
-    s += outputs + ',' + nm + '_num_tensors' + str(i) + ',&'
-    c = ',&'.join(inputs)
+    s += outputs + ',' + nm + '_num_tensors' + str(i) + ','
+    c = ','.join(inputs)
     s += c + '); \n'
     file.write(s)
 
@@ -785,12 +785,12 @@ def model2c(model, file, function_name):
                     is_model_output = False
                     if isinstance(inp, list):
                         inp_nm = []
-                        for i in inp:
-                            if i in model_inputs:
-                                inp_nm.append(i + '_input')
+                        for j in inp:
+                            if j in model_inputs:
+                                inp_nm.append(j + '_input')
                                 is_model_input = True
                             else:
-                                inp_nm.append('&' + i + '_output')
+                                inp_nm.append('&' + j + '_output')
                     else:
                         if inp in model_inputs:
                             inp_nm = inp + '_input'
