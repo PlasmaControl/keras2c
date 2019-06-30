@@ -28,6 +28,70 @@ def build_and_run(name):
     return rcode
 
 
+class TestPoolingLayers(unittest.TestCase):
+    """tests for pooling layers"""
+
+    def test_MaxPooling1D1(self):
+        inshp = (23, 29)
+        pool_size = 3
+        strides = 1
+        padding = 'valid'
+        a = keras.layers.Input(inshp)
+        b = keras.layers.MaxPooling1D(pool_size=pool_size,
+                                      strides=strides,
+                                      padding=padding)(a)
+        model = keras.models.Model(inputs=a, outputs=b)
+        name = 'test___MaxPooling1D1' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode.returncode, 0)
+
+    def test_MaxPooling1D2(self):
+        inshp = (13, 19)
+        pool_size = 2
+        strides = 2
+        padding = 'same'
+        a = keras.layers.Input(inshp)
+        b = keras.layers.MaxPooling1D(pool_size=pool_size,
+                                      strides=strides,
+                                      padding=padding)(a)
+        model = keras.models.Model(inputs=a, outputs=b)
+        name = 'test___MaxPooling1D2' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode.returncode, 0)
+
+    def test_AveragePooling1D1(self):
+        inshp = (23, 29)
+        pool_size = 2
+        strides = 3
+        padding = 'valid'
+        a = keras.layers.Input(inshp)
+        b = keras.layers.AveragePooling1D(pool_size=pool_size,
+                                          strides=strides,
+                                          padding=padding)(a)
+        model = keras.models.Model(inputs=a, outputs=b)
+        name = 'test___AveragePooling1D1' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode.returncode, 0)
+
+    def test_AveragePooling1D2(self):
+        inshp = (13, 19)
+        pool_size = 3
+        strides = 1
+        padding = 'same'
+        a = keras.layers.Input(inshp)
+        b = keras.layers.AveragePooling1D(pool_size=pool_size,
+                                          strides=strides,
+                                          padding=padding)(a)
+        model = keras.models.Model(inputs=a, outputs=b)
+        name = 'test___AveragePooling1D2' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode.returncode, 0)
+
+
 class TestMergeLayers(unittest.TestCase):
     """tests for merge layers"""
 
@@ -39,6 +103,78 @@ class TestMergeLayers(unittest.TestCase):
         c = keras.layers.Dot((2, 1))([a, b])
         model = keras.models.Model(inputs=[a, b], outputs=c)
         name = 'test___Dot1' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode.returncode, 0)
+
+
+class TestConvolutionLayers(unittest.TestCase):
+    """tests for convolution layers"""
+
+    def test_Conv1D1(self):
+        inshp = (25, 32)
+        filters = 13
+        kernel_size = 3
+        strides = 2
+        padding = 'valid'
+        dilation_rate = 1
+        activation = 'relu'
+        a = keras.layers.Input(inshp)
+        b = keras.layers.Conv1D(filters=filters,
+                                kernel_size=kernel_size,
+                                strides=strides,
+                                padding=padding,
+                                dilation_rate=dilation_rate,
+                                activation=activation,
+                                use_bias=False)(a)
+        model = keras.models.Model(inputs=a, outputs=b)
+        name = 'test___Conv1D1' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode.returncode, 0)
+
+    def test_Conv1D2(self):
+        inshp = (13, 23)
+        filters = 17
+        kernel_size = 4
+        strides = 1
+        padding = 'same'
+        dilation_rate = 3
+        activation = 'sigmoid'
+        a = keras.layers.Input(inshp)
+        b = keras.layers.Conv1D(filters=filters,
+                                kernel_size=kernel_size,
+                                strides=strides,
+                                padding=padding,
+                                dilation_rate=dilation_rate,
+                                activation=activation,
+                                use_bias=True,
+                                bias_initializer='glorot_uniform')(a)
+        model = keras.models.Model(inputs=a, outputs=b)
+        name = 'test___Conv1D2' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode.returncode, 0)
+
+    def test_Conv1D3(self):
+        inshp = (8, 32)
+        filters = 17
+        kernel_size = 4
+        strides = 1
+        padding = 'causal'
+        dilation_rate = 1
+        activation = 'tanh'
+        a = keras.layers.Input(inshp)
+        b = keras.layers.Conv1D(filters=filters,
+                                kernel_size=kernel_size,
+                                strides=strides,
+                                padding=padding,
+                                dilation_rate=dilation_rate,
+                                activation=activation,
+                                use_bias=True,
+                                bias_initializer='glorot_uniform')(a)
+        model = keras.models.Model(inputs=a, outputs=b)
+        name = 'test___Conv1D3' + str(int(time.time()))
         keras2c_main.k2c(model, name)
         rcode = build_and_run(name)
         self.assertEqual(rcode.returncode, 0)
@@ -129,7 +265,7 @@ class TestRecurrentLayers(unittest.TestCase):
         units = 17
         a = keras.layers.Input(inshp)
         b = keras.layers.SimpleRNN(units, activation='relu',
-                                   return_sequences=True)(a)
+                                   return_sequences=False)(a)
         model = keras.models.Model(inputs=a, outputs=b)
         name = 'test___SimpleRNN1' + str(int(time.time()))
         keras2c_main.k2c(model, name)
@@ -154,7 +290,7 @@ class TestRecurrentLayers(unittest.TestCase):
         units = 19
         a = keras.layers.Input(inshp)
         b = keras.layers.LSTM(units, activation='relu',
-                              return_sequences=True,
+                              return_sequences=False,
                               recurrent_activation='hard_sigmoid')(a)
         model = keras.models.Model(inputs=a, outputs=b)
         name = 'test___LSTM1' + str(int(time.time()))
@@ -182,7 +318,7 @@ class TestRecurrentLayers(unittest.TestCase):
         a = keras.layers.Input(inshp)
         b = keras.layers.GRU(units, activation='softmax',
                              recurrent_activation='softsign',
-                             return_sequences=True)(a)
+                             return_sequences=False)(a)
         model = keras.models.Model(inputs=a, outputs=b)
         name = 'test___GRU1' + str(int(time.time()))
         keras2c_main.k2c(model, name)

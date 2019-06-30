@@ -33,9 +33,9 @@ def array2c(array, name):
         s += '{\n'
         for i in range(size):
             if temp[i] == np.inf:
-                s += "HUGE_VAL,"
+                s += "HUGE_VALF,"
             elif temp[i] == -np.inf:
-                s += "-HUGE_VAL,"
+                s += "-HUGE_VALF,"
             else:
                 s += "{:.10e}".format(temp[i]) + ','
             count += 1
@@ -180,7 +180,7 @@ def write_weights_Conv1D(layer, file, model_io):
     s += 'size_t ' + layer.name + '_dilation = ' + str(dilation) + '; \n'
     file.write(s)
 
-    inputs, outputs = get_layer_io_names(layer)
+    _, outputs = get_layer_io_names(layer)
     for i, outp in enumerate(outputs):
         inshp = layer.get_input_at(i).shape[1:]
         outshp = layer.get_output_at(i).shape[1:]
@@ -191,8 +191,7 @@ def write_weights_Conv1D(layer, file, model_io):
             pad_top = pad_along_height
             pad_bottom = 0
         elif pad == 'same':
-            pad_along_height = max((outshp[0] - 1) * stride*dilation +
-                                   kernel_size - inshp[0], 0)
+            pad_along_height = dilation*(kernel_size-1)
             pad_top = int(pad_along_height // 2)
             pad_bottom = int(pad_along_height - pad_top)
         elif pad == 'valid':
@@ -436,7 +435,7 @@ def write_layer_Conv1D(layer, file, inputs, outputs, i):
     pnm = '&' + nm
     activation = 'k2c_' + layer.get_config()['activation']
 
-    s = 'k2c_pad1d(' + nm + '_padded' + str(i) + '_input,' + inputs + ',' + nm + \
+    s = 'k2c_pad1d(' + pnm + '_padded' + str(i) + '_input,' + inputs + ',' + nm + \
         '_fill' + str(i) + ', \n\t' + nm + '_pad' + str(i) + \
         '_top,' + nm + '_pad' + str(i) + '_bottom); \n'
     file.write(s)
@@ -448,7 +447,7 @@ def write_layer_Conv1D(layer, file, inputs, outputs, i):
 def write_layer_Pooling1D(layer, file, inputs, outputs, i):
     nm = layer.name
     pnm = '&' + nm
-    s = 'k2c_pad1d(' + nm + '_padded' + str(i) + '_input,' + inputs + ',' + nm + \
+    s = 'k2c_pad1d(' + pnm + '_padded' + str(i) + '_input,' + inputs + ',' + nm + \
         '_fill' + str(i) + ', \n\t' + nm + '_pad' + str(i) + \
         '_top,' + nm + '_pad' + str(i) + '_bottom); \n'
     file.write(s)
@@ -803,7 +802,7 @@ def model2c(model, file, function_name):
                         for o in outp:
                             if o in model_outputs:
                                 outp_nm.append(outp + '_output')
-                                is_model_outut = True
+                                is_model_ouptut = True
                             else:
                                 outp_nm.append('&' + outp + '_output')
                     else:
@@ -1042,7 +1041,7 @@ def make_test_suite(model, function_name, num_tests=10, tol=1e-5):
         ' tests: %llu us \\n", (t2u-t1u)/' + str(num_tests) + '); \n'
     file.write(s)
     for i in range(num_tests):
-        for j, outpt in enumerate(model_outputs):
+        for j, _ in enumerate(model_outputs):
             s = 'errors[' + str(i*num_outputs+j) + '] = maxabs(&keras_' + model_outputs[j] + '_test' + \
                 str(i+1) + ',&c_' + \
                 model_outputs[j] + '_test' + str(i+1) + '); \n'
