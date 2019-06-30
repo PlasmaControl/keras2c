@@ -530,7 +530,7 @@ def write_layer_AdvancedActivation(layer, file, inputs, outputs, i, is_model_inp
     if is_model_input:
         inp = inputs + '->'
     else:
-        inp = inputs[1:] + '.'
+        inp = inputs + '.'
 
     if layer_type(layer) == 'LeakyReLU':
         s = 'k2c_LeakyReLU(' + inp + 'array,' + \
@@ -554,13 +554,18 @@ def write_layer_AdvancedActivation(layer, file, inputs, outputs, i, is_model_inp
 
 def write_dummy_layer(layer, file, inputs, outputs, i, is_model_input, is_model_output):
     if is_model_output:
-        s = outputs + '->ndim = ' + \
-            inputs[1:] + '.ndim; // copy data into output struct \n'
-        s += outputs + '->numel = ' + inputs[1:] + '.numel; \n'
-        s = 'memcpy(' + outputs + '->shape,' + inputs[1:] + \
-            '.shape,K2C_MAX_NDIM*sizeof(size_t));  \n'
-        s += 'memcpy(' + outputs + '->array,' + inputs[1:] + '.array,' + \
-            outputs + '->numel*sizeof(' + outputs + '->array[0])); \n'
+        outputs = outputs + '->'
+        if is_model_input:
+            inputs = inputs + '->'
+        else:
+            inputs = inputs[1:] + '.'
+        s = outputs + 'ndim = ' + \
+            inputs + 'ndim; // copy data into output struct \n'
+        s += outputs + 'numel = ' + inputs + 'numel; \n'
+        s = 'memcpy(' + outputs + 'shape,' + inputs + \
+            'shape,K2C_MAX_NDIM*sizeof(size_t));  \n'
+        s += 'memcpy(' + outputs + 'array,' + inputs + 'array,' + \
+            outputs + 'numel*sizeof(' + outputs + 'array[0])); \n'
     else:
         s = 'k2c_tensor ' + str(outputs[1:]) + '; \n'
         s += 'memcpy(' + outputs + ',' + inputs + \
@@ -802,7 +807,7 @@ def model2c(model, file, function_name):
                         for o in outp:
                             if o in model_outputs:
                                 outp_nm.append(outp + '_output')
-                                is_model_ouptut = True
+                                is_model_output = True
                             else:
                                 outp_nm.append('&' + outp + '_output')
                     else:
