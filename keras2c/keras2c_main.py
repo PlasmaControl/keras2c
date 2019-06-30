@@ -1000,7 +1000,7 @@ def make_test_suite(model, function_name, num_tests=10, tol=1e-5):
         while True:
             rand_inputs = []
             for j, _ in enumerate(model_inputs):
-                rand_input = np.random.random(input_shape[j])
+                rand_input = 4*np.random.random(input_shape[j]) - 2
                 rand_input = rand_input[np.newaxis, ...]
                 rand_inputs.insert(j, rand_input)
                 # make predictions

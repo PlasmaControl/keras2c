@@ -88,20 +88,6 @@ void k2c_idx2sub(size_t idx, size_t sub[], size_t shape[], size_t ndim) {
 
 }
 
-float k2c_vec_dot(float A[], float B[], size_t numels, size_t offsetA,
-		  size_t offsetB) {
-
-  float sum = 0.0;
-  size_t idxA = 0;
-  size_t idxB = 0;
-  for (size_t i=0; i<numels; i++) {
-    sum += A[idxA]*B[idxB];
-    idxA += offsetA;
-    idxB += offsetB;
-  }
-  return sum;
-}
-
 void k2c_dot(k2c_tensor* C, k2c_tensor* A, k2c_tensor* B, size_t axesA[],
 	     size_t axesB[], size_t naxes, int normalize, float fwork[]) {
 

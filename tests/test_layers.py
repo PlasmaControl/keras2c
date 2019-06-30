@@ -370,7 +370,7 @@ class TestCoreLayers(unittest.TestCase):
         inshp = (40, 30)
         units = 500
         a = keras.layers.Input(inshp)
-        b = keras.layers.Dense(units, activation='tanh')(a)
+        b = keras.layers.Dense(units, activation='tanh', use_bias=False)(a)
         c = keras.layers.Activation('exponential')(b)
         model = keras.models.Model(inputs=a, outputs=c)
         name = 'test___Dense2' + str(int(time.time()))
@@ -457,6 +457,20 @@ class TestRecurrentLayers(unittest.TestCase):
         rcode = build_and_run(name)
         self.assertEqual(rcode.returncode, 0)
 
+    def test_SimpleRNN3(self):
+        inshp = (34, 17)
+        units = 40
+        a = keras.layers.Input(inshp)
+        b = keras.layers.SimpleRNN(units, go_backwards=False,
+                                   return_sequences=True,
+                                   activation='tanh',
+                                   use_bias=False)(a)
+        model = keras.models.Model(inputs=a, outputs=b)
+        name = 'test___SimpleRNN3' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode.returncode, 0)
+
     def test_LSTM1(self):
         inshp = (23, 32)
         units = 19
@@ -480,6 +494,21 @@ class TestRecurrentLayers(unittest.TestCase):
                               recurrent_activation='tanh')(a)
         model = keras.models.Model(inputs=a, outputs=b)
         name = 'test___LSTM2' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode.returncode, 0)
+
+    def test_LSTM3(self):
+        inshp = (4, 80)
+        units = 23
+        a = keras.layers.Input(inshp)
+        b = keras.layers.LSTM(units, go_backwards=False,
+                              return_sequences=True,
+                              activation='sigmoid',
+                              recurrent_activation='tanh',
+                              use_bias=False)(a)
+        model = keras.models.Model(inputs=a, outputs=b)
+        name = 'test___LSTM3' + str(int(time.time()))
         keras2c_main.k2c(model, name)
         rcode = build_and_run(name)
         self.assertEqual(rcode.returncode, 0)
@@ -508,6 +537,22 @@ class TestRecurrentLayers(unittest.TestCase):
                              reset_after=True)(a)
         model = keras.models.Model(inputs=a, outputs=b)
         name = 'test___GRU2' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode.returncode, 0)
+
+    def test_GRU3(self):
+        inshp = (12, 46)
+        units = 17
+        a = keras.layers.Input(inshp)
+        b = keras.layers.GRU(units, activation='softplus',
+                             recurrent_activation='sigmoid',
+                             return_sequences=True,
+                             go_backwards=False,
+                             reset_after=True,
+                             use_bias=False)(a)
+        model = keras.models.Model(inputs=a, outputs=b)
+        name = 'test___GRU3' + str(int(time.time()))
         keras2c_main.k2c(model, name)
         rcode = build_and_run(name)
         self.assertEqual(rcode.returncode, 0)
