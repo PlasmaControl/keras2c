@@ -57,6 +57,47 @@ def write_outputs(layer, file, model_io):
             file.write(array2c(np.zeros(outshp), outp + '_output'))
 
 
+def write_weights_BatchNorm(layer, file, model_io):
+    center = layer.get_config()['center']
+    scale = layer.get_config()['scale']
+    if isinstance(layer.get_config()['axis'], (list, tuple, np.ndarray)):
+        axis = layer.get_config()['axis'][0]-1
+    else:
+        axis = layer.get_config()['axis']-1
+    epsilon = layer.get_config()['epsilon']
+
+    if center and scale:
+        gamma = layer.get_weights()[0]
+        beta = layer.get_weights()[1]
+        mean = layer.get_weights()[2]
+        variance = layer.get_weights()[3]
+    elif center:
+        beta = layer.get_weights()[0]
+        mean = layer.get_weights()[1]
+        variance = layer.get_weights()[2]
+        gamma = np.ones(mean.shape)
+    elif scale:
+        gamma = layer.get_weights()[0]
+        mean = layer.get_weights()[1]
+        variance = layer.get_weights()[2]
+        beta = np.zeros(mean.shape)
+    else:
+        mean = layer.get_weights()[0]
+        variance = layer.get_weights()[1]
+        beta = np.zeros(mean.shape)
+        gamma = np.ones(mean.shape)
+
+    stdev = np.sqrt(variance + epsilon)
+    write_outputs(layer, file, model_io)
+    s = 'size_t ' + layer.name + '_axis = ' + str(axis) + '; \n'
+    file.write(s)
+    file.write(array2c(mean, layer.name + '_mean'))
+    file.write(array2c(stdev, layer.name + '_stdev'))
+    file.write(array2c(gamma, layer.name + '_gamma'))
+    file.write(array2c(beta, layer.name + '_beta'))
+    file.write('\n\n')
+
+
 def write_weights_LSTM(layer, file, model_io):
     units = layer.get_config()['units']
     write_outputs(layer, file, model_io)
@@ -349,7 +390,15 @@ def write_weights_Dot(layer, file, model_io):
     s += 'float ' + nm + '_fwork[' + str(work_size) + '] = {0}; \n'
     s += 'int ' + nm + '_normalize = ' + \
         str(int(layer.get_config()['normalize'])) + '; \n'
-    file.write(s)
+    file.write(s + '\n\n')
+
+
+def write_weights_Embedding(layer, file, model_io):
+    nm = layer.name
+    write_outputs(layer, file, model_io)
+    kernel = layer.get_weights()[0]
+    file.write(array2c(kernel, nm+'_kernel'))
+    file.write('\n\n')
 
 
 def weights2c(layer, file, model_io):
@@ -403,6 +452,12 @@ def weights2c(layer, file, model_io):
 
     elif layer_type(layer) == 'Dot':
         write_weights_Dot(layer, file, model_io)
+
+    elif layer_type(layer) in ['BatchNormalizationV1', 'BatchNormalization']:
+        write_weights_BatchNorm(layer, file, model_io)
+
+    elif layer_type(layer) == 'Embedding':
+        write_weights_Embedding(layer, file, model_io)
 
 
 # layer2c
@@ -608,6 +663,21 @@ def write_layer_Dot(layer, file, inputs, outputs, i):
     file.write(s)
 
 
+def write_layer_BatchNorm(layer, file, inputs, outputs, i):
+    nm = layer.name
+    pnm = '&' + nm
+    s = 'k2c_batch_norm(' + outputs + ',' + inputs + ',' + pnm + '_mean,' + \
+        pnm + '_stdev,' + pnm + '_gamma,' + pnm + '_beta,' + nm + '_axis); \n'
+    file.write(s)
+
+
+def write_layer_Embedding(layer, file, inputs, outputs, i):
+    nm = layer.name
+    pnm = '&' + nm
+    s = 'k2c_embedding(' + outputs + ',' + inputs + ',' + pnm + '_kernel); \n'
+    file.write(s)
+
+
 def layer2c(layer, file, inputs, outputs, i, is_model_input, is_model_output):
     if layer_type(layer) == 'Dense':
         write_layer_Dense(layer, file, inputs, outputs, i)
@@ -662,6 +732,12 @@ def layer2c(layer, file, inputs, outputs, i, is_model_input, is_model_output):
 
     elif layer_type(layer) == 'Dot':
         write_layer_Dot(layer, file, inputs, outputs, i)
+
+    elif layer_type(layer) in ['BatchNormalizationV1', 'BatchNormalization']:
+        write_layer_BatchNorm(layer, file, inputs, outputs, i)
+
+    elif layer_type(layer) == 'Embedding':
+        write_layer_Embedding(layer, file, inputs, outputs, i)
 
 
 # types, names, io
@@ -833,7 +909,9 @@ def k2c(model, function_name, num_tests=10):
     filename = function_name + '.h'
     if isinstance(model, str):
         model = keras.models.load_model(str(model_filepath))
-    elif not isinstance(model, keras.models.Model):
+    elif not isinstance(model, (keras.models.Model,
+                                keras.engine.training.Model)):
+
         raise ValueError(
             'Unknown model type. Model should either be an instance of keras.models.Model, or a filepath to a saved .h5 model')
 
@@ -867,23 +945,25 @@ def name_check(model):
     for layer in model.layers:
         if not is_valid_c_name(layer.name):
             valid = False
-            log += "layer name '" + layer.name + "' is not a valid C name \n"
+            log += "layer name '" + layer.name + "' is not a valid C name. \n"
     return valid, log
 
 
 def layers_supported_check(model):
-    core_layers = ['Dense', 'Activation', 'InputLayer', 'Input', 'Dropout', 'SpatialDropout1D', 'SpatialDropout2D', 'SpatialDropout3D',
-                   'ActivityRegularization', 'Flatten', 'Reshape', 'Permute', 'RepeatVector']
+    core_layers = ['Dense', 'Activation', 'InputLayer', 'Input', 'Dropout',
+                   'SpatialDropout1D', 'SpatialDropout2D', 'SpatialDropout3D',
+                   'ActivityRegularization', 'Flatten', 'Reshape', 'Permute',
+                   'RepeatVector']
     conv_layers = ['Conv1D']
     pool_layers = ['MaxPooling1D', 'AveragePooling1D',
                    'GlobalMaxPooling1D', 'GlobalAveragePooling1D']
     local_layers = []
     recur_layers = ['LSTM', 'GRU', 'SimpleRNN']
-    embed_layers = []
+    embed_layers = ['Embedding']
     merge_layers = ['Add', 'Subtract', 'Multiply',
                     'Average', 'Maximum', 'Minimum', 'Dot']
     activ_layers = ['LeakyReLU', 'PReLU', 'ELU', 'ThresholdedReLU', 'ReLU']
-    norm_layers = []
+    norm_layers = ['BatchNormalizationV1', 'BatchNormalization']
     noise_layers = ['GaussianNoise', 'GaussianDropout', 'AlphaDropout']
 
     supported_layers = core_layers + conv_layers + pool_layers + local_layers + \
@@ -895,13 +975,14 @@ def layers_supported_check(model):
         if not (layer_type(layer) in supported_layers):
             valid = False
             log += "layer type '" + \
-                layer_type(layer) + "' is not supported at this time \n"
+                layer_type(layer) + "' is not supported at this time. \n"
     return valid, log
 
 
 def activation_supported_check(model):
-    supported_activations = ['linear', 'relu', 'softmax', 'softplus', 'softsign', 'relu', 'tanh',
-                             'sigmoid', 'hard_sigmoid', 'exponential']
+    supported_activations = ['linear', 'relu', 'softmax', 'softplus',
+                             'softsign', 'relu', 'tanh', 'sigmoid',
+                             'hard_sigmoid', 'exponential']
     valid = True
     log = ''
     for layer in model.layers:
@@ -909,12 +990,15 @@ def activation_supported_check(model):
             if not (layer.get_config()['activation'] in supported_activations):
                 valid = False
                 log += "activation type '" + layer.get_config()['activation'] + \
-                    "' for layer '" + layer.name + "' is not supported at this time \n"
+                    "' for layer '" + layer.name + \
+                    "' is not supported at this time. \n"
         if 'recurrent_activation' in layer.get_config():
             if not (layer.get_config()['recurrent_activation'] in supported_activations):
                 valid = False
-                log += "recurrent activation type '" + layer.get_config()['recurrent_activation'] + \
-                    "' for layer '" + layer.name + "' is not supported at this time \n"
+                log += "recurrent activation type '" + \
+                       layer.get_config()['recurrent_activation'] + \
+                    "' for layer '" + layer.name + \
+                    "' is not supported at this time. \n"
     return valid, log
 
 # add check for masking
@@ -927,30 +1011,39 @@ def config_supported_check(model):
         if 'data_format' in layer.get_config():
             if layer.get_config()['data_format'] != 'channels_last':
                 valid = False
-                log += "data format '" + layer.get_config()['data_format'] + "' for layer '" + \
-                    layer.name + "' is not supported at this time \n"
+                log += "data format '" + layer.get_config()['data_format'] +\
+                       "' for layer '" + layer.name + \
+                       "' is not supported at this time. \n"
         if 'return_state' in layer.get_config():
             if layer.get_config()['return_state']:
                 valid = False
                 log += "'return_state' option for layer '" + layer.name + \
-                    "' is not supported at this time \n"
+                    "' is not supported at this time. \n"
         if 'stateful' in layer.get_config():
             if layer.get_config()['stateful']:
                 valid = False
                 log += "'stateful' option for layer '" + layer.name + \
-                    "' is not supported at this time \n"
+                    "' is not supported at this time. \n"
         if 'shared_axes' in layer.get_config():
             if layer.get_config()['shared_axes'] is not None:
                 valid = False
                 log += "shared axes option for layer '" + layer.name + \
-                    "' is not supported at this time"
-        if layer_type(layer) in ['Add', 'Subtract', 'Multiply', 'Average', 'Maximum', 'Minimum']:
+                    "' is not supported at this time. \n"
+        if layer_type(layer) in ['Add', 'Subtract', 'Multiply', 'Average',
+                                 'Maximum', 'Minimum']:
             inshps = layer.input_shape
             insize = [np.prod(inp[1:]) for inp in inshps]
             if len(set(insize)) > 1:
                 valid = False
-                log += "broadcasting merge functions between tensors of different shapes for layer '" + \
-                    layer.name + "' is not currently supported"
+                log += "broadcasting merge functions between tensors" + \
+                       " of different shapes for layer '" + \
+                       layer.name + "' is not currently supported. \n"
+        if layer_type(layer) in ['BatchNormalizationV1', 'BatchNormalization']:
+            if isinstance(layer.get_config()['axis'], (list, tuple, np.ndarray)):
+                if len(layer.get_config()['axis']) > 1:
+                    valid = False
+                    log += 'batch normalization along multiple axes is' + \
+                           ' not currently supported. \n'
     return valid, log
 
 
@@ -959,7 +1052,7 @@ def check_model(model, function_name):
     log = 'The following errors were found: \n'
     if not is_valid_c_name(function_name):
         valid_fname = False
-        log += "function name '" + function_name + "' is not a valid C name \n"
+        log += "function name '" + function_name + "' is not a valid C name. \n"
     valid_lname, name_log = name_check(model)
     log += name_log
     valid_layer, layer_log = layers_supported_check(model)
@@ -968,7 +1061,8 @@ def check_model(model, function_name):
     log += activation_log
     valid_config, config_log = config_supported_check(model)
     log += config_log
-    if not (valid_fname and valid_lname and valid_layer and valid_activation and valid_config):
+    if not (valid_fname and valid_lname and valid_layer and
+            valid_activation and valid_config):
         raise AssertionError(log)
 
 # make test suite

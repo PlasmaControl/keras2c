@@ -96,3 +96,14 @@ class TestConfigSupported(unittest.TestCase):
         c = keras.layers.Add()([a, b])
         model = keras.models.Model(inputs=[a, b], outputs=c)
         self.assertRaises(AssertionError, keras2c_main.k2c, model, name)
+
+# keras itself doesnt support multiple axes for batchnorm, but tensorflow.keras does
+
+    # def test_batch_norm_axis(self):
+    #     inshp = (8, 12, 16)
+    #     name = 'foobar'
+    #     axis = (2, 3)
+    #     a = keras.layers.Input(inshp)
+    #     b = keras.layers.BatchNormalization(axis=axis)(a)
+    #     model = keras.models.Model(inputs=a, outputs=b)
+    #     self.assertRaises(AssertionError, keras2c_main.k2c, model, name)

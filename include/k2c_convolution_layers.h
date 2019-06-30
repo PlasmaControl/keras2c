@@ -1,5 +1,5 @@
-#ifndef KERAS2C_CONVOLUTIONS_H
-#define KERAS2C_CONVOLUTIONS_H
+#ifndef KERAS2C_CONVOLUTION_LAYERS_H
+#define KERAS2C_CONVOLUTION_LAYERS_H
 
 #include <stddef.h>
 #include <math.h>
@@ -72,4 +72,4 @@ void k2c_conv1d(k2c_tensor* output, k2c_tensor* input, k2c_tensor* kernel,
   activation(output->array,out_size);
 }
 
-#endif /* KERAS2C_CONVOLUTIONS_H */
+#endif /* KERAS2C_CONVOLUTION_LAYERS_H */

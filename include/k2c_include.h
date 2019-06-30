@@ -8,3 +8,5 @@
 #include "./k2c_recurrent_layers.h"
 #include "./k2c_pooling_layers.h"
 #include "./k2c_merge_layers.h"
+#include "./k2c_normalization_layers.h"
+#include "./k2c_embedding_layers.h"
