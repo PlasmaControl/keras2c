@@ -229,7 +229,7 @@ def write_weights_Pooling1D(layer, file, model_io):
     s += 'size_t ' + layer.name + '_pool_size = ' + str(pool_size) + '; \n'
     file.write(s)
 
-    inputs, outputs = get_layer_io_names(layer)
+    _, outputs = get_layer_io_names(layer)
     for i, outp in enumerate(outputs):
         inshp = layer.get_input_at(i).shape[1:]
         outshp = layer.get_output_at(i).shape[1:]
@@ -313,12 +313,12 @@ def write_weights_PReLU(layer, file, model_io):
 
 def write_weights_Reshape(layer, file, model_io):
     nm = layer.name
-    newshp = model.layers[1].get_config()['target_shape']
+    newshp = layer.get_config()['target_shape']
     newndim = len(newshp)
-    newshp = np.concatenate((shp, np.ones(maxndim-ndim)))
+    newshp = np.concatenate((newshp, np.ones(maxndim-newndim)))
     s = 'size_t ' + nm + '_newndim = ' + str(newndim) + '; \n'
-    s += 'size_t' + nm + '_newshp[K2C_MAX_NDIM] = {' + \
-        str(np.array2string(shp.astype(int), separator=',')[1:-1]) + '}; \n'
+    s += 'size_t ' + nm + '_newshp[K2C_MAX_NDIM] = {' + \
+        str(np.array2string(newshp.astype(int), separator=',')[1:-1]) + '}; \n'
     file.write(s + '\n\n')
 
 
@@ -339,12 +339,15 @@ def write_weights_RepeatVector(layer, file, model_io):
 
 
 def write_weights_Dot(layer, file, model_io):
+    nm = layer.name
     write_outputs(layer, file, model_io)
-    axes = np.array(model.layers[2].get_config()['axes']) - 1
-    s = 'size_t ' + layer.name + '_axesA[1] = {' + str(axes[0]) + '}; \n'
-    s += 'size_t ' + layer.name + '_axesB[1] = {' + str(axes[1]) + '}; \n'
-    s += 'size_t ' + layer.name + '_naxes = 1; \n'
-    s += 'float ' + layer.name + '_fwork[' + str(work_size) + '] = {0}; \n'
+    work_size = np.prod(layer.input[0].shape[1:]) + \
+        np.prod(layer.input[1].shape[1:])
+    axes = np.array(layer.get_config()['axes']) - 1
+    s = 'size_t ' + nm + '_axesA[1] = {' + str(axes[0]) + '}; \n'
+    s += 'size_t ' + nm + '_axesB[1] = {' + str(axes[1]) + '}; \n'
+    s += 'size_t ' + nm + '_naxes = 1; \n'
+    s += 'float ' + nm + '_fwork[' + str(work_size) + '] = {0}; \n'
     s += 'int ' + nm + '_normalize = ' + \
         str(int(layer.get_config()['normalize'])) + '; \n'
     file.write(s)
@@ -407,11 +410,12 @@ def weights2c(layer, file, model_io):
 
 def write_layer_LSTM(layer, file, inputs, outputs, i):
     nm = layer.name
+    pnm = '&' + nm
     output_activation = 'k2c_' + layer.get_config()['activation']
     recurrent_activation = 'k2c_' + layer.get_config()['recurrent_activation']
 
-    s = 'k2c_lstm(' + outputs + ',' + inputs + ',' + nm + '_state,' + nm + '_kernel, \n\t' + \
-        nm + '_recurrent_kernel,' + nm + '_bias,' + nm + '_fwork, \n\t' + \
+    s = 'k2c_lstm(' + outputs + ',' + inputs + ',' + nm + '_state,' + pnm + '_kernel, \n\t' + \
+        pnm + '_recurrent_kernel,' + pnm + '_bias,' + nm + '_fwork, \n\t' + \
         nm + '_go_backwards,' + nm + '_return_sequences, \n\t' + \
         recurrent_activation + ',' + output_activation + '); \n'
     file.write(s)
@@ -419,28 +423,31 @@ def write_layer_LSTM(layer, file, inputs, outputs, i):
 
 def write_layer_Dense(layer, file, inputs, outputs, i):
     nm = layer.name
+    pnm = '&' + nm
     activation = 'k2c_' + layer.get_config()['activation']
 
-    s = 'k2c_dense(' + outputs + ',' + inputs + ',' + nm + '_kernel, \n\t' + \
-        nm + '_bias,' + activation + ',' + nm + '_fwork); \n'
+    s = 'k2c_dense(' + outputs + ',' + inputs + ',' + pnm + '_kernel, \n\t' + \
+        pnm + '_bias,' + activation + ',' + nm + '_fwork); \n'
     file.write(s)
 
 
 def write_layer_Conv1D(layer, file, inputs, outputs, i):
     nm = layer.name
+    pnm = '&' + nm
     activation = 'k2c_' + layer.get_config()['activation']
 
     s = 'k2c_pad1d(' + nm + '_padded' + str(i) + '_input,' + inputs + ',' + nm + \
         '_fill' + str(i) + ', \n\t' + nm + '_pad' + str(i) + \
         '_top,' + nm + '_pad' + str(i) + '_bottom); \n'
     file.write(s)
-    s = 'k2c_conv1d(' + outputs + ',' + nm + '_padded' + str(i) + '_input,' + nm + '_kernel, \n\t' + \
-        nm + '_bias,' + nm + '_stride,' + nm + '_dilation,' + activation + '); \n'
+    s = 'k2c_conv1d(' + outputs + ',' + pnm + '_padded' + str(i) + '_input,' + pnm + '_kernel, \n\t' + \
+        pnm + '_bias,' + nm + '_stride,' + nm + '_dilation,' + activation + '); \n'
     file.write(s)
 
 
 def write_layer_Pooling1D(layer, file, inputs, outputs, i):
     nm = layer.name
+    pnm = '&' + nm
     s = 'k2c_pad1d(' + nm + '_padded' + str(i) + '_input,' + inputs + ',' + nm + \
         '_fill' + str(i) + ', \n\t' + nm + '_pad' + str(i) + \
         '_top,' + nm + '_pad' + str(i) + '_bottom); \n'
@@ -449,7 +456,7 @@ def write_layer_Pooling1D(layer, file, inputs, outputs, i):
         s = 'k2c_maxpool1d('
     else:
         s = 'k2c_avgpool1d('
-    s += outputs + ',' + nm + '_padded' + str(i) + '_input,' + nm + '_pool_size, \n\t' + \
+    s += outputs + ',' + pnm + '_padded' + str(i) + '_input,' + nm + '_pool_size, \n\t' + \
         nm + '_stride); \n'
     file.write(s)
 
@@ -485,11 +492,12 @@ def write_layer_Merge(layer, file, inputs, outputs, i):
 
 def write_layer_GRU(layer, file, inputs, outputs, i):
     nm = layer.name
+    pnm = '&' + nm
     output_activation = 'k2c_' + layer.get_config()['activation']
     recurrent_activation = 'k2c_' + layer.get_config()['recurrent_activation']
 
-    s = 'k2c_gru(' + outputs + ',' + inputs + ',' + nm + '_state,' + nm + '_kernel, \n\t' + \
-        nm + '_recurrent_kernel,' + nm + '_bias,' + nm + '_fwork, \n\t' + \
+    s = 'k2c_gru(' + outputs + ',' + inputs + ',' + nm + '_state,' + pnm + '_kernel, \n\t' + \
+        pnm + '_recurrent_kernel,' + pnm + '_bias,' + nm + '_fwork, \n\t' + \
         nm + '_reset_after,' + nm + '_go_backwards,' + nm + '_return_sequences, \n\t' + \
         recurrent_activation + ',' + output_activation + '); \n'
     file.write(s)
@@ -497,59 +505,83 @@ def write_layer_GRU(layer, file, inputs, outputs, i):
 
 def write_layer_SimpleRNN(layer, file, inputs, outputs, i):
     nm = layer.name
+    pnm = '&' + nm
     activation = 'k2c_' + layer.get_config()['activation']
 
-    s = 'k2c_simpleRNN(' + outputs + ',' + inputs + ',' + nm + '_state,' + nm + '_kernel, \n\t' + \
-        nm + '_recurrent_kernel,' + nm + '_bias,' + nm + '_fwork, \n\t' + \
+    s = 'k2c_simpleRNN(' + outputs + ',' + inputs + ',' + nm + '_state,' + pnm + '_kernel, \n\t' + \
+        pnm + '_recurrent_kernel,' + pnm + '_bias,' + nm + '_fwork, \n\t' + \
         nm + '_go_backwards,' + nm + '_return_sequences,' + activation + '); \n'
     file.write(s)
 
 
-def write_layer_Activation(layer, file, inputs, outputs, i):
+def write_layer_Activation(layer, file, inputs, outputs, i, is_model_input, is_model_output):
     activation = 'k2c_' + layer.get_config()['activation']
-    s = activation + '(' + inputs + '.array,' + inputs + '.numel); \n'
-    s += 'k2c_tensor *' + outputs + ' = ' + inputs + '; // rename for clarity \n'
+    if is_model_input:
+        inp = inputs + '->'
+    else:
+        inp = inputs[1:] + '.'
+    s = activation + '(' + inp + 'array,' + inp + 'numel); \n'
     file.write(s)
+    write_dummy_layer(layer, file, inputs, outputs, i,
+                      is_model_input, is_model_output)
 
 
-def write_layer_AdvancedActivation(layer, file, inputs, outputs, i):
+def write_layer_AdvancedActivation(layer, file, inputs, outputs, i, is_model_input, is_model_output):
     nm = layer.name
+    if is_model_input:
+        inp = inputs + '->'
+    else:
+        inp = inputs[1:] + '.'
+
     if layer_type(layer) == 'LeakyReLU':
-        s = 'k2c_LeakyReLU(' + inputs + '.array,' + \
-            inputs + '.numel,' + nm + '_alpha); \n'
+        s = 'k2c_LeakyReLU(' + inp + 'array,' + \
+            inp + 'numel,' + nm + '_alpha); \n'
     if layer_type(layer) == 'PReLU':
-        s = 'k2c_PReLU(' + inputs + '.array,' + inputs + \
-            '.numel,' + nm + '_alpha.array); \n'
+        s = 'k2c_PReLU(' + inp + 'array,' + inp + \
+            'numel,' + nm + '_alpha.array); \n'
     if layer_type(layer) == 'ELU':
-        s = 'k2c_ELU(' + inputs + '.array,' + inputs + \
-            '.numel,' + nm + '_alpha); \n'
+        s = 'k2c_ELU(' + inp + 'array,' + inp + \
+            'numel,' + nm + '_alpha); \n'
     if layer_type(layer) == 'ThresholdedReLU':
-        s = 'k2c_ThresholdedReLU(' + inputs + '.array,' + \
-            inputs + '.numel,' + nm + '_theta); \n'
+        s = 'k2c_ThresholdedReLU(' + inp + 'array,' + \
+            inp + 'numel,' + nm + '_theta); \n'
     if layer_type(layer) == 'ReLU':
-        s = 'k2c_ReLU(' + inputs + '.array,' + inputs + '.numel,' + nm + '_max_value, \n\t' + \
+        s = 'k2c_ReLU(' + inp + 'array,' + inp + 'numel,' + nm + '_max_value, \n\t' + \
             nm + '_negative_slope,' + nm + '_threshold); \n'
-    s += 'k2c_tensor *' + outputs + ' = ' + inputs + '; // rename for clarity \n'
+    file.write(s)
+    write_dummy_layer(layer, file, inputs, outputs, i,
+                      is_model_input, is_model_output)
+
+
+def write_dummy_layer(layer, file, inputs, outputs, i, is_model_input, is_model_output):
+    if is_model_output:
+        s = outputs + '->ndim = ' + \
+            inputs[1:] + '.ndim; // copy data into output struct \n'
+        s += outputs + '->numel = ' + inputs[1:] + '.numel; \n'
+        s = 'memcpy(' + outputs + '->shape,' + inputs[1:] + \
+            '.shape,K2C_MAX_NDIM*sizeof(size_t));  \n'
+        s += 'memcpy(' + outputs + '->array,' + inputs[1:] + '.array,' + \
+            outputs + '->numel*sizeof(' + outputs + '->array[0])); \n'
+    else:
+        s = 'k2c_tensor ' + str(outputs[1:]) + '; \n'
+        s += 'memcpy(' + outputs + ',' + inputs + \
+             ',sizeof(k2c_tensor)); // rename for clarity \n'
     file.write(s)
 
 
-def write_dummy_layer(layer, file, inputs, outputs, i):
-    s = 'k2c_tensor ' + outputs + ' = ' + inputs + \
-        '; // layer only acts during training, during predict just rename for clarity \n'
-    file.write(s)
-
-
-def write_layer_Reshape(layer, file, inputs, outputs, i):
+def write_layer_Reshape(layer, file, inputs, outputs, i, is_model_input, is_model_output):
     nm = layer.name
     s = 'k2c_reshape(' + inputs + ',' + nm + '_newshp,' + nm + '_newndim); \n'
-    s += 'k2c_tensor *' + outputs + ' = ' + inputs + '; // rename for clarity \n'
     file.write(s)
+    write_dummy_layer(layer, file, inputs, outputs, i,
+                      is_model_input, is_model_output)
 
 
-def write_layer_Flatten(layer, file, inputs, outputs, i):
+def write_layer_Flatten(layer, file, inputs, outputs, i, is_model_input, is_model_output):
     s = 'k2c_flatten(' + inputs + '); \n'
-    s += 'k2c_tensor *' + outputs + ' = ' + inputs + '; // rename for clarity \n'
     file.write(s)
+    write_dummy_layer(layer, file, inputs, outputs, i,
+                      is_model_input, is_model_output)
 
 
 def write_layer_Permute(layer, file, inputs, outputs, i):
@@ -566,13 +598,13 @@ def write_layer_RepeatVector(layer, file, inputs, outputs, i):
 
 def write_layer_Dot(layer, file, inputs, outputs, i):
     nm = layer.name
-    s = 'k2c_dot(' + outputs + ',' + inputs[0] + ',' + inputs[1] + ',' + nm + '_axesA,' + nm + 'axesB,' + \
+    s = 'k2c_dot(' + outputs + ',' + inputs[0] + ',' + inputs[1] + ',' + nm + \
+        '_axesA,' + '\n\t' + nm + '_axesB,' + \
         nm + '_naxes,' + nm + '_normalize,' + nm + '_fwork); \n'
     file.write(s)
 
 
-def layer2c(layer, file, inputs, outputs, i):
-
+def layer2c(layer, file, inputs, outputs, i, is_model_input, is_model_output):
     if layer_type(layer) == 'Dense':
         write_layer_Dense(layer, file, inputs, outputs, i)
 
@@ -598,20 +630,25 @@ def layer2c(layer, file, inputs, outputs, i):
         write_layer_Merge(layer, file, inputs, outputs, i)
 
     elif layer_type(layer) == 'Activation':
-        write_layer_Activation(layer, file, inputs, outputs, i)
+        write_layer_Activation(layer, file, inputs, outputs,
+                               i, is_model_input, is_model_output)
 
     elif layer_type(layer) in ['LeakyReLU', 'PReLU', 'ELU', 'ThresholdedReLU', 'ReLU']:
-        write_layer_AdvancedActivation(layer, file, inputs, outputs, i)
+        write_layer_AdvancedActivation(
+            layer, file, inputs, outputs, i, is_model_input, is_model_output)
 
     elif layer_type(layer) == 'Reshape':
-        write_layer_Reshape(layer, file, inputs, outputs, i)
+        write_layer_Reshape(layer, file, inputs, outputs, i,
+                            is_model_input, is_model_output)
 
     elif layer_type(layer) == 'Flatten':
-        write_layer_Flatten(layer, file, inputs, outputs, i)
+        write_layer_Flatten(layer, file, inputs, outputs, i,
+                            is_model_input, is_model_output)
 
     elif layer_type(layer) in ['Dropout', 'SpatialDropout1D', 'SpatialDropout2D', 'SpatialDropout3D', 'ActivityRegularization',
                                'GaussianNoise', 'GaussianDropout', 'AlphaDropout']:
-        write_dummy_layer(layer, file, inputs, outputs, i)
+        write_dummy_layer(layer, file, inputs, outputs, i,
+                          is_model_input, is_model_output)
 
     elif layer_type(layer) == 'Permute':
         write_layer_Permute(layer, file, inputs, outputs, i)
@@ -623,7 +660,7 @@ def layer2c(layer, file, inputs, outputs, i):
         write_layer_Dot(layer, file, inputs, outputs, i)
 
 
-### types, names, io
+# types, names, io
 
 def layer_type(layer):
     return str(layer.__class__).split('.')[-1][0:-2]
@@ -724,9 +761,9 @@ def model2c(model, file, function_name):
     s += '#include <stdarg.h> \n#include "k2c_include.h" \n'
     s += '\n \n'
     s += 'void ' + function_name + '('
-    s_in = ['k2c_tensor ' + in_nm + '_input' for in_nm in model_inputs]
+    s_in = ['k2c_tensor* ' + in_nm + '_input' for in_nm in model_inputs]
     s += ', '.join(s_in) + ', '
-    s_out = ['k2c_tensor ' + out_nm + '_output' for out_nm in model_outputs]
+    s_out = ['k2c_tensor* ' + out_nm + '_output' for out_nm in model_outputs]
     s += ', '.join(s_out) + ') { \n \n'
     file.write(s)
 
@@ -740,20 +777,44 @@ def model2c(model, file, function_name):
         for layer in model.layers:
             layer_inputs, layer_outputs = get_layer_io_names(layer)
             for i, (inp, outp) in enumerate(zip(layer_inputs, layer_outputs)):
-                if (set(flatten(inp)).issubset(written_io) and set(flatten(outp)).issubset(unwritten_io)) \
-                        or layer_type(layer) == 'InputLayer':
+                if (set(flatten(inp)).issubset(written_io) and
+                        set(flatten(outp)).issubset(unwritten_io))or \
+                        layer_type(layer) == 'InputLayer':
+
                     print('Writing layer ', outp)
-                    if set(flatten(inp)).issubset(set(model_inputs)):
-                        if isinstance(inp, list):
-                            inp_nm = [nm + '_input' for nm in inp]
-                        else:
-                            inp_nm = inp + '_input'
+                    is_model_input = False
+                    is_model_output = False
+                    if isinstance(inp, list):
+                        inp_nm = []
+                        for i in inp:
+                            if i in model_inputs:
+                                inp_nm.append(i + '_input')
+                                is_model_input = True
+                            else:
+                                inp_nm.append('&' + i + '_output')
                     else:
-                        if isinstance(inp, list):
-                            inp_nm = [nm + '_output' for nm in inp]
+                        if inp in model_inputs:
+                            inp_nm = inp + '_input'
+                            is_model_input = True
                         else:
-                            inp_nm = inp + '_output'
-                    layer2c(layer, file, inp_nm, outp + '_output', i)
+                            inp_nm = '&' + inp + '_output'
+                    if isinstance(outp, list):
+                        outp_nm = []
+                        for o in outp:
+                            if o in model_outputs:
+                                outp_nm.append(outp + '_output')
+                                is_model_outut = True
+                            else:
+                                outp_nm.append('&' + outp + '_output')
+                    else:
+                        if outp in model_outputs:
+                            outp_nm = outp + '_output'
+                            is_model_output = True
+                        else:
+                            outp_nm = '&' + outp + '_output'
+
+                    layer2c(layer, file, inp_nm, outp_nm,
+                            i, is_model_input, is_model_output)
                     written_io |= set(flatten(inp))
                     written_io |= set(flatten(outp))
                     unwritten_io -= set(flatten(inp))
@@ -816,7 +877,7 @@ def layers_supported_check(model):
     recur_layers = ['LSTM', 'GRU', 'SimpleRNN']
     embed_layers = []
     merge_layers = ['Add', 'Subtract', 'Multiply',
-                    'Average', 'Maximum', 'Minimum']
+                    'Average', 'Maximum', 'Minimum', 'Dot']
     activ_layers = ['LeakyReLU', 'PReLU', 'ELU', 'ThresholdedReLU', 'ReLU']
     norm_layers = []
     noise_layers = ['GaussianNoise', 'GaussianDropout', 'AlphaDropout']
@@ -912,7 +973,7 @@ def check_model(model, function_name):
 def make_test_suite(model, function_name, num_tests=10, tol=1e-5):
     print('Writing tests')
     input_shape = []
-    #output_shape = []
+    # output_shape = []
     model_inputs, model_outputs = get_model_io_names(model)
     num_inputs = len(model_inputs)
     num_outputs = len(model_outputs)
@@ -924,7 +985,7 @@ def make_test_suite(model, function_name, num_tests=10, tol=1e-5):
     file = open(function_name + '_test_suite.c', "x+")
     s = '#include <stdio.h> \n#include <math.h> \n#include <sys/time.h> \n#include "' + \
         function_name + '.h" \n\n'
-    s += 'float norm2(k2c_tensor *tensor1, k2c_tensor *tensor2);\n'
+    s += 'float maxabs(k2c_tensor *tensor1, k2c_tensor *tensor2);\n'
     s += 'struct timeval GetTimeStamp(); \n \n'
     file.write(s)
     s = 'int main(){\n'
@@ -934,7 +995,7 @@ def make_test_suite(model, function_name, num_tests=10, tol=1e-5):
         ct = 0
         while True:
             rand_inputs = []
-            for j in range(len(model_inputs)):
+            for j, _ in enumerate(model_inputs):
                 rand_input = np.random.random(input_shape[j])
                 rand_input = rand_input[np.newaxis, ...]
                 rand_inputs.insert(j, rand_input)
@@ -945,14 +1006,14 @@ def make_test_suite(model, function_name, num_tests=10, tol=1e-5):
             if ct > 20:
                 raise Exception('Cannot find inputs to the \
                 network that result in a finite output')
-        for j in range(len(model_inputs)):
+        for j, _ in enumerate(model_inputs):
             file.write(array2c(np.squeeze(rand_inputs[j]), 'test' + str(i+1) +
                                '_' + model_inputs[j] + '_input'))
 
             # write predictions
         if not isinstance(outputs, list):
             outputs = [outputs]
-            for j in range(len(model_outputs)):
+            for j, _ in enumerate(model_outputs):
                 output = outputs[j][0, :]
                 file.write(array2c(output, 'keras_' +
                                    model_outputs[j] + '_test' + str(i+1)))
@@ -965,11 +1026,11 @@ def make_test_suite(model, function_name, num_tests=10, tol=1e-5):
     file.write(s)
     for i in range(num_tests):
         s = function_name + '('
-        for j, inpt in enumerate(model_inputs):
-            s += 'test' + str(i+1) + '_' + model_inputs[j] + '_input,'
+        for j, _ in enumerate(model_inputs):
+            s += '&test' + str(i+1) + '_' + model_inputs[j] + '_input,'
         s += '\n\t'
-        for j, outpt in enumerate(model_outputs):
-            s += 'c_' + model_outputs[j] + '_test' + str(i+1) + ','
+        for j, _ in enumerate(model_outputs):
+            s += '&c_' + model_outputs[j] + '_test' + str(i+1) + ','
         s = s[:-1] + '); \n'
         file.write(s)
     file.write('\n')
@@ -982,7 +1043,7 @@ def make_test_suite(model, function_name, num_tests=10, tol=1e-5):
     file.write(s)
     for i in range(num_tests):
         for j, outpt in enumerate(model_outputs):
-            s = 'errors[' + str(i*num_outputs+j) + '] = norm2(&keras_' + model_outputs[j] + '_test' + \
+            s = 'errors[' + str(i*num_outputs+j) + '] = maxabs(&keras_' + model_outputs[j] + '_test' + \
                 str(i+1) + ',&c_' + \
                 model_outputs[j] + '_test' + str(i+1) + '); \n'
             file.write(s)
@@ -990,18 +1051,20 @@ def make_test_suite(model, function_name, num_tests=10, tol=1e-5):
     s += 'for(size_t i=1; i< num_tests*num_outputs;i++){ \n'
     s += 'if (errors[i] > maxerror) { \n'
     s += 'maxerror = errors[i];}} \n'
-    s += 'printf("Max L2 norm of output errors for ' + \
+    s += 'printf("Max absolute error for ' + \
         str(num_tests) + ' tests: %f \\n", maxerror);\n'
     file.write(s)
     s = 'if (maxerror > ' + str(tol) + ') { \n'
     s += 'return 1;} \n'
     s += 'return 0;\n} \n\n'
     file.write(s)
-    s = """float norm2(k2c_tensor *tensor1, k2c_tensor *tensor2){ \n
-    float sum = 0; \n
+    s = """float maxabs(k2c_tensor *tensor1, k2c_tensor *tensor2){ \n
+    float x = 0; \n
+    float y = 0; \n
     for(size_t i=0; i<tensor1->numel; i++){\n
-    sum += (tensor1->array[i]-tensor2->array[i])*(tensor1->array[i]-tensor2->array[i]);}\n
-    return sqrt(sum);}\n\n"""
+    y = fabs(tensor1->array[i]-tensor2->array[i]);
+    if (y>x) {x=y;}}
+    return x;}\n\n"""
     file.write(s)
     s = """struct timeval GetTimeStamp() {
     struct timeval tv;
