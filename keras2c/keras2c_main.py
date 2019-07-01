@@ -213,7 +213,7 @@ def write_weights_Dense(layer, file, model_io):
 
 
 def write_weights_Conv1D(layer, file, model_io):
-    pad = layer.get_config()['padding']
+    padding = layer.get_config()['padding']
     stride = layer.get_config()['strides'][0]
     dilation = layer.get_config()['dilation_rate'][0]
     kernel_size = layer.get_config()['kernel_size'][0]
@@ -221,42 +221,77 @@ def write_weights_Conv1D(layer, file, model_io):
     s += 'size_t ' + layer.name + '_dilation = ' + str(dilation) + '; \n'
     file.write(s)
 
-    _, outputs = get_layer_io_names(layer)
-    for i, outp in enumerate(outputs):
-        inshp = layer.get_input_at(i).shape[1:]
-        outshp = layer.get_output_at(i).shape[1:]
-        inrows = inshp[0]
-        incols = inshp[1]
-        if pad == 'causal':
-            pad_along_height = dilation*(kernel_size-1)
-            pad_top = pad_along_height
-            pad_bottom = 0
-        elif pad == 'same':
-            pad_along_height = dilation*(kernel_size-1)
-            pad_top = int(pad_along_height // 2)
-            pad_bottom = int(pad_along_height - pad_top)
-        elif pad == 'valid':
-            pad_top = 0
-            pad_bottom = 0
-
-        file.write(array2c(np.zeros((inrows+pad_top+pad_bottom, incols)),
-                           layer.name + '_padded' + str(i) + '_input'))
-        s = 'size_t ' + layer.name + '_pad' + \
-            str(i) + '_top = ' + str(pad_top) + '; \n'
-        s += 'size_t ' + layer.name + '_pad' + \
-            str(i) + '_bottom = ' + str(pad_bottom) + '; \n'
-        s += 'float ' + layer.name + '_fill' + str(i) + ' = 0; \n'
+    write_outputs(layer, file, model_io)
+    inshp = layer.get_input_at(0).shape[1:]
+    outshp = layer.get_output_at(0).shape[1:]
+    if padding == 'causal':
+        pad_along_height = dilation*(kernel_size-1)
+        pad_top = pad_along_height
+        pad_bottom = 0
+        file.write(array2c(np.zeros((inshp[0]+pad_top+pad_bottom, inshp[1])),
+                           layer.name + '_padded_input'))
+        s = 'size_t ' + layer.name + '_pad[2] = {' + str(pad_top) + ','\
+            + str(pad_bottom) + '}; \n'
+        s += 'float ' + layer.name + '_fill = 0.0f; \n'
         file.write(s)
-        if outp not in model_io[1]:
-            file.write(array2c(np.zeros(outshp), outp + '_output'))
+    elif padding == 'same':
+        pad_along_height = dilation*(kernel_size-1)
+        pad_top = int(pad_along_height // 2)
+        pad_bottom = int(pad_along_height - pad_top)
+        file.write(array2c(np.zeros((inshp[0]+pad_top+pad_bottom, inshp[1])),
+                           layer.name + '_padded_input'))
+        s = 'size_t ' + layer.name + '_pad[2] = {' + str(pad_top) + ','\
+            + str(pad_bottom) + '}; \n'
+        s += 'float ' + layer.name + '_fill = 0.0f; \n'
+        file.write(s)
 
     weights = layer.get_weights()
-    filters = weights[0]
+    kernel = weights[0]
     if layer.get_config()['use_bias']:
         bias = weights[1]
     else:
-        bias = np.zeros(filters.shape[2])
-    file.write(array2c(filters, layer.name + '_kernel'))
+        bias = np.zeros(kernel.shape[2])
+    file.write(array2c(kernel, layer.name + '_kernel'))
+    file.write(array2c(bias, layer.name + '_bias'))
+    file.write('\n \n')
+
+
+def write_weights_Conv2D(layer, file, model_io):
+    padding = layer.get_config()['padding']
+    stride = layer.get_config()['strides']
+    dilation = layer.get_config()['dilation_rate']
+    kernel_size = layer.get_config()['kernel_size']
+    s = 'size_t ' + layer.name + \
+        '_stride[2] = {' + ','.join([str(i) for i in stride]) + '}; \n'
+    s += 'size_t ' + layer.name + \
+        '_dilation[2] = {' + ','.join([str(i) for i in dilation]) + '}; \n'
+    file.write(s)
+
+    write_outputs(layer, file, model_io)
+    if padding == 'same':
+        inshp = layer.get_input_at(0).shape[1:]
+        pad_along_height = dilation[0]*(kernel_size[0]-1)
+        pad_top = int(pad_along_height // 2)
+        pad_bottom = int(pad_along_height - pad_top)
+        pad_along_width = dilation[1]*(kernel_size[1]-1)
+        pad_left = pad_along_width//2
+        pad_right = pad_along_width - pad_left
+        padshp = (inshp[0]+pad_along_height,
+                  inshp[1]+pad_along_width, inshp[2])
+        pad = [pad_top, pad_bottom, pad_left, pad_right]
+        file.write(array2c(np.zeros(padshp), layer.name + '_padded_input'))
+        s = 'size_t ' + layer.name + \
+            '_pad[4] = {' + ','.join([str(i) for i in pad]) + '}; \n'
+        s += 'float ' + layer.name + '_fill = 0.0f; \n'
+        file.write(s)
+
+    weights = layer.get_weights()
+    kernel = weights[0]
+    if layer.get_config()['use_bias']:
+        bias = weights[1]
+    else:
+        bias = np.zeros(kernel.shape[3])
+    file.write(array2c(kernel, layer.name + '_kernel'))
     file.write(array2c(bias, layer.name + '_bias'))
     file.write('\n \n')
 
@@ -269,31 +304,23 @@ def write_weights_Pooling1D(layer, file, model_io):
     s += 'size_t ' + layer.name + '_pool_size = ' + str(pool_size) + '; \n'
     file.write(s)
 
-    _, outputs = get_layer_io_names(layer)
-    for i, outp in enumerate(outputs):
-        inshp = layer.get_input_at(i).shape[1:]
-        outshp = layer.get_output_at(i).shape[1:]
-        inrows = inshp[0]
-        incols = inshp[1]
-        if pad == 'same':
-            pad_along_height = max((outshp[0] - 1) * stride +
-                                   pool_size - inshp[0], 0)
-            pad_top = int(pad_along_height // 2)
-            pad_bottom = int(pad_along_height - pad_top)
-        elif pad == 'valid':
-            pad_top = 0
-            pad_bottom = 0
-        file.write(array2c(np.zeros((inrows+pad_top+pad_bottom, incols)),
-                           layer.name + '_padded' + str(i) + '_input'))
-        s = 'size_t ' + layer.name + '_pad' + \
-            str(i) + '_top = ' + str(pad_top) + '; \n'
-        s += 'size_t ' + layer.name + '_pad' + \
-            str(i) + '_bottom = ' + str(pad_bottom) + '; \n'
-        s += 'float ' + layer.name + '_fill' + str(i) + ' = -HUGE_VALF; \n'
-        file.write(s)
-        if outp not in model_io[1]:
-            file.write(array2c(np.zeros(outshp), outp + '_output'))
-
+    write_outputs(layer, file, model_io)
+    inshp = layer.get_input_at(0).shape[1:]
+    outshp = layer.get_output_at(0).shape[1:]
+    if pad == 'same':
+        pad_along_height = max((outshp[0] - 1) * stride +
+                               pool_size - inshp[0], 0)
+        pad_top = int(pad_along_height // 2)
+        pad_bottom = int(pad_along_height - pad_top)
+    elif pad == 'valid':
+        pad_top = 0
+        pad_bottom = 0
+    file.write(array2c(np.zeros((inshp[0]+pad_top+pad_bottom, inshp[1])),
+                       layer.name + '_padded_input'))
+    s = 'size_t ' + layer.name + '_pad[2] = {' + str(pad_top) + ','\
+        + str(pad_bottom) + '}; \n'
+    s += 'float ' + layer.name + '_fill = -HUGE_VALF; \n'
+    file.write(s)
     file.write('\n \n')
 
 
@@ -401,6 +428,31 @@ def write_weights_Embedding(layer, file, model_io):
     file.write('\n\n')
 
 
+def write_weights_ZeroPad1D(layer, file, model_io):
+    nm = layer.name
+    write_outputs(layer, file, model_io)
+    pad_top = layer.get_config()['padding'][0]
+    pad_bottom = layer.get_config()['padding'][1]
+    s = 'size_t ' + nm + '_pad[2] = {' + str(pad_top) + ','\
+        + str(pad_bottom) + '}; \n'
+    s += 'float ' + nm + '_fill = 0.0f; \n'
+    file.write(s)
+
+
+def write_weights_ZeroPad2D(layer, file, model_io):
+    nm = layer.name
+    write_outputs(layer, file, model_io)
+    pad_top = layer.get_config()['padding'][0][0]
+    pad_bottom = layer.get_config()['padding'][0][1]
+    pad_left = layer.get_config()['padding'][1][0]
+    pad_right = layer.get_config()['padding'][1][1]
+    s = 'size_t ' + nm + '_pad[4] = {' + str(pad_top) + ','\
+        + str(pad_bottom) + ',' + str(pad_left) + \
+        ',' + str(pad_right) + '}; \n'
+    s += 'float ' + nm + '_fill = 0.0f; \n'
+    file.write(s)
+
+
 def weights2c(layer, file, model_io):
     if layer_type(layer) == 'Dense':
         write_weights_Dense(layer, file, model_io)
@@ -416,6 +468,9 @@ def weights2c(layer, file, model_io):
 
     elif layer_type(layer) == 'Conv1D':
         write_weights_Conv1D(layer, file, model_io)
+
+    elif layer_type(layer) == 'Conv2D':
+        write_weights_Conv2D(layer, file, model_io)
 
     elif layer_type(layer) in ['Add', 'Subtract', 'Multiply', 'Maximum', 'Minimum', 'Average']:
         write_weights_Merge(layer, file, model_io)
@@ -459,8 +514,14 @@ def weights2c(layer, file, model_io):
     elif layer_type(layer) == 'Embedding':
         write_weights_Embedding(layer, file, model_io)
 
+    elif layer_type(layer) == 'ZeroPadding1D':
+        write_weights_ZeroPad1D(layer, file, model_io)
 
-# layer2c
+    elif layer_type(layer) == 'ZeroPadding2D':
+        write_weights_ZeroPad2D(layer, file, model_io)
+
+        # layer2c
+
 
 def write_layer_LSTM(layer, file, inputs, outputs, i):
     nm = layer.name
@@ -489,29 +550,52 @@ def write_layer_Conv1D(layer, file, inputs, outputs, i):
     nm = layer.name
     pnm = '&' + nm
     activation = 'k2c_' + layer.get_config()['activation']
-
-    s = 'k2c_pad1d(' + pnm + '_padded' + str(i) + '_input,' + inputs + ',' + nm + \
-        '_fill' + str(i) + ', \n\t' + nm + '_pad' + str(i) + \
-        '_top,' + nm + '_pad' + str(i) + '_bottom); \n'
+    if layer.get_config()['padding'] == 'valid':
+        s = 'k2c_conv1d(' + outputs + ',' + inputs + ',' + \
+            pnm + '_kernel, \n\t' + pnm + '_bias,' + nm + \
+            '_stride,' + nm + '_dilation,' + activation + '); \n'
+    else:
+        write_layer_ZeroPad(layer, file, inputs, pnm +
+                            '_padded_input', i)
+        s = 'k2c_conv1d(' + outputs + ',' + pnm + '_padded_input,' + \
+            pnm + '_kernel, \n\t' + pnm + '_bias,' + nm + \
+            '_stride,' + nm + '_dilation,' + activation + '); \n'
     file.write(s)
-    s = 'k2c_conv1d(' + outputs + ',' + pnm + '_padded' + str(i) + '_input,' + pnm + '_kernel, \n\t' + \
-        pnm + '_bias,' + nm + '_stride,' + nm + '_dilation,' + activation + '); \n'
+
+
+def write_layer_Conv2D(layer, file, inputs, outputs, i):
+    nm = layer.name
+    pnm = '&' + nm
+    activation = 'k2c_' + layer.get_config()['activation']
+    if layer.get_config()['padding'] == 'valid':
+        s = 'k2c_conv2d(' + outputs + ',' + inputs + ',' + \
+            pnm + '_kernel, \n\t' + pnm + '_bias,' + nm + \
+            '_stride,' + nm + '_dilation,' + activation + '); \n'
+    else:
+        write_layer_ZeroPad(layer, file, inputs, pnm +
+                            '_padded_input', i)
+        s = 'k2c_conv2d(' + outputs + ',' + pnm + '_padded_input,' + \
+            pnm + '_kernel, \n\t' + pnm + '_bias,' + nm + \
+            '_stride,' + nm + '_dilation,' + activation + '); \n'
     file.write(s)
 
 
 def write_layer_Pooling1D(layer, file, inputs, outputs, i):
     nm = layer.name
     pnm = '&' + nm
-    s = 'k2c_pad1d(' + pnm + '_padded' + str(i) + '_input,' + inputs + ',' + nm + \
-        '_fill' + str(i) + ', \n\t' + nm + '_pad' + str(i) + \
-        '_top,' + nm + '_pad' + str(i) + '_bottom); \n'
-    file.write(s)
     if 'Max' in layer_type(layer):
-        s = 'k2c_maxpool1d('
+        s = 'k2c_maxpool1d(' + outputs + ','
     else:
-        s = 'k2c_avgpool1d('
-    s += outputs + ',' + pnm + '_padded' + str(i) + '_input,' + nm + '_pool_size, \n\t' + \
-        nm + '_stride); \n'
+        s = 'k2c_avgpool1d(' + outputs + ','
+
+    if layer.get_config()['padding'] == 'valid':
+        s += inputs + ','
+    else:
+        write_layer_ZeroPad(layer, file, inputs, pnm +
+                            '_padded_input', i)
+        s += pnm + '_padded_input,'
+
+    s += nm + '_pool_size, \n\t' + nm + '_stride); \n'
     file.write(s)
 
 
@@ -678,6 +762,21 @@ def write_layer_Embedding(layer, file, inputs, outputs, i):
     file.write(s)
 
 
+def write_layer_ZeroPad(layer, file, inputs, outputs, i):
+    nm = layer.name
+    pnm = '&' + nm
+
+    if layer_type(layer)[-2:] == '1D':
+        s = 'k2c_pad1d('
+    elif layer_type(layer)[-2:] == '2D':
+        s = 'k2c_pad2d('
+    elif layer_type(layer)[-2:] == '3D':
+        s = 'k2c_pad3d('
+    s += outputs + ',' + inputs + ',' + nm + \
+        '_fill, \n\t' + nm + '_pad); \n'
+    file.write(s)
+
+
 def layer2c(layer, file, inputs, outputs, i, is_model_input, is_model_output):
     if layer_type(layer) == 'Dense':
         write_layer_Dense(layer, file, inputs, outputs, i)
@@ -693,6 +792,9 @@ def layer2c(layer, file, inputs, outputs, i, is_model_input, is_model_output):
 
     elif layer_type(layer) == 'Conv1D':
         write_layer_Conv1D(layer, file, inputs, outputs, i)
+
+    elif layer_type(layer) == 'Conv2D':
+        write_layer_Conv2D(layer, file, inputs, outputs, i)
 
     elif layer_type(layer) in ['MaxPooling1D', 'AveragePooling1D']:
         write_layer_Pooling1D(layer, file, inputs, outputs, i)
@@ -738,6 +840,9 @@ def layer2c(layer, file, inputs, outputs, i, is_model_input, is_model_output):
 
     elif layer_type(layer) == 'Embedding':
         write_layer_Embedding(layer, file, inputs, outputs, i)
+
+    elif layer_type(layer) in ['ZeroPadding1D', 'ZeroPadding2D', 'ZeroPadding3D']:
+        write_layer_ZeroPad(layer, file, inputs, outputs, i)
 
 
 # types, names, io
@@ -912,8 +1017,9 @@ def k2c(model, function_name, num_tests=10):
     elif not isinstance(model, (keras.models.Model,
                                 keras.engine.training.Model)):
 
-        raise ValueError(
-            'Unknown model type. Model should either be an instance of keras.models.Model, or a filepath to a saved .h5 model')
+        raise ValueError('Unknown model type. Model should ' +
+                         'either be an instance of keras.models.Model, ' +
+                         'or a filepath to a saved .h5 model')
 
     # check that the model can be converted
     check_model(model, function_name)
@@ -954,7 +1060,8 @@ def layers_supported_check(model):
                    'SpatialDropout1D', 'SpatialDropout2D', 'SpatialDropout3D',
                    'ActivityRegularization', 'Flatten', 'Reshape', 'Permute',
                    'RepeatVector']
-    conv_layers = ['Conv1D']
+    conv_layers = ['Conv1D', 'Conv2D', 'ZeroPadding1D',
+                   'ZeroPadding2D', 'ZeroPadding3D']
     pool_layers = ['MaxPooling1D', 'AveragePooling1D',
                    'GlobalMaxPooling1D', 'GlobalAveragePooling1D']
     local_layers = []
