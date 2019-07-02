@@ -324,7 +324,39 @@ def write_weights_Pooling1D(layer, file, model_io):
     file.write('\n \n')
 
 
-def write_weights_GlobalPooling1D(layer, file, model_io):
+def write_weights_Pooling2D(layer, file, model_io):
+    padding = layer.get_config()['padding']
+    stride = layer.get_config()['strides']
+    pool_size = layer.get_config()['pool_size']
+    s = 'size_t ' + layer.name + \
+        '_stride[2] = {' + ','.join([str(i) for i in stride]) + '}; \n'
+    s += 'size_t ' + layer.name + \
+        '_pool_size[2] = {' + ','.join([str(i) for i in pool_size]) + '}; \n'
+    file.write(s)
+
+    write_outputs(layer, file, model_io)
+    if padding == 'same':
+        inshp = layer.get_input_at(0).shape[1:]
+        outshp = layer.get_output_at(0).shape[1:]
+        pad_along_height = max((outshp[0] - 1) * stride[0] +
+                               pool_size[0] - inshp[0], 0)
+        pad_top = int(pad_along_height // 2)
+        pad_bottom = int(pad_along_height - pad_top)
+        pad_along_width = max((outshp[1] - 1) * stride[1] +
+                              pool_size[1] - inshp[1], 0)
+        pad_left = pad_along_width//2
+        pad_right = pad_along_width - pad_left
+        padshp = (inshp[0]+pad_along_height,
+                  inshp[1]+pad_along_width, inshp[2])
+        pad = [pad_top, pad_bottom, pad_left, pad_right]
+        file.write(array2c(np.zeros(padshp), layer.name + '_padded_input'))
+        s = 'size_t ' + layer.name + \
+            '_pad[4] = {' + ','.join([str(i) for i in pad]) + '}; \n'
+        s += 'float ' + layer.name + '_fill = -HUGE_VALF; \n'
+        file.write(s)
+
+
+def write_weights_GlobalPooling(layer, file, model_io):
     write_outputs(layer, file, model_io)
     file.write('\n\n')
 
@@ -478,8 +510,13 @@ def weights2c(layer, file, model_io):
     elif layer_type(layer) in ['MaxPooling1D', 'AveragePooling1D']:
         write_weights_Pooling1D(layer, file, model_io)
 
-    elif layer_type(layer) in ['GlobalMaxPooling1D', 'GlobalAveragePooling']:
-        write_weights_GlobalPooling1D(layer, file, model_io)
+    elif layer_type(layer) in ['MaxPooling2D', 'AveragePooling2D']:
+        write_weights_Pooling2D(layer, file, model_io)
+
+    elif layer_type(layer) in ['GlobalMaxPooling1D', 'GlobalAveragePooling1D',
+                               'GlobalMaxPooling2D', 'GlobalAveragePooling2D',
+                               'GlobalMaxPooling3D', 'GlobalAveragePooling3D']:
+        write_weights_GlobalPooling(layer, file, model_io)
 
     elif layer_type(layer) == 'LeakyReLU':
         write_weights_LeakyReLU(layer, file, model_io)
@@ -599,11 +636,30 @@ def write_layer_Pooling1D(layer, file, inputs, outputs, i):
     file.write(s)
 
 
-def write_layer_GlobalPooling1D(layer, file, inputs, outputs, i):
+def write_layer_Pooling2D(layer, file, inputs, outputs, i):
+    nm = layer.name
+    pnm = '&' + nm
     if 'Max' in layer_type(layer):
-        s = 'k2c_global_max_pooling_1d('
+        s = 'k2c_maxpool2d(' + outputs + ','
     else:
-        s = 'k2c_global_avg_pooling_1d('
+        s = 'k2c_avgpool2d(' + outputs + ','
+
+    if layer.get_config()['padding'] == 'valid':
+        s += inputs + ','
+    else:
+        write_layer_ZeroPad(layer, file, inputs, pnm +
+                            '_padded_input', i)
+        s += pnm + '_padded_input,'
+
+    s += nm + '_pool_size, \n\t' + nm + '_stride); \n'
+    file.write(s)
+
+
+def write_layer_GlobalPooling(layer, file, inputs, outputs, i):
+    if 'Max' in layer_type(layer):
+        s = 'k2c_global_max_pooling('
+    else:
+        s = 'k2c_global_avg_pooling('
     s += outputs + ',' + inputs + '); \n'
     file.write(s)
 
@@ -799,8 +855,13 @@ def layer2c(layer, file, inputs, outputs, i, is_model_input, is_model_output):
     elif layer_type(layer) in ['MaxPooling1D', 'AveragePooling1D']:
         write_layer_Pooling1D(layer, file, inputs, outputs, i)
 
-    elif layer_type(layer) in ['GlobalMaxPooling1D', 'GlobalAveragePooling1D']:
-        write_layer_GlobalPooling1D(layer, file, inputs, outputs, i)
+    elif layer_type(layer) in ['MaxPooling2D', 'AveragePooling2D']:
+        write_layer_Pooling2D(layer, file, inputs, outputs, i)
+
+    elif layer_type(layer) in ['GlobalMaxPooling1D', 'GlobalAveragePooling1D',
+                               'GlobalMaxPooling2D', 'GlobalAveragePooling2D',
+                               'GlobalMaxPooling3D', 'GlobalAveragePooling3D']:
+        write_layer_GlobalPooling(layer, file, inputs, outputs, i)
 
     elif layer_type(layer) in ['Add', 'Subtract', 'Multiply', 'Average', 'Maximum', 'Minimum']:
         write_layer_Merge(layer, file, inputs, outputs, i)
@@ -1063,7 +1124,10 @@ def layers_supported_check(model):
     conv_layers = ['Conv1D', 'Conv2D', 'ZeroPadding1D',
                    'ZeroPadding2D', 'ZeroPadding3D']
     pool_layers = ['MaxPooling1D', 'AveragePooling1D',
-                   'GlobalMaxPooling1D', 'GlobalAveragePooling1D']
+                   'MaxPooling2D', 'AveragePooling2D',
+                   'GlobalMaxPooling1D', 'GlobalAveragePooling1D',
+                   'GlobalMaxPooling2D', 'GlobalAveragePooling2D',
+                   'GlobalMaxPooling3D', 'GlobalAveragePooling3D']
     local_layers = []
     recur_layers = ['LSTM', 'GRU', 'SimpleRNN']
     embed_layers = ['Embedding']

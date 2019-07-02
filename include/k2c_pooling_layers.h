@@ -6,97 +6,121 @@
 #include <string.h>
 #include "k2c_helper_functions.h"
 
-void k2c_global_max_pooling_1d(k2c_tensor* output, k2c_tensor* input) {
+void k2c_global_max_pooling(k2c_tensor* output, k2c_tensor* input) {
 
-  size_t in_height = input->shape[0];
-  size_t in_width = input->shape[1];
-  
-  for (size_t i=0; i<in_width; i++){
+  // works for 1d,2d,3d
+
+  size_t in_chan = input->shape[input->ndim-1];
+  for (size_t i=0; i<in_chan; i++){
     output->array[i] = input->array[i];}
 
-  for (size_t j=1; j<in_height; j++){
-    size_t rowidx = j*in_width;
-    for (size_t i=0; i<in_width;i++){
-      if (output->array[i]<input->array[rowidx+i]){
-	output->array[i] = input->array[rowidx+i];
+  for (size_t i=0; i<input->numel; i+=in_chan){
+    for (size_t j=0; j<in_chan;j++){
+      if (output->array[j]<input->array[i+j]){
+	output->array[j] = input->array[i+j];}
+    }
+  }
+}
+
+
+void k2c_global_avg_pooling(k2c_tensor* output, k2c_tensor* input) {
+
+  size_t in_chan = input->shape[input->ndim-1];
+  memset(output->array,0,output->numel*sizeof(input->array[0]));
+  float num_inv = 1.0f/(input->numel/in_chan);
+  
+  for (size_t i=0; i<input->numel; i+=in_chan){
+    for (size_t j=0; j<in_chan;j++){
+      output->array[j] += input->array[i+j]*num_inv;
+    }
+  }
+}
+
+void k2c_maxpool1d(k2c_tensor* output, k2c_tensor* input, size_t pool_size,
+		   size_t stride) {
+  size_t channels = input->shape[1];
+  
+  for(size_t i=0; i<channels; i++) {
+    for (size_t j=0, k=0; j<output->shape[0]*channels; j+=channels, k+=stride*channels) {
+      output->array[j+i] = input->array[k+i];
+      for (size_t l=0; l<pool_size*channels; l+=channels) {
+	if (output->array[j+i] < input->array[k+i+l]) {
+	  output->array[j+i] = input->array[k+i+l];}
       }
     }
   }
 }
 
-void k2c_global_avg_pooling_1d(k2c_tensor* output, k2c_tensor* input) {
+void k2c_maxpool2d(k2c_tensor* output, k2c_tensor* input, size_t pool_size[],
+		   size_t stride[]) {
 
-  size_t in_height = input->shape[0];
-  size_t in_width = input->shape[1];
-  memset(output->array,0,in_width*sizeof(input->array[0]));
-  float in_height_inv = 1.0f/in_height;
-  
-  for (size_t j=0; j<in_height; j++){
-    size_t rowidx = j*in_width;
-    for (size_t i=0; i<in_width;i++){
-      output->array[i] += input->array[rowidx+i]*in_height_inv;
-    }
-  }
-}
+  size_t channels = input->shape[2];
 
-float k2c_arrmax(float array[], size_t numels, size_t offset){
-
-  float max=array[0];
-  for (size_t i=1; i<numels; i++){
-    if (array[i*offset]>max){
-      max = array[i*offset];}
-  }
-  return max;
-}
-
-float k2c_arravg(float array[], size_t numels, size_t offset){
-
-  float avg=0.0f;
-  size_t count = 0;
-  
-  for (size_t i=0; i<numels; i++){
-    if (array[i*offset] > -HUGE_VALF) {
-      avg  += array[i*offset];
-      count += 1;
-    }
-  }
-  avg = avg/count;
-  return avg;
-}
-
-void k2c_maxpool1d(k2c_tensor* output, k2c_tensor* input, size_t pool_size,
-	       size_t stride){
-
-  size_t in_width = input->shape[1];
-  size_t out_height = output->shape[0];
-  
-  for (size_t i=0, k=0; i<out_height; i++, k+=stride){
-    size_t inrowidx = k*in_width;
-    size_t outrowidx = i*in_width;
-    for (size_t j=0; j<in_width; j++){
-      output->array[outrowidx+j] = k2c_arrmax(&input->array[inrowidx+j],
-				   pool_size,in_width);
+  // i,j,l output indices
+  /// i, k, m input indices
+  for (size_t i=0; i< channels; i++) {
+    for (size_t j=0, k=0; j<output->shape[1]*channels;
+	 j+=channels, k+=channels*stride[1]) {
+      for (size_t l=0, m=0; l<output->numel; l+=channels*output->shape[1],
+	     m+=channels*input->shape[1]*stride[0]) {
+	output->array[l+j+i] = input->array[m+k+i];
+	for (size_t n=0; n<pool_size[1]*channels; n+=channels) {
+	  for (size_t p=0; p<pool_size[0]*channels*input->shape[1];
+	       p+=channels*input->shape[1]) {
+	    	if (output->array[l+j+i] < input->array[m+k+i+n+p]) {
+		  output->array[l+j+i] = input->array[m+k+i+n+p];}
+	  }
+	}
+      }
     }
   }
 }
 
 void k2c_avgpool1d(k2c_tensor* output, k2c_tensor* input, size_t pool_size,
-	       size_t stride){
+		   size_t stride){
 
-    size_t in_width = input->shape[1];
-    size_t out_height = output->shape[0];
+  size_t channels = input->shape[1];
 
-    for (size_t i=0, k=0; i<out_height; i++, k+=stride){
-      size_t inrowidx = k*in_width;
-      size_t outrowidx = i*in_width;
-      for (size_t j=0; j<in_width; j++){
-	output->array[outrowidx+j] = k2c_arravg(&input->array[inrowidx+j],
-						pool_size,in_width);
+  for(size_t i=0; i<channels; i++) {
+    for (size_t j=0, k=0; j<output->numel; j+=channels, k+=stride*channels) {
+      output->array[j+i] = 0;
+      int count = 0;
+      for (size_t l=0; l<pool_size*channels; l+=channels) {
+	if (input->array[k+i+l] > -HUGE_VALF) {
+	  output->array[j+i] += input->array[k+i+l];
+	  count++;
+	}
+      }
+      output->array[i+j] /= (float)count;
     }
   }
 }
 
+void k2c_avgpool2d(k2c_tensor* output, k2c_tensor* input, size_t pool_size[],
+		   size_t stride[]) {
 
+  size_t channels = input->shape[2];
+  // i,j,l output indices
+  /// i, k, m input indices
+  for (size_t i=0; i< channels; i++) {
+    for (size_t j=0, k=0; j<output->shape[1]*channels;
+	 j+=channels, k+=channels*stride[1]) {
+      for (size_t l=0, m=0; l<output->numel; l+=channels*output->shape[1],
+	     m+=channels*input->shape[1]*stride[0]) {
+	output->array[l+j+i] = 0;
+	size_t count = 0;
+	for (size_t n=0; n<pool_size[1]*channels; n+=channels) {
+	  for (size_t p=0; p<pool_size[0]*channels*input->shape[1];
+	       p+=channels*input->shape[1]) {
+	    	if (-HUGE_VALF < input->array[m+k+i+n+p]) {
+		  output->array[l+j+i] += input->array[m+k+i+n+p];
+		  count++;}
+	  }
+	}
+	output->array[l+j+i] /= (float)count;}
+    }
+  }
+}
 
 #endif /* KERAS2C_POOLING_LAYERS */
 
