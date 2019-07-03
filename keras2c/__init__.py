@@ -4,7 +4,6 @@ This file is a part of keras2c
 
 from . import keras2c_main
 
-
 __author__ = "Rory Conlin"
 __copyright__ = "Copyright 2019, Rory Conlin"
 __license__ = "GNU GPLv3"
