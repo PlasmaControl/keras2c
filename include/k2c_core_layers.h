@@ -11,7 +11,12 @@ void k2c_dense(k2c_tensor* output, k2c_tensor* input, k2c_tensor* kernel,
 	       float fwork[]){
 
   if (input->ndim <=2) {
-    size_t outrows = input->shape[0];
+    size_t outrows;
+
+    if (input->ndim>1) {
+      outrows = input->shape[0];}
+    else {
+      outrows = 1;}
     size_t outcols = kernel->shape[1];
     size_t innerdim = kernel->shape[0];
     size_t outsize = outrows*outcols;
@@ -20,6 +25,7 @@ void k2c_dense(k2c_tensor* output, k2c_tensor* input, k2c_tensor* kernel,
     activation(output->array,outsize);
   }
   else {
+
     size_t axesA[1] = {input->ndim-1};
     size_t axesB[1] = {0};
     size_t naxes = 1;
@@ -32,9 +38,11 @@ void k2c_dense(k2c_tensor* output, k2c_tensor* input, k2c_tensor* kernel,
 }
 
 void k2c_flatten(k2c_tensor* input) {
+
   for (size_t i=0; i<input->ndim; i++) {
     input->shape[i] = 1;}
   input->shape[0] = input->numel;
+  input->ndim = 1;
 }
 
 void k2c_reshape(k2c_tensor* input, size_t newshp[], size_t newndim) {

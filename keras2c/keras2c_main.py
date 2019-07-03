@@ -748,23 +748,42 @@ def write_layer_AdvancedActivation(layer, file, inputs, outputs, i, is_model_inp
 
 
 def write_dummy_layer(layer, file, inputs, outputs, i, is_model_input, is_model_output):
-    if is_model_output:
-        outputs = outputs + '->'
-        if is_model_input:
-            inputs = inputs + '->'
-        else:
-            inputs = inputs[1:] + '.'
-        s = outputs + 'ndim = ' + \
-            inputs + 'ndim; // copy data into output struct \n'
-        s += outputs + 'numel = ' + inputs + 'numel; \n'
-        s = 'memcpy(' + outputs + 'shape,' + inputs + \
-            'shape,K2C_MAX_NDIM*sizeof(size_t));  \n'
-        s += 'memcpy(' + outputs + 'array,' + inputs + 'array,' + \
-            outputs + 'numel*sizeof(' + outputs + 'array[0])); \n'
+    outputs = outputs.replace("&", "")
+    inputs = inputs.replace("&", "")
+    if is_model_input and is_model_output:
+        s = outputs + '->ndim = ' + \
+            inputs + '->ndim; // copy data into output struct \n'
+        s += outputs + '->numel = ' + inputs + '->numel; \n'
+        s += 'memcpy(&' + outputs + '->shape,&' + inputs + \
+            '->shape,K2C_MAX_NDIM*sizeof(size_t));  \n'
+        s += 'memcpy(' + outputs + '->array,' + inputs + '->array,' + \
+            outputs + '->numel*sizeof(' + outputs + '->array[0])); \n'
+    elif is_model_input:
+        s = 'k2c_tensor ' + outputs + '; \n'
+        s += outputs + '.ndim = ' + \
+            inputs + '->ndim; // copy data into output struct \n'
+        s += outputs + '.numel = ' + inputs + '->numel; \n'
+        s += 'memcpy(' + outputs + '.shape,' + inputs + \
+            '->shape,K2C_MAX_NDIM*sizeof(size_t));  \n'
+        s += outputs + '.array = &' + inputs + \
+            '->array[0]; // rename for clarity \n'
+    elif is_model_output:
+        s = outputs + '->ndim = ' + \
+            inputs + '.ndim; // copy data into output struct \n'
+        s += outputs + '->numel = ' + inputs + '.numel; \n'
+        s += 'memcpy(' + outputs + '->shape,' + inputs + \
+            '.shape,K2C_MAX_NDIM*sizeof(size_t));  \n'
+        s += 'memcpy(' + outputs + '->array,' + inputs + '.array,' + \
+            outputs + '->numel*sizeof(' + outputs + '->array[0])); \n'
     else:
-        s = 'k2c_tensor ' + str(outputs[1:]) + '; \n'
-        s += 'memcpy(' + outputs + ',' + inputs + \
-             ',sizeof(k2c_tensor)); // rename for clarity \n'
+        s = 'k2c_tensor ' + outputs + '; \n'
+        s += outputs + '.ndim = ' + \
+            inputs + '.ndim; // copy data into output struct \n'
+        s += outputs + '.numel = ' + inputs + '.numel; \n'
+        s += 'memcpy(' + outputs + '.shape,' + inputs + \
+            '.shape,K2C_MAX_NDIM*sizeof(size_t));  \n'
+        s += outputs + '.array = &' + inputs + \
+            '.array[0]; // rename for clarity \n'
     file.write(s)
 
 
@@ -1026,7 +1045,6 @@ def model2c(model, file, function_name):
                 if (set(flatten(inp)).issubset(written_io) and
                         set(flatten(outp)).issubset(unwritten_io))or \
                         layer_type(layer) == 'InputLayer':
-
                     print('Writing layer ', outp)
                     is_model_input = False
                     is_model_output = False

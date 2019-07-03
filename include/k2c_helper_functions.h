@@ -49,9 +49,11 @@ void k2c_affine_matmul(float C[], float A[], float B[], float d[], size_t outrow
   /*   Size d: outrows */
 
   // make sure output is empty
+
   memset(C, 0, outrows*outcols*sizeof(C[0]));
 
   for (size_t i = 0 ; i < outrows; i++) {
+
     size_t outrowidx = i*outcols;
     size_t inneridx = i*innerdim;
     for (size_t j = 0;  j < outcols; j++) {

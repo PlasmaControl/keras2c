@@ -76,22 +76,27 @@ void k2c_softmax(float x[], size_t size) {
   /*     z[i] = exp(x[i]-max(x)) */
   /*     y = z/sum(z) */
   /* x is overwritten with the activated values */
+
   float xmax = x[0];
   float sum = 0;
   for (size_t i=0; i < size; i++) {
     if (x[i]>xmax) {
       xmax = x[i];}
   }
+
   for (size_t i=0; i < size; i++) {
     x[i] = exp(x[i]-xmax);
   }
+
   for (size_t i=0; i < size; i++) {
     sum += x[i];
   }
+
   sum = 1.0f/sum; // divide once and multiply -> fast
   for (size_t i=0; i < size; i++) {
     x[i] = x[i]*sum;
   }
+
 }
 
 void k2c_softplus(float x[], size_t size) {

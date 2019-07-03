@@ -54,6 +54,7 @@ void k2c_maxpool1d(k2c_tensor* output, k2c_tensor* input, size_t pool_size,
 void k2c_maxpool2d(k2c_tensor* output, k2c_tensor* input, size_t pool_size[],
 		   size_t stride[]) {
 
+
   size_t channels = input->shape[2];
 
   // i,j,l output indices
