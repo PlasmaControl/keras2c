@@ -5,8 +5,7 @@ Checks a model before conversion to flag unsupported features
 
 # imports
 import numpy as np
-import keras
-from keras2c.io_parsing import layer_type
+from keras2c.io_parsing import layer_type, flatten
 
 
 __author__ = "Rory Conlin"
@@ -21,10 +20,10 @@ __email__ = "wconlin@princeton.edu"
 def is_valid_c_name(name):
     allowed_chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_1234567890'
     allowed_starting_chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_'
-    if not set(name).issubset(allowed_chars):
+    if not set(name).issubset(allowed_chars) or not \
+       set(name[0]).issubset(allowed_starting_chars):
         return False
-    if not set(name[0]).issubset(allowed_starting_chars):
-        return False
+
     return True
 
 
@@ -65,7 +64,7 @@ def layers_supported_check(model):
     valid = True
     log = ''
     for layer in model.layers:
-        if not (layer_type(layer) in supported_layers):
+        if layer_type(layer) not in supported_layers:
             valid = False
             log += "layer type '" + \
                 layer_type(layer) + "' is not supported at this time. \n"
@@ -79,19 +78,20 @@ def activation_supported_check(model):
     valid = True
     log = ''
     for layer in model.layers:
-        if 'activation' in layer.get_config():
-            if not (layer.get_config()['activation'] in supported_activations):
-                valid = False
-                log += "activation type '" + layer.get_config()['activation'] + \
-                    "' for layer '" + layer.name + \
-                    "' is not supported at this time. \n"
-        if 'recurrent_activation' in layer.get_config():
-            if not (layer.get_config()['recurrent_activation'] in supported_activations):
-                valid = False
-                log += "recurrent activation type '" + \
-                       layer.get_config()['recurrent_activation'] + \
-                    "' for layer '" + layer.name + \
-                    "' is not supported at this time. \n"
+        activation = layer.get_config().get('activation')
+        recurrent_activation = layer.get_config().get('recurrent_activation')
+        if activation not in supported_activations and activation is not None:
+            valid = False
+            log += "activation type '" + layer.get_config()['activation'] + \
+                   "' for layer '" + layer.name + \
+                   "' is not supported at this time. \n"
+        if recurrent_activation not in supported_activations and \
+           recurrent_activation is not None:
+            valid = False
+            log += "recurrent activation type '" + \
+                   layer.get_config()['recurrent_activation'] + \
+                   "' for layer '" + layer.name + \
+                   "' is not supported at this time. \n"
     return valid, log
 
 # add check for masking
@@ -101,27 +101,24 @@ def config_supported_check(model):
     valid = True
     log = ''
     for layer in model.layers:
-        if 'data_format' in layer.get_config():
-            if layer.get_config()['data_format'] != 'channels_last':
-                valid = False
-                log += "data format '" + layer.get_config()['data_format'] +\
-                       "' for layer '" + layer.name + \
-                       "' is not supported at this time. \n"
-        if 'return_state' in layer.get_config():
-            if layer.get_config()['return_state']:
-                valid = False
-                log += "'return_state' option for layer '" + layer.name + \
-                    "' is not supported at this time. \n"
-        if 'stateful' in layer.get_config():
-            if layer.get_config()['stateful']:
-                valid = False
-                log += "'stateful' option for layer '" + layer.name + \
-                    "' is not supported at this time. \n"
-        if 'shared_axes' in layer.get_config():
-            if layer.get_config()['shared_axes'] is not None:
-                valid = False
-                log += "shared axes option for layer '" + layer.name + \
-                    "' is not supported at this time. \n"
+        config = layer.get_config()
+        if config.get('data_format') == 'channels_first':
+            valid = False
+            log += "data format '" + layer.get_config()['data_format'] +\
+                   "' for layer '" + layer.name + \
+                   "' is not supported at this time. \n"
+        if config.get('return_state'):
+            valid = False
+            log += "'return_state' option for layer '" + layer.name + \
+                   "' is not supported at this time. \n"
+        if config.get('stateful'):
+            valid = False
+            log += "'stateful' option for layer '" + layer.name + \
+                   "' is not supported at this time. \n"
+        if config.get('shared_axes'):
+            valid = False
+            log += "shared axes option for layer '" + layer.name + \
+                   "' is not supported at this time. \n"
         if layer_type(layer) in ['Add', 'Subtract', 'Multiply', 'Average',
                                  'Maximum', 'Minimum']:
             inshps = layer.input_shape
@@ -132,11 +129,10 @@ def config_supported_check(model):
                        " of different shapes for layer '" + \
                        layer.name + "' is not currently supported. \n"
         if layer_type(layer) in ['BatchNormalizationV1', 'BatchNormalization']:
-            if isinstance(layer.get_config()['axis'], (list, tuple, np.ndarray)):
-                if len(layer.get_config()['axis']) > 1:
-                    valid = False
-                    log += 'batch normalization along multiple axes is' + \
-                           ' not currently supported. \n'
+            if len(flatten(config.get('axis'))) > 1:
+                valid = False
+                log += 'batch normalization along multiple axes is' + \
+                       ' not currently supported. \n'
     return valid, log
 
 

@@ -67,7 +67,6 @@ void k2c_conv1d(k2c_tensor* output, k2c_tensor* input, k2c_tensor* kernel,
 
   size_t out_times = output->shape[0];
   size_t out_channels = output->shape[1];
-  size_t out_size = out_channels*out_times;
   size_t in_channels = input->shape[1];
 
   for (size_t x0=0; x0 < out_times; x0++){

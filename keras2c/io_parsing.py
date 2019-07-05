@@ -3,11 +3,6 @@ This file is part of keras2c
 Helper functions to get input and output names for each layer etc.
 """
 
-# imports
-import numpy as np
-import keras
-
-
 __author__ = "Rory Conlin"
 __copyright__ = "Copyright 2019, Rory Conlin"
 __license__ = "GNU GPLv3"

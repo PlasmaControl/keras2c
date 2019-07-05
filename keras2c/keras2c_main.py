@@ -4,12 +4,11 @@ Converts keras model to C code
 """
 
 # imports
-import numpy as np
 import keras
 from keras2c.make_test_suite import make_test_suite
 from keras2c.check_model import check_model
 from keras2c.io_parsing import layer_type, get_all_io_names, get_layer_io_names, \
-    get_model_io_names, get_layer_num_io, flatten
+    get_model_io_names, flatten
 from keras2c.weights2c import weights2c
 from keras2c.layer2c import layer2c
 

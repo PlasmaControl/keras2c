@@ -5,8 +5,7 @@ Gets weights and other parameters from each layer and writes to C file
 
 # imports
 import numpy as np
-import keras
-from keras2c.io_parsing import layer_type, get_layer_io_names, get_model_io_names
+from keras2c.io_parsing import layer_type, get_layer_io_names
 maxndim = 4
 
 
@@ -221,7 +220,6 @@ def write_weights_Conv1D(layer, file, model_io):
 
     write_outputs(layer, file, model_io)
     inshp = layer.get_input_at(0).shape[1:]
-    outshp = layer.get_output_at(0).shape[1:]
     if padding == 'causal':
         pad_along_height = dilation*(kernel_size-1)
         pad_top = pad_along_height

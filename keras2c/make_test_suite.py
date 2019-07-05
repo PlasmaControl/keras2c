@@ -5,7 +5,6 @@ Converts keras model to C code
 
 # imports
 import numpy as np
-import keras
 from keras2c.io_parsing import get_model_io_names
 from keras2c.weights2c import array2c
 

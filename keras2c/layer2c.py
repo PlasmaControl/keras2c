@@ -4,8 +4,6 @@ Writes individual layers to C code
 """
 
 # imports
-import numpy as np
-import keras
 from keras2c.io_parsing import layer_type
 
 
@@ -295,7 +293,6 @@ def write_layer_Embedding(layer, file, inputs, outputs, i):
 
 def write_layer_ZeroPad(layer, file, inputs, outputs, i):
     nm = layer.name
-    pnm = '&' + nm
 
     if layer_type(layer)[-2:] == '1D':
         s = 'k2c_pad1d('
