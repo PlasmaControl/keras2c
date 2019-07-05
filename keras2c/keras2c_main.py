@@ -34,8 +34,8 @@ def model2c(model, file, function_name):
     file.write(s)
 
     print('Writing Weights')
-    weights = Weights2C(model).write_weights()
-    file.write(weights)
+    stack_vars, malloc_vars = Weights2C(model).write_weights()
+    file.write(stack_vars)
     print('Weights written')
 
     written_io = set(model_inputs)

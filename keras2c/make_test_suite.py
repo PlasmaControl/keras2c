@@ -6,7 +6,7 @@ Converts keras model to C code
 # imports
 import numpy as np
 from keras2c.io_parsing import get_model_io_names
-from keras2c.weights2c import array2c
+from keras2c.weights2c import Weights2C
 
 __author__ = "Rory Conlin"
 __copyright__ = "Copyright 2019, Rory Conlin"
@@ -52,18 +52,18 @@ def make_test_suite(model, function_name, num_tests=10, tol=1e-5):
                 raise Exception('Cannot find inputs to the \
                 network that result in a finite output')
         for j, _ in enumerate(model_inputs):
-            file.write(array2c(np.squeeze(rand_inputs[j]), 'test' + str(i+1) +
-                               '_' + model_inputs[j] + '_input'))
+            file.write(Weights2C.array2c(np.squeeze(rand_inputs[j]), 'test' + str(i+1) +
+                                         '_' + model_inputs[j] + '_input'))
 
             # write predictions
         if not isinstance(outputs, list):
             outputs = [outputs]
             for j, _ in enumerate(model_outputs):
                 output = outputs[j][0, :]
-                file.write(array2c(output, 'keras_' +
-                                   model_outputs[j] + '_test' + str(i+1)))
-                file.write(array2c(np.zeros(output.shape), 'c_' +
-                                   model_outputs[j] + '_test' + str(i+1)))
+                file.write(Weights2C.array2c(output, 'keras_' +
+                                             model_outputs[j] + '_test' + str(i+1)))
+                file.write(Weights2C.array2c(np.zeros(output.shape), 'c_' +
+                                             model_outputs[j] + '_test' + str(i+1)))
     s = ' float errors[' + str(num_tests*num_outputs) + '];\n'
     s += ' size_t num_tests = ' + str(num_tests) + '; \n'
     s += 'size_t num_outputs = ' + str(num_outputs) + '; \n'

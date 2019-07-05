@@ -31,7 +31,7 @@ void tensor_copy(k2c_tensor* bar);
 void k2c_exponential(float x[], size_t size);
 void wrapper(k2c_tensor* C, k2c_tensor* A, k2c_tensor* B, float work[]);
 void wrapper2(k2c_tensor* C, k2c_tensor* A, k2c_tensor* B, float work[]);
-
+void malloc_test(float* array);
   
 int main(){
   float x1[12] = { 1,   2,3,  4,  5,    6,  7,   8  , 9,10,11,12};
@@ -58,10 +58,8 @@ int main(){
   
   /* for (int i=0; i<12; i++) { */
   /*   printf("%e \n", x3[i]);} */
+  malloc_test(x1);
 
-
-  wrapper(&C,&x3,&y,work);
-     printer(C.array,6);
   
  /*  size_t in_height = 10; */
 /*   for (int i=in_height-1; i>-1; i--) { */
@@ -98,6 +96,13 @@ int main(){
   //dense(C,x,y,d,outrows,outcols,innerdim,linear);
   
 return 0;
+}
+
+void malloc_test(float* array) {
+  k2c_tensor foo = {array,1,12,{12,1,1,1}};
+  for (size_t i=0; i<foo.numel; i++) {
+    printf("%f \n", foo.array[i]);
+  }
 }
 
 void wrapper(k2c_tensor* C, k2c_tensor* A, k2c_tensor* B, float work[])  {
