@@ -9,7 +9,7 @@ from keras2c.make_test_suite import make_test_suite
 from keras2c.check_model import check_model
 from keras2c.io_parsing import layer_type, get_all_io_names, get_layer_io_names, \
     get_model_io_names, flatten
-from keras2c.weights2c import weights2c
+from keras2c.weights2c import Weights2C
 from keras2c.layer2c import layer2c
 
 
@@ -34,8 +34,10 @@ def model2c(model, file, function_name):
     file.write(s)
 
     print('Writing Weights')
-    for layer in model.layers:
-        weights2c(layer, file, [model_inputs, model_outputs])
+    weights = Weights2C(model).write_weights()
+    file.write(weights)
+    print('Weights written')
+
     written_io = set(model_inputs)
     unwritten_io = set(get_all_io_names(model)) - written_io
 
