@@ -92,10 +92,10 @@ class Weights2C():
                     np.zeros(outshp), outp + '_output')
 
     def write_weights_Input(self, layer):
-        return ''
+        self.stack_vars += ''
 
     def write_weights_InputLayer(self, layer):
-        return ''
+        self.stack_vars += ''
 
     def write_weights_BatchNormalization(self, layer):
         center = layer.get_config()['center']
