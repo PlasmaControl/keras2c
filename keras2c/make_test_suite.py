@@ -15,7 +15,7 @@ __maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
 __email__ = "wconlin@princeton.edu"
 
 
-def make_test_suite(model, function_name, malloc_vars, num_tests=10, tol=1e-6):
+def make_test_suite(model, function_name, malloc_vars, num_tests=10, tol=1e-5):
     print('Writing tests')
     input_shape = []
     # output_shape = []
