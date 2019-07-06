@@ -15,7 +15,7 @@ __maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
 __email__ = "wconlin@princeton.edu"
 
 
-def make_test_suite(model, function_name, num_tests=10, tol=1e-5):
+def make_test_suite(model, function_name, malloc_vars, num_tests=10, tol=1e-6):
     print('Writing tests')
     input_shape = []
     # output_shape = []
@@ -67,16 +67,21 @@ def make_test_suite(model, function_name, num_tests=10, tol=1e-5):
     s = ' float errors[' + str(num_tests*num_outputs) + '];\n'
     s += ' size_t num_tests = ' + str(num_tests) + '; \n'
     s += 'size_t num_outputs = ' + str(num_outputs) + '; \n'
+    for var in malloc_vars:
+        s += 'float* ' + var + '; \n'
+    s += function_name + \
+        '_initialize(' + ','.join(['&' + var for var in malloc_vars]) + '); \n'
     s += ' struct timeval t1 = GetTimeStamp(); \n'
     file.write(s)
+
     for i in range(num_tests):
         s = function_name + '('
-        for j, _ in enumerate(model_inputs):
-            s += '&test' + str(i+1) + '_' + model_inputs[j] + '_input,'
-        s += '\n\t'
-        for j, _ in enumerate(model_outputs):
-            s += '&c_' + model_outputs[j] + '_test' + str(i+1) + ','
-        s = s[:-1] + '); \n'
+        model_in = ['&test' + str(i+1) + '_' + inp +
+                    '_input' for inp in model_inputs]
+        model_out = ['&c_' + outp + '_test' +
+                     str(i+1) for outp in model_outputs]
+        s += ','.join(model_in + model_out + list(malloc_vars))
+        s += '); \n'
         file.write(s)
     file.write('\n')
     s = 'struct timeval t2 = GetTimeStamp(); \n'
@@ -86,6 +91,7 @@ def make_test_suite(model, function_name, num_tests=10, tol=1e-5):
     s += 'printf("Average time over ' + str(num_tests) + \
         ' tests: %llu us \\n", (t2u-t1u)/' + str(num_tests) + '); \n'
     file.write(s)
+
     for i in range(num_tests):
         for j, _ in enumerate(model_outputs):
             s = 'errors[' + str(i*num_outputs+j) + '] = maxabs(&keras_' + model_outputs[j] + '_test' + \
@@ -97,9 +103,15 @@ def make_test_suite(model, function_name, num_tests=10, tol=1e-5):
     s += 'if (errors[i] > maxerror) { \n'
     s += 'maxerror = errors[i];}} \n'
     s += 'printf("Max absolute error for ' + \
-        str(num_tests) + ' tests: %f \\n", maxerror);\n'
+        str(num_tests) + ' tests: %e \\n", maxerror);\n'
     file.write(s)
-    s = 'if (maxerror > ' + str(tol) + ') { \n'
+
+    # s = 'for(size_t i=0; i< num_tests*num_outputs;i++){ \n'
+    # s += 'printf(\"Error, test %d: %f \\n \",i,errors[i]);} \n'
+    # file.write(s)
+
+    s = function_name + '_terminate(' + ','.join(malloc_vars) + '); \n'
+    s += 'if (maxerror > ' + str(tol) + ') { \n'
     s += 'return 1;} \n'
     s += 'return 0;\n} \n\n'
     file.write(s)

@@ -1,6 +1,6 @@
-"""test_models.py
+"""test_malloc.py
 This file is part of the test suite for keras2c
-Implements tests for full models
+Implements tests for dynamic memory allocation
 """
 
 #!/usr/bin/env python3
@@ -20,14 +20,25 @@ __maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
 __email__ = "wconlin@princeton.edu"
 
 
-class TestModels(unittest.TestCase):
-    """tests for full models"""
+class TestMalloc(unittest.TestCase):
+    """tests for dynamic memory allocation for large weight tensors"""
 
-    def test_CIFAR_10_CNN(self):
+    def test_Malloc1(self):
+        inshp = (21, 4, 9)
+        units = 45
+        a = keras.layers.Input(inshp)
+        b = keras.layers.Dense(units, activation='relu')(a)
+        model = keras.models.Model(inputs=a, outputs=b)
+        name = 'test___Malloc1' + str(int(time.time()))
+        keras2c_main.k2c(model, name, malloc=True)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)
+
+    def test_Malloc2(self):
         model = keras.models.Sequential()
         model.add(keras.layers.Conv2D(8, (3, 3), padding='same',
                                       input_shape=(32, 32, 3)))
-        model.add(keras.layers.Activation('relu'))
+        model.add(keras.layers.Activation('tanh'))
         model.add(keras.layers.Conv2D(8, (3, 3)))
         model.add(keras.layers.Activation('relu'))
         model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
@@ -44,8 +55,8 @@ class TestModels(unittest.TestCase):
         model.add(keras.layers.Dropout(0.5))
         model.add(keras.layers.Dense(10))
         model.add(keras.layers.Activation('softmax'))
-        name = 'test___CIFAR_10_CNN' + str(int(time.time()))
-        keras2c_main.k2c(model, name)
+        name = 'test___Malloc2' + str(int(time.time()))
+        keras2c_main.k2c(model, name, malloc=True)
         rcode = build_and_run(name)
         self.assertEqual(rcode, 0)
 

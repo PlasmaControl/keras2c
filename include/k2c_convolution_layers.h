@@ -64,6 +64,7 @@ void k2c_conv1d(k2c_tensor* output, k2c_tensor* input, k2c_tensor* kernel,
 		   void (*activation) (float[], size_t)) {
   /* 1D (temporal) convolution. Assumes a "channels last" structure
    */
+  memset(output->array,0,output->numel*sizeof(output->array[0]));
 
   size_t out_times = output->shape[0];
   size_t out_channels = output->shape[1];
@@ -92,6 +93,7 @@ void k2c_conv2d(k2c_tensor* output, k2c_tensor* input, k2c_tensor* kernel,
 		   void (*activation) (float[], size_t)) {
   /* 2D (spatial) convolution. Assumes a "channels last" structure
    */
+  memset(output->array,0,output->numel*sizeof(output->array[0]));
 
   size_t out_rows = output->shape[0];
   size_t out_cols = output->shape[1];

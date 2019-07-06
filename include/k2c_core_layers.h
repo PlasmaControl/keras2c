@@ -25,7 +25,6 @@ void k2c_dense(k2c_tensor* output, k2c_tensor* input, k2c_tensor* kernel,
     activation(output->array,outsize);
   }
   else {
-
     size_t axesA[1] = {input->ndim-1};
     size_t axesB[1] = {0};
     size_t naxes = 1;
@@ -77,6 +76,7 @@ void k2c_permute_dims(k2c_tensor* output, k2c_tensor* input,
 }
 
 void k2c_repeat_vector(k2c_tensor* output, k2c_tensor* input, size_t n) {
+
   size_t in_width = input->shape[0];
   for (size_t i=0; i<n; i++) {
     for(size_t j=0; j<in_width; j++) {

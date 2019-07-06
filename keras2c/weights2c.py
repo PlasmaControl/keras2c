@@ -36,10 +36,10 @@ class Weights2C():
         if malloc:
             to_malloc = {}
             s = 'k2c_tensor ' + name + ' = {' + name + \
-                '_array[0],' + str(int(ndim)) + ',' + str(int(size)) + ',{' + \
+                '_array,' + str(int(ndim)) + ',' + str(int(size)) + ',{' + \
                 np.array2string(shp.astype(int), separator=',')[
                     1:-1] + '}}; \n'
-            to_malloc.update({name: temp})
+            to_malloc.update({name + '_array': temp})
             return s, to_malloc
         else:
             count = 0
@@ -54,9 +54,9 @@ class Weights2C():
                     elif temp[i] == -np.inf:
                         s += "-HUGE_VALF,"
                     else:
-                        s += "{:.10e}".format(temp[i]) + ','
+                        s += "{:.8e}".format(temp[i]) + ','
                     count += 1
-                    if (count) % 4 is 0:
+                    if (count) % 5 is 0:
                         s += '\n'
                 s += '}; \n'
             s += 'k2c_tensor ' + name + ' = {&' + name + \

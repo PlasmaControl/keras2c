@@ -16,10 +16,11 @@ __email__ = "wconlin@princeton.edu"
 
 class Layers2C():
 
-    def __init__(self, model):
+    def __init__(self, model, malloc):
         self.model = model
         self.model_inputs, self.model_outputs = get_model_io_names(self.model)
         self.layers = ''
+        self.malloc = malloc
 
     def write_layers(self):
         written_io = set(self.model_inputs)
@@ -292,7 +293,6 @@ class Layers2C():
                                is_model_input, is_model_output)
 
     def write_dummy_layer(self, layer, inputs, outputs, i, is_model_input, is_model_output):
-        nm, _, _, _ = self.format_io_names(layer, inputs, outputs)
         outputs = outputs.replace("&", "")
         inputs = inputs.replace("&", "")
         if is_model_input and is_model_output:
@@ -302,7 +302,8 @@ class Layers2C():
             self.layers += 'memcpy(&' + outputs + '->shape,&' + inputs + \
                 '->shape,K2C_MAX_NDIM*sizeof(size_t));  \n'
             self.layers += 'memcpy(' + outputs + '->array,' + inputs + '->array,' + \
-                outputs + '->numel*sizeof(' + outputs + '->array[0])); \n'
+                           outputs + \
+                           '->numel*sizeof(' + outputs + '->array[0])); \n'
         elif is_model_input:
             self.layers += 'k2c_tensor ' + outputs + '; \n'
             self.layers += outputs + '.ndim = ' + \
@@ -319,7 +320,8 @@ class Layers2C():
             self.layers += 'memcpy(' + outputs + '->shape,' + inputs + \
                 '.shape,K2C_MAX_NDIM*sizeof(size_t));  \n'
             self.layers += 'memcpy(' + outputs + '->array,' + inputs + '.array,' + \
-                outputs + '->numel*sizeof(' + outputs + '->array[0])); \n'
+                           outputs + \
+                           '->numel*sizeof(' + outputs + '->array[0])); \n'
         else:
             self.layers += 'k2c_tensor ' + outputs + '; \n'
             self.layers += outputs + '.ndim = ' + \
@@ -339,7 +341,7 @@ class Layers2C():
                                is_model_input, is_model_output)
 
     def write_layer_Flatten(self, layer, inputs, outputs, i):
-        nm, pnm, inputs, outputs, is_model_input, is_model_output = self.format_io_names(
+        nm, _, inputs, outputs, is_model_input, is_model_output = self.format_io_names(
             layer, inputs, outputs, True)
         self.layers += 'k2c_flatten(' + inputs + '); \n'
         self.write_dummy_layer(layer, inputs, outputs, i,
@@ -356,7 +358,7 @@ class Layers2C():
             ',' + nm + '_n); \n'
 
     def write_layer_Dot(self, layer, inputs, outputs, i):
-        nm, pnm, inputs, outputs = self.format_io_names(layer, inputs, outputs)
+        nm, _, inputs, outputs = self.format_io_names(layer, inputs, outputs)
         self.layers += 'k2c_dot(' + outputs + ',' + inputs[0] + \
                        ',' + inputs[1] + ',' + nm + '_axesA,' + \
                        '\n\t' + nm + '_axesB,' + nm + '_naxes,' + \

@@ -5,6 +5,7 @@ Converts keras model to C code
 
 # imports
 import keras
+import numpy as np
 from keras2c.make_test_suite import make_test_suite
 from keras2c.check_model import check_model
 from keras2c.io_parsing import layer_type, get_all_io_names, get_layer_io_names, \
@@ -20,17 +21,18 @@ __maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
 __email__ = "wconlin@princeton.edu"
 
 
-def model2c(model, file, function_name):
+def model2c(model, file, function_name, malloc=False):
     model_inputs, model_outputs = get_model_io_names(model)
-
-    s = '#include <stdio.h> \n#include <stddef.h> \n#include <math.h> \n#include <string.h> \n'
+    s = "#ifndef " + function_name.upper() + "_H \n"
+    s += "#define " + function_name.upper() + "_H \n"
+    s += '#include <stdio.h> \n#include <stddef.h> \n#include <math.h> \n#include <string.h> \n'
     s += '#include <stdarg.h> \n#include "k2c_include.h" \n'
     s += '\n \n'
     file.write(s)
 
     print('Gathering Weights')
-    stack_vars, malloc_vars = Weights2C(model).write_weights()
-    layers = Layers2C(model).write_layers()
+    stack_vars, malloc_vars = Weights2C(model, malloc).write_weights()
+    layers = Layers2C(model, malloc).write_layers()
 
     function_signature = 'void ' + function_name + '('
     function_signature += ', '.join(['k2c_tensor* ' +
@@ -42,24 +44,49 @@ def model2c(model, file, function_name):
                                               key for key in malloc_vars.keys()])
     function_signature += ') { \n\n'
 
+    file.write(function_signature)
+    file.write(stack_vars)
+    file.write(layers)
+    file.write('\n } \n\n')
+
+    write_function_initialize(file, function_name, malloc_vars)
+    write_function_terminate(file, function_name, malloc_vars)
+    s = "#endif /* " + function_name.upper() + "_H */"
+    file.write(s)
+    return malloc_vars.keys()
+
+
+def write_function_initialize(file, function_name, malloc_vars):
     function_init_signature = 'void ' + function_name + '_initialize('
-    function_init_signature += ','.join(['float* ' +
+    function_init_signature += ','.join(['float** ' +
                                          key for key in malloc_vars.keys()])
     function_init_signature += ') { \n\n'
+    file.write(function_init_signature)
+    s = ''
+    for key in malloc_vars.keys():
+        fname = function_name + key + ".csv"
+        tempfile = open(fname, "w+")
+        np.savetxt(fname, malloc_vars[key], fmt="%.8e", delimiter=',')
+        s += '*' + key + " = k2c_read_array(\"" + \
+            fname + "\"," + str(malloc_vars[key].size) + "); \n"
+    s += "} \n\n"
+    file.write(s)
 
+
+def write_function_terminate(file, function_name, malloc_vars):
     function_term_signature = 'void ' + function_name + '_terminate('
     function_term_signature += ','.join(['float* ' +
                                          key for key in malloc_vars.keys()])
     function_term_signature += ') { \n\n'
+    file.write(function_term_signature)
+    s = ''
+    for key in malloc_vars.keys():
+        s += "free(" + key + "); \n"
+    s += "} \n\n"
+    file.write(s)
 
-    file.write(function_signature)
-    file.write(stack_vars)
-    file.write(layers)
-    file.write('\n }')
 
-
-# keras2c
-def k2c(model, function_name, num_tests=10):
+def k2c(model, function_name, malloc=False, num_tests=10):
 
     function_name = str(function_name)
     filename = function_name + '.h'
@@ -77,8 +104,8 @@ def k2c(model, function_name, num_tests=10):
     print('All checks passed')
 
     file = open(filename, "x+")
-    model2c(model, file, function_name)
+    malloc_vars = model2c(model, file, function_name, malloc)
     file.close()
-    make_test_suite(model, function_name, num_tests)
+    make_test_suite(model, function_name, malloc_vars, num_tests)
     print("Done \n C code is in '" + function_name +
           ".h' and tests are in '" + function_name + "_test_suite.c'")

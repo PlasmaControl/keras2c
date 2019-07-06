@@ -4,6 +4,7 @@
 #include <math.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #define K2C_MAX_NDIM 5
 
@@ -218,5 +219,18 @@ void k2c_bias_add(k2c_tensor* A, k2c_tensor* b) {
   }
 }
 
+float* k2c_read_array(char* filename, size_t array_size) {
+    float* ptr = (float*) malloc(array_size * sizeof(float));
+    size_t ctr = 0;
+    FILE *finp;
+    finp = fopen(filename, "r");
+    if(NULL == finp) {
+      printf("Unable to open file %s \n",filename);
+      exit(-1);}
+    while((!feof(finp)) && (ctr < array_size)) { 
+      fscanf(finp, "%f,", &ptr[ctr++]);}
+    fclose(finp);
+    return ptr;
+}
 
 #endif /* KERAS2C_HELPER_FUNCTIONS_H */

@@ -81,10 +81,10 @@ void k2c_avgpool1d(k2c_tensor* output, k2c_tensor* input, size_t pool_size,
 		   size_t stride){
 
   size_t channels = input->shape[1];
-
+  memset(output->array,0,output->numel*sizeof(output->array[0]));
   for(size_t i=0; i<channels; i++) {
     for (size_t j=0, k=0; j<output->numel; j+=channels, k+=stride*channels) {
-      output->array[j+i] = 0;
+      /* output->array[j+i] = 0; */
       int count = 0;
       for (size_t l=0; l<pool_size*channels; l+=channels) {
 	if (input->array[k+i+l] > -HUGE_VALF) {
@@ -99,7 +99,7 @@ void k2c_avgpool1d(k2c_tensor* output, k2c_tensor* input, size_t pool_size,
 
 void k2c_avgpool2d(k2c_tensor* output, k2c_tensor* input, size_t pool_size[],
 		   size_t stride[]) {
-
+  memset(output->array,0,output->numel*sizeof(output->array[0]));
   size_t channels = input->shape[2];
   // i,j,l output indices
   /// i, k, m input indices
@@ -108,7 +108,7 @@ void k2c_avgpool2d(k2c_tensor* output, k2c_tensor* input, size_t pool_size[],
 	 j+=channels, k+=channels*stride[1]) {
       for (size_t l=0, m=0; l<output->numel; l+=channels*output->shape[1],
 	     m+=channels*input->shape[1]*stride[0]) {
-	output->array[l+j+i] = 0;
+	/* output->array[l+j+i] = 0; */
 	size_t count = 0;
 	for (size_t n=0; n<pool_size[1]*channels; n+=channels) {
 	  for (size_t p=0; p<pool_size[0]*channels*input->shape[1];
