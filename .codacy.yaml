@@ -1,0 +1,9 @@
+---
+engines:
+ duplication:
+   exclude_paths:
+     - keras2c/**
+exclude_paths:
+  - 'tests/**'
+  - 'scratch/**'
+  - 'benchmarks/**/*'
