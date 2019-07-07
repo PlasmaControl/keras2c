@@ -35,6 +35,19 @@ class TestMergeLayers(unittest.TestCase):
         rcode = build_and_run(name)
         self.assertEqual(rcode, 0)
 
+    def test_Dot2(self):
+        dotaxes = (2, 2)
+        inshape1 = (5, 9)
+        inshape2 = (9, 9)
+        i1 = keras.layers.Input(inshape1)
+        i2 = keras.layers.Input(inshape2)
+        d = keras.layers.Dot(axes=dotaxes, normalize=True)([i1, i2])
+        model = keras.models.Model(inputs=[i1, i2], outputs=d)
+        name = 'test___Dot2' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)
+
     def test_Add1(self):
         inshp1 = (10, 8, 12)
         inshp2 = (10, 8, 12)
