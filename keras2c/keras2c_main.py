@@ -105,6 +105,12 @@ def k2c(model, function_name, malloc=False, num_tests=10):
     file = open(filename, "x+")
     malloc_vars = model2c(model, file, function_name, malloc)
     file.close()
-    make_test_suite(model, function_name, malloc_vars, num_tests)
-    print("Done \n C code is in '" + function_name +
-          ".h' and tests are in '" + function_name + "_test_suite.c'")
+    s = 'Done \n'
+    s += "C code is in '" + function_name + ".h' \n"
+    if num_tests > 0:
+        make_test_suite(model, function_name, malloc_vars, num_tests)
+        s += "Tests are in '" + function_name + "_test_suite.c' \n"
+    if malloc:
+        s += "Weight arrays are in .csv files of the form 'model_name_layer_name_array_type.csv' \n"
+        s += "They should be placed in the directory from which the main program is run."
+    print(s)

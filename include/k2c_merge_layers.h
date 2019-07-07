@@ -157,4 +157,5 @@ void k2c_concatenate(k2c_tensor* output, size_t axis, size_t num_tensors,...) {
     }
     offset += arrptr->shape[axis];
   }
+  va_end (args);               
 }
