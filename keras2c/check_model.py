@@ -6,6 +6,8 @@ Checks a model before conversion to flag unsupported features
 # imports
 import numpy as np
 from keras2c.io_parsing import layer_type, flatten
+from keras2c.weights2c import Weights2C
+from keras2c.layer2c import Layers2C
 
 
 __author__ = "Rory Conlin"
@@ -38,33 +40,11 @@ def name_check(model):
 
 
 def layers_supported_check(model):
-    core_layers = ['Dense', 'Activation', 'InputLayer', 'Input', 'Dropout',
-                   'SpatialDropout1D', 'SpatialDropout2D', 'SpatialDropout3D',
-                   'ActivityRegularization', 'Flatten', 'Reshape', 'Permute',
-                   'RepeatVector']
-    conv_layers = ['Conv1D', 'Conv2D', 'ZeroPadding1D',
-                   'ZeroPadding2D', 'ZeroPadding3D']
-    pool_layers = ['MaxPooling1D', 'AveragePooling1D',
-                   'MaxPooling2D', 'AveragePooling2D',
-                   'GlobalMaxPooling1D', 'GlobalAveragePooling1D',
-                   'GlobalMaxPooling2D', 'GlobalAveragePooling2D',
-                   'GlobalMaxPooling3D', 'GlobalAveragePooling3D']
-    local_layers = []
-    recur_layers = ['LSTM', 'GRU', 'SimpleRNN']
-    embed_layers = ['Embedding']
-    merge_layers = ['Add', 'Subtract', 'Multiply',
-                    'Average', 'Maximum', 'Minimum', 'Dot']
-    activ_layers = ['LeakyReLU', 'PReLU', 'ELU', 'ThresholdedReLU', 'ReLU']
-    norm_layers = ['BatchNormalizationV1', 'BatchNormalization']
-    noise_layers = ['GaussianNoise', 'GaussianDropout', 'AlphaDropout']
-
-    supported_layers = core_layers + conv_layers + pool_layers + local_layers + \
-        recur_layers + embed_layers + merge_layers + \
-        activ_layers + norm_layers + noise_layers
     valid = True
     log = ''
     for layer in model.layers:
-        if layer_type(layer) not in supported_layers:
+        if not hasattr(Weights2C, 'write_weights_' + layer_type(layer)) \
+           or not hasattr(Layers2C, 'write_layer_' + layer_type(layer)):
             valid = False
             log += "layer type '" + \
                 layer_type(layer) + "' is not supported at this time. \n"
@@ -102,7 +82,7 @@ def config_supported_check(model):
     log = ''
     for layer in model.layers:
         config = layer.get_config()
-        if config.get('data_format') == 'channels_first':
+        if config.get('data_format') not in ['channels_last', None]:
             valid = False
             log += "data format '" + layer.get_config()['data_format'] +\
                    "' for layer '" + layer.name + \

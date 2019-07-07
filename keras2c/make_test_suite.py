@@ -52,7 +52,7 @@ def make_test_suite(model, function_name, malloc_vars, num_tests=10, tol=1e-5):
                 raise Exception('Cannot find inputs to the \
                 network that result in a finite output')
         for j, _ in enumerate(model_inputs):
-            file.write(Weights2C.array2c(np.squeeze(rand_inputs[j]), 'test' + str(i+1) +
+            file.write(Weights2C.array2c((rand_inputs[j][0, :]), 'test' + str(i+1) +
                                          '_' + model_inputs[j] + '_input'))
 
             # write predictions

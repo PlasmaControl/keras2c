@@ -106,7 +106,7 @@ void k2c_max(k2c_tensor* output, size_t num_tensors,...){
   va_end (args);             
 }
 
-void k2c_min(k2c_tensor* output, size_t num_tensors,...){
+void k2c_min(k2c_tensor* output, size_t num_tensors,...) {
 /*  Element-wise minimum of several tensors. */
 /* num_tensors is the total number of tensors */
 /* results are stored in output array */
@@ -129,4 +129,32 @@ void k2c_min(k2c_tensor* output, size_t num_tensors,...){
     }
   }
   va_end (args);             
+}
+
+void k2c_concatenate(k2c_tensor* output, size_t axis, size_t num_tensors,...) {
+/*  Concatenation several tensors. */
+/* num_tensors is the total number of tensors */
+/* axis is the axis along which to concatenate */
+/* results are stored in output array */
+/* takes variable number of tensors as inputs: */
+/* concatenate(output, num_tensors, axis, tensor1, tensor2,...tensorN) etc */
+
+  va_list args;
+  k2c_tensor* arrptr;
+  size_t  offset = 0;
+  size_t outidx;
+  size_t insub[K2C_MAX_NDIM], outsub[K2C_MAX_NDIM];
+  va_start (args, num_tensors);     
+
+  for (size_t i=0; i<num_tensors; i++) {
+    arrptr = va_arg(args, k2c_tensor*);
+    for (size_t j=0; j<arrptr->numel; j++) {
+      k2c_idx2sub(j,insub,arrptr->shape,arrptr->ndim);
+      memcpy(outsub,insub,K2C_MAX_NDIM*sizeof(size_t));
+      outsub[axis] += offset;
+      outidx = k2c_sub2idx(outsub,output->shape, output->ndim);
+      output->array[outidx] = arrptr->array[j];
+    }
+    offset += arrptr->shape[axis];
+  }
 }

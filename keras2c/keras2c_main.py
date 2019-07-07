@@ -65,7 +65,6 @@ def write_function_initialize(file, function_name, malloc_vars):
     s = ''
     for key in malloc_vars.keys():
         fname = function_name + key + ".csv"
-        tempfile = open(fname, "w+")
         np.savetxt(fname, malloc_vars[key], fmt="%.8e", delimiter=',')
         s += '*' + key + " = k2c_read_array(\"" + \
             fname + "\"," + str(malloc_vars[key].size) + "); \n"

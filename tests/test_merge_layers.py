@@ -125,6 +125,51 @@ class TestMergeLayers(unittest.TestCase):
         rcode = build_and_run(name)
         self.assertEqual(rcode, 0)
 
+    def test_Concatenate1(self):
+        inshp1 = (4, 3, 2)
+        inshp2 = (4, 3, 3)
+        inshp3 = (4, 3, 6)
+        axis = 3
+        a = keras.layers.Input(inshp1)
+        b = keras.layers.Input(inshp2)
+        c = keras.layers.Input(inshp3)
+        d = keras.layers.Concatenate(axis=axis)([a, b, c])
+        model = keras.models.Model([a, b, c], d)
+        name = 'test___Concatenate1' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)
+
+    def test_Concatenate2(self):
+        inshp1 = (2, 3, 6)
+        inshp2 = (2, 2, 6)
+        inshp3 = (2, 4, 6)
+        axis = 2
+        a = keras.layers.Input(inshp1)
+        b = keras.layers.Input(inshp2)
+        c = keras.layers.Input(inshp3)
+        d = keras.layers.Concatenate(axis=axis)([a, b, c])
+        model = keras.models.Model([a, b, c], d)
+        name = 'test___Concatenate2' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)
+
+    def test_Concatenate3(self):
+        inshp1 = (2, 3, 6, 3)
+        inshp2 = (3, 3, 6, 3)
+        inshp3 = (1, 3, 6, 3)
+        axis = 1
+        a = keras.layers.Input(inshp1)
+        b = keras.layers.Input(inshp2)
+        c = keras.layers.Input(inshp3)
+        d = keras.layers.Concatenate(axis=axis)([a, b, c])
+        model = keras.models.Model([a, b, c], d)
+        name = 'test___Concatenate3' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -123,5 +123,61 @@ void k2c_conv2d(k2c_tensor* output, k2c_tensor* input, k2c_tensor* kernel,
   activation(output->array,output->numel);
 }
 
+void k2c_crop1d(k2c_tensor* output, k2c_tensor* input, size_t crop[]) {
+
+  size_t offset = crop[0]*input->shape[1];
+  memcpy(&output->array[0],&input->array[offset],
+	 output->numel*sizeof(output->array[0]));
+}
+
+void k2c_crop2d(k2c_tensor* output, k2c_tensor* input, size_t crop[]) {
+
+  size_t out_height = output->shape[0];
+  size_t in_width = input->shape[1];
+  size_t in_channels = input->shape[2];
+  size_t crop_top = crop[0];
+  size_t crop_left = crop[2];
+  size_t crop_right = crop[3];
+
+  size_t offset = in_channels*in_width*crop_top + in_channels*crop_left;
+  size_t num = in_channels*(in_width-crop_left-crop_right);
+  for (size_t i=0; i<out_height; i++) {
+    memcpy(&output->array[i*num],&input->array[offset],num*sizeof(input->array[0]));
+    offset += in_width*in_channels;
+  }
+}
+
+void k2c_upsampling1d(k2c_tensor* output, k2c_tensor* input, size_t size) {
+
+  size_t in_height = input->shape[0];
+  size_t in_width = input->shape[1];
+
+  for (size_t i=0; i<in_height; i++) {
+    for (size_t j=0; j<size; j++) {
+      for (size_t k=0; k<in_width; k++) {
+	output->array[(size*i+j)*in_width + k] = input->array[i*in_width+k]; 
+      }
+    }
+  }
+}
+
+void k2c_upsampling2d(k2c_tensor* output, k2c_tensor* input, size_t size[]) {
+
+  size_t out_height = output->shape[0];
+  size_t out_width = output->shape[1];
+  size_t channels = input->shape[2];
+  
+  for (size_t i=0; i<out_height; i++) {
+    for (size_t j=0; j<out_width; j++) {
+      size_t insub[K2C_MAX_NDIM] = {i/size[0],j/size[1],0};
+      size_t outsub[K2C_MAX_NDIM] = {i,j,0};
+      memcpy(&output->array[k2c_sub2idx(outsub,output->shape,output->ndim)],
+	     &input->array[k2c_sub2idx(insub,input->shape,input->ndim)],
+	     channels*sizeof(input->array[0]));
+    }
+  }
+}
+      
+
 
 #endif /* KERAS2C_CONVOLUTION_LAYERS_H */

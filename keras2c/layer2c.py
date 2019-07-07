@@ -176,7 +176,7 @@ class Layers2C():
         self.write_layer_GlobalPooling(layer, inputs, outputs, i)
 
     def write_layer_GlobalPooling(self, layer, inputs, outputs, i):
-        nm, pnm, inputs, outputs = self.format_io_names(layer, inputs, outputs)
+        _, _, inputs, outputs = self.format_io_names(layer, inputs, outputs)
         if 'Max' in layer_type(layer):
             self.layers += 'k2c_global_max_pooling('
         else:
@@ -202,7 +202,7 @@ class Layers2C():
         self.write_layer_Merge(layer, inputs, outputs, i)
 
     def write_layer_Merge(self, layer, inputs, outputs, i):
-        nm, pnm, inputs, outputs = self.format_io_names(layer, inputs, outputs)
+        nm, _, inputs, outputs = self.format_io_names(layer, inputs, outputs)
         if 'Subtract' == layer_type(layer):
             self.layers += 'k2c_subtract('
         elif 'Add' == layer_type(layer):
@@ -216,6 +216,13 @@ class Layers2C():
         elif 'Minimum' == layer_type(layer):
             self.layers += 'k2c_min('
         self.layers += outputs + ',' + nm + '_num_tensors' + str(i) + ','
+        c = ','.join(inputs)
+        self.layers += c + '); \n'
+
+    def write_layer_Concatenate(self, layer, inputs, outputs, i):
+        nm, _, inputs, outputs = self.format_io_names(layer, inputs, outputs)
+        self.layers += 'k2c_concatenate(' + outputs + ',' + nm + \
+                       '_axis' + ',' + nm + '_num_tensors' + str(i) + ','
         c = ','.join(inputs)
         self.layers += c + '); \n'
 
@@ -239,7 +246,7 @@ class Layers2C():
             layer.get_config()['activation'] + '); \n'
 
     def write_layer_Activation(self, layer, inputs, outputs, i):
-        nm, pnm, inputs, outputs, is_model_input, is_model_output = self.format_io_names(
+        _, _, inputs, outputs, is_model_input, is_model_output = self.format_io_names(
             layer, inputs, outputs, True)
         activation = 'k2c_' + layer.get_config()['activation']
         if is_model_input:
@@ -266,7 +273,7 @@ class Layers2C():
         self.write_layer_AdvancedActivation(layer, inputs, outputs, i)
 
     def write_layer_AdvancedActivation(self, layer, inputs, outputs, i):
-        nm, pnm, inputs, outputs, is_model_input, is_model_output = self.format_io_names(
+        nm, _, inputs, outputs, is_model_input, is_model_output = self.format_io_names(
             layer, inputs, outputs, True)
         if is_model_input:
             inp = inputs + '->'
@@ -300,17 +307,17 @@ class Layers2C():
                 inputs + '->ndim; // copy data into output struct \n'
             self.layers += outputs + '->numel = ' + inputs + '->numel; \n'
             self.layers += 'memcpy(&' + outputs + '->shape,&' + inputs + \
-                '->shape,K2C_MAX_NDIM*sizeof(size_t));  \n'
+                           '->shape,K2C_MAX_NDIM*sizeof(size_t));  \n'
             self.layers += 'memcpy(' + outputs + '->array,' + inputs + '->array,' + \
                            outputs + \
-                           '->numel*sizeof(' + outputs + '->array[0])); \n'
+                '->numel*sizeof(' + outputs + '->array[0])); \n'
         elif is_model_input:
             self.layers += 'k2c_tensor ' + outputs + '; \n'
             self.layers += outputs + '.ndim = ' + \
                 inputs + '->ndim; // copy data into output struct \n'
             self.layers += outputs + '.numel = ' + inputs + '->numel; \n'
             self.layers += 'memcpy(' + outputs + '.shape,' + inputs + \
-                '->shape,K2C_MAX_NDIM*sizeof(size_t));  \n'
+                           '->shape,K2C_MAX_NDIM*sizeof(size_t));  \n'
             self.layers += outputs + '.array = &' + inputs + \
                 '->array[0]; // rename for clarity \n'
         elif is_model_output:
@@ -318,22 +325,22 @@ class Layers2C():
                 inputs + '.ndim; // copy data into output struct \n'
             self.layers += outputs + '->numel = ' + inputs + '.numel; \n'
             self.layers += 'memcpy(' + outputs + '->shape,' + inputs + \
-                '.shape,K2C_MAX_NDIM*sizeof(size_t));  \n'
+                           '.shape,K2C_MAX_NDIM*sizeof(size_t));  \n'
             self.layers += 'memcpy(' + outputs + '->array,' + inputs + '.array,' + \
                            outputs + \
-                           '->numel*sizeof(' + outputs + '->array[0])); \n'
+                '->numel*sizeof(' + outputs + '->array[0])); \n'
         else:
             self.layers += 'k2c_tensor ' + outputs + '; \n'
             self.layers += outputs + '.ndim = ' + \
                 inputs + '.ndim; // copy data into output struct \n'
             self.layers += outputs + '.numel = ' + inputs + '.numel; \n'
             self.layers += 'memcpy(' + outputs + '.shape,' + inputs + \
-                '.shape,K2C_MAX_NDIM*sizeof(size_t));  \n'
+                           '.shape,K2C_MAX_NDIM*sizeof(size_t));  \n'
             self.layers += outputs + '.array = &' + inputs + \
                 '.array[0]; // rename for clarity \n'
 
     def write_layer_Reshape(self, layer, inputs, outputs, i):
-        nm, pnm, inputs, outputs, is_model_input, is_model_output = self.format_io_names(
+        nm, _, inputs, outputs, is_model_input, is_model_output = self.format_io_names(
             layer, inputs, outputs, True)
         self.layers += 'k2c_reshape(' + inputs + ',' + nm + \
             '_newshp,' + nm + '_newndim); \n'
@@ -341,19 +348,19 @@ class Layers2C():
                                is_model_input, is_model_output)
 
     def write_layer_Flatten(self, layer, inputs, outputs, i):
-        nm, _, inputs, outputs, is_model_input, is_model_output = self.format_io_names(
+        _, _, inputs, outputs, is_model_input, is_model_output = self.format_io_names(
             layer, inputs, outputs, True)
         self.layers += 'k2c_flatten(' + inputs + '); \n'
         self.write_dummy_layer(layer, inputs, outputs, i,
                                is_model_input, is_model_output)
 
     def write_layer_Permute(self, layer, inputs, outputs, i):
-        nm, pnm, inputs, outputs = self.format_io_names(layer, inputs, outputs)
+        nm, _, inputs, outputs = self.format_io_names(layer, inputs, outputs)
         self.layers += 'k2c_permute_dims(' + outputs + ',' + inputs + \
             ',' + nm + '_permute); \n'
 
     def write_layer_RepeatVector(self, layer, inputs, outputs, i):
-        nm, pnm, inputs, outputs = self.format_io_names(layer, inputs, outputs)
+        nm, _, inputs, outputs = self.format_io_names(layer, inputs, outputs)
         self.layers += 'k2c_repeat_vector(' + outputs + ',' + inputs + \
             ',' + nm + '_n); \n'
 
@@ -375,13 +382,44 @@ class Layers2C():
         self.layers += 'k2c_embedding(' + outputs + ',' + inputs + \
             ',' + pnm + '_kernel); \n'
 
+    def write_layer_UpSampling1D(self, layer, inputs, outputs, i):
+        self.write_layer_UpSampling(layer, inputs, outputs, i)
+
+    def write_layer_UpSampling2D(self, layer, inputs, outputs, i):
+        self.write_layer_UpSampling(layer, inputs, outputs, i)
+
+    def write_layer_UpSampling(self, layer, inputs, outputs, i):
+        nm, _, inputs, outputs = self.format_io_names(
+            layer, inputs, outputs)
+        if layer_type(layer)[-2:] == '1D':
+            self.layers += 'k2c_upsampling1d('
+        elif layer_type(layer)[-2:] == '2D':
+            self.layers += 'k2c_upsampling2d('
+        elif layer_type(layer)[-2:] == '3D':
+            self.layers += 'k2c_upsampling3d('
+        self.layers += outputs + ',' + inputs + ',' + nm + '_size); \n'
+
+    def write_layer_Cropping1D(self, layer, inputs, outputs, i):
+        self.write_layer_Cropping(layer, inputs, outputs, i)
+
+    def write_layer_Cropping2D(self, layer, inputs, outputs, i):
+        self.write_layer_Cropping(layer, inputs, outputs, i)
+
+    def write_layer_Cropping(self, layer, inputs, outputs, i):
+        nm, _, inputs, outputs = self.format_io_names(
+            layer, inputs, outputs)
+        if layer_type(layer)[-2:] == '1D':
+            self.layers += 'k2c_crop1d('
+        elif layer_type(layer)[-2:] == '2D':
+            self.layers += 'k2c_crop2d('
+        elif layer_type(layer)[-2:] == '3D':
+            self.layers += 'k2c_crop3d('
+        self.layers += outputs + ',' + inputs + ',' + nm + '_crop); \n'
+
     def write_layer_ZeroPadding1D(self, layer, inputs, outputs, i):
         self.write_layer_ZeroPad(layer, inputs, outputs, i)
 
     def write_layer_ZeroPadding2D(self, layer, inputs, outputs, i):
-        self.write_layer_ZeroPad(layer, inputs, outputs, i)
-
-    def write_layer_ZeroPadding3D(self, layer, inputs, outputs, i):
         self.write_layer_ZeroPad(layer, inputs, outputs, i)
 
     def write_layer_ZeroPad(self, layer, inputs, outputs, i):

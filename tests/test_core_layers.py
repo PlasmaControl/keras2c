@@ -21,6 +21,7 @@ __email__ = "wconlin@princeton.edu"
 
 def build_and_run(name):
     ccflags = '-g -O0 -std=c99 -fprofile-arcs -ftest-coverage -I./include/'
+    #ccflags = '-Ofast -std=c99 -I./include/'
     cc = 'gcc ' + ccflags + ' -o ' + name + ' ' + name + '_test_suite.c -lm'
     subprocess.run(cc.split())
     rcode = subprocess.run(['./' + name]).returncode

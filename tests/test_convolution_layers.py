@@ -136,6 +136,9 @@ class TestConvolutionLayers(unittest.TestCase):
         rcode = build_and_run(name)
         self.assertEqual(rcode, 0)
 
+
+class TestPadding(unittest.TestCase):
+
     def test_ZeroPad1D(self):
         inshp = (10, 12)
         pad_top = 3
@@ -159,6 +162,59 @@ class TestConvolutionLayers(unittest.TestCase):
             padding=((pad_top, pad_bottom), (pad_left, pad_right)))(a)
         model = keras.models.Model(inputs=a, outputs=b)
         name = 'test___ZeroPad2D' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)
+
+
+class TestCropping(unittest.TestCase):
+
+    def test_Cropping1D(self):
+        inshp = (10, 12)
+        crop_top = 3
+        crop_bottom = 1
+        a = keras.layers.Input(inshp)
+        b = keras.layers.Cropping1D(cropping=(crop_top, crop_bottom))(a)
+        model = keras.models.Model(inputs=a, outputs=b)
+        name = 'test___Cropping1D' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)
+
+    def test_Cropping2D(self):
+        inshp = (10, 12, 5)
+        crop_top = 3
+        crop_bottom = 1
+        crop_left = 4
+        crop_right = 3
+        a = keras.layers.Input(inshp)
+        b = keras.layers.Cropping2D(
+            cropping=((crop_top, crop_bottom), (crop_left, crop_right)))(a)
+        model = keras.models.Model(inputs=a, outputs=b)
+        name = 'test___Cropping2D' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)
+
+
+class TestUpSampling(unittest.TestCase):
+
+    def test_UpSampling1D(self):
+        inshp = (4, 10)
+        a = keras.layers.Input(inshp)
+        b = keras.layers.UpSampling1D(3)(a)
+        model = keras.models.Model(a, b)
+        name = 'test___UpSampling1D' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)
+
+    def test_UpSampling2D(self):
+        inshp = (4, 5, 10)
+        a = keras.layers.Input(inshp)
+        b = keras.layers.UpSampling2D((3, 4))(a)
+        model = keras.models.Model(a, b)
+        name = 'test___UpSampling2D' + str(int(time.time()))
         keras2c_main.k2c(model, name)
         rcode = build_and_run(name)
         self.assertEqual(rcode, 0)

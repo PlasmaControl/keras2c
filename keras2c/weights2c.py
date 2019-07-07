@@ -440,6 +440,20 @@ class Weights2C():
                                        outp + '_output')
         self.stack_vars += '\n\n'
 
+    def write_weights_Concatenate(self, layer):
+        inputs, outputs = get_layer_io_names(layer)
+        for i, (inp, outp) in enumerate(zip(inputs, outputs)):
+            outshp = layer.get_output_at(i).shape[1:]
+            num_tensors = len(inp)
+            self.stack_vars += 'size_t ' + layer.name + '_num_tensors' + str(i) + \
+                ' = ' + str(num_tensors) + '; \n'
+            self.stack_vars += 'size_t ' + layer.name + '_axis = ' +\
+                str(layer.get_config()['axis']-1) + '; \n'
+        if outp not in self.model_io[1]:
+            self.write_weights_array2c(np.zeros(outshp),
+                                       outp + '_output')
+        self.stack_vars += '\n\n'
+
     def write_weights_ELU(self, layer):
         alpha = layer.get_config()['alpha']
         self.stack_vars += 'float ' + layer.name + \
@@ -525,6 +539,42 @@ class Weights2C():
         self.write_outputs(layer)
         kernel = layer.get_weights()[0]
         self.write_weights_array2c(kernel, nm+'_kernel')
+        self.stack_vars += '\n\n'
+
+    def write_weights_UpSampling1D(self, layer):
+        nm = layer.name
+        self.write_outputs(layer)
+        size = layer.get_config()['size']
+        self.stack_vars += 'size_t ' + nm + '_size = ' + str(size) + '; \n'
+        self.stack_vars += '\n\n'
+
+    def write_weights_UpSampling2D(self, layer):
+        nm = layer.name
+        self.write_outputs(layer)
+        size = layer.get_config()['size']
+        self.stack_vars += 'size_t ' + nm + '_size[2] = {' + str(size[0]) + \
+            ',' + str(size[1]) + '}; \n'
+        self.stack_vars += '\n\n'
+
+    def write_weights_Cropping1D(self, layer):
+        nm = layer.name
+        self.write_outputs(layer)
+        crop_top = layer.get_config()['cropping'][0]
+        crop_bottom = layer.get_config()['cropping'][1]
+        self.stack_vars += 'size_t ' + nm + '_crop[2] = {' + str(crop_top) + ','\
+            + str(crop_bottom) + '}; \n'
+        self.stack_vars += '\n\n'
+
+    def write_weights_Cropping2D(self, layer):
+        nm = layer.name
+        self.write_outputs(layer)
+        crop_top = layer.get_config()['cropping'][0][0]
+        crop_bottom = layer.get_config()['cropping'][0][1]
+        crop_left = layer.get_config()['cropping'][1][0]
+        crop_right = layer.get_config()['cropping'][1][1]
+        self.stack_vars += 'size_t ' + nm + '_crop[4] = {' + str(crop_top) + ','\
+            + str(crop_bottom) + ',' + str(crop_left) + \
+            ',' + str(crop_right) + '}; \n'
         self.stack_vars += '\n\n'
 
     def write_weights_ZeroPadding1D(self, layer):
