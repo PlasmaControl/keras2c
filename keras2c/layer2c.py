@@ -106,6 +106,8 @@ class Layers2C():
             fname = 'k2c_conv1d('
         elif layer_type(layer)[-2:] == '2D':
             fname = 'k2c_conv2d('
+        elif layer_type(layer)[-2:] == '3D':
+            fname = 'k2c_conv3d('
         if layer.get_config()['padding'] == 'valid':
             self.layers += fname + outputs + ',' + inputs + ',' + \
                 pnm + '_kernel, \n\t' + pnm + '_bias,' + nm + \
@@ -122,6 +124,9 @@ class Layers2C():
         self.write_layer_Conv(layer, inputs, outputs, i)
 
     def write_layer_Conv2D(self, layer, inputs, outputs, i):
+        self.write_layer_Conv(layer, inputs, outputs, i)
+
+    def write_layer_Conv3D(self, layer, inputs, outputs, i):
         self.write_layer_Conv(layer, inputs, outputs, i)
 
     def write_layer_MaxPooling1D(self, layer, inputs, outputs, i):
@@ -388,6 +393,9 @@ class Layers2C():
     def write_layer_UpSampling2D(self, layer, inputs, outputs, i):
         self.write_layer_UpSampling(layer, inputs, outputs, i)
 
+    def write_layer_UpSampling3D(self, layer, inputs, outputs, i):
+        self.write_layer_UpSampling(layer, inputs, outputs, i)
+
     def write_layer_UpSampling(self, layer, inputs, outputs, i):
         nm, _, inputs, outputs = self.format_io_names(
             layer, inputs, outputs)
@@ -405,6 +413,9 @@ class Layers2C():
     def write_layer_Cropping2D(self, layer, inputs, outputs, i):
         self.write_layer_Cropping(layer, inputs, outputs, i)
 
+    def write_layer_Cropping3D(self, layer, inputs, outputs, i):
+        self.write_layer_Cropping(layer, inputs, outputs, i)
+
     def write_layer_Cropping(self, layer, inputs, outputs, i):
         nm, _, inputs, outputs = self.format_io_names(
             layer, inputs, outputs)
@@ -420,6 +431,9 @@ class Layers2C():
         self.write_layer_ZeroPad(layer, inputs, outputs, i)
 
     def write_layer_ZeroPadding2D(self, layer, inputs, outputs, i):
+        self.write_layer_ZeroPad(layer, inputs, outputs, i)
+
+    def write_layer_ZeroPadding3D(self, layer, inputs, outputs, i):
         self.write_layer_ZeroPad(layer, inputs, outputs, i)
 
     def write_layer_ZeroPad(self, layer, inputs, outputs, i):

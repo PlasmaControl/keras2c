@@ -6,7 +6,7 @@ Gets weights and other parameters from each layer and writes to C file
 # imports
 import numpy as np
 from keras2c.io_parsing import layer_type, get_layer_io_names, get_model_io_names
-maxndim = 4
+maxndim = 5
 
 
 __author__ = "Rory Conlin"
@@ -322,6 +322,50 @@ class Weights2C():
         self.write_weights_array2c(bias, layer.name + '_bias')
         self.stack_vars += '\n \n'
 
+    def write_weights_Conv3D(self, layer):
+        padding = layer.get_config()['padding']
+        stride = layer.get_config()['strides']
+        dilation = layer.get_config()['dilation_rate']
+        kernel_size = layer.get_config()['kernel_size']
+        self.stack_vars += 'size_t ' + layer.name + \
+            '_stride[3] = {' + ','.join([str(i) for i in stride]) + '}; \n'
+        self.stack_vars += 'size_t ' + layer.name + \
+            '_dilation[3] = {' + ','.join([str(i)
+                                           for i in dilation]) + '}; \n'
+        self.write_outputs(layer)
+        if padding == 'same':
+            inshp = layer.get_input_at(0).shape[1:]
+            pad_along_height = dilation[0]*(kernel_size[0]-1)
+            pad_top = int(pad_along_height // 2)
+            pad_bottom = int(pad_along_height - pad_top)
+            pad_along_width = dilation[1]*(kernel_size[1]-1)
+            pad_left = pad_along_width//2
+            pad_right = pad_along_width - pad_left
+            pad_along_depth = dilation[1]*(kernel_size[1]-1)
+            pad_front = pad_along_depth//2
+            pad_back = pad_along_depth - pad_front
+            padshp = (inshp[0]+pad_along_height,
+                      inshp[1]+pad_along_width,
+                      inshp[2]+pad_along_depth,
+                      inshp[3])
+            pad = [pad_top, pad_bottom, pad_left,
+                   pad_right, pad_front, pad_back]
+            self.write_weights_array2c(np.zeros(padshp), layer.name +
+                                       '_padded_input')
+            self.stack_vars += 'size_t ' + layer.name + \
+                '_pad[6] = {' + ','.join([str(i) for i in pad]) + '}; \n'
+            self.stack_vars += 'float ' + layer.name + '_fill = 0.0f; \n'
+
+        weights = layer.get_weights()
+        kernel = weights[0]
+        if layer.get_config()['use_bias']:
+            bias = weights[1]
+        else:
+            bias = np.zeros(kernel.shape[3])
+        self.write_weights_array2c(kernel, layer.name + '_kernel')
+        self.write_weights_array2c(bias, layer.name + '_bias')
+        self.stack_vars += '\n \n'
+
     def write_weights_MaxPooling1D(self, layer):
         return self.write_weights_Pooling1D(layer)
 
@@ -556,6 +600,14 @@ class Weights2C():
             ',' + str(size[1]) + '}; \n'
         self.stack_vars += '\n\n'
 
+    def write_weights_UpSampling3D(self, layer):
+        nm = layer.name
+        self.write_outputs(layer)
+        size = layer.get_config()['size']
+        self.stack_vars += 'size_t ' + nm + '_size[3] = {' + str(size[0]) + \
+            ',' + str(size[1]) + ',' + str(size[2]) + '}; \n'
+        self.stack_vars += '\n\n'
+
     def write_weights_Cropping1D(self, layer):
         nm = layer.name
         self.write_outputs(layer)
@@ -575,6 +627,20 @@ class Weights2C():
         self.stack_vars += 'size_t ' + nm + '_crop[4] = {' + str(crop_top) + ','\
             + str(crop_bottom) + ',' + str(crop_left) + \
             ',' + str(crop_right) + '}; \n'
+        self.stack_vars += '\n\n'
+
+    def write_weights_Cropping3D(self, layer):
+        nm = layer.name
+        self.write_outputs(layer)
+        crop0 = layer.get_config()['cropping'][0][0]
+        crop1 = layer.get_config()['cropping'][0][1]
+        crop2 = layer.get_config()['cropping'][1][0]
+        crop3 = layer.get_config()['cropping'][1][1]
+        crop4 = layer.get_config()['cropping'][2][0]
+        crop5 = layer.get_config()['cropping'][2][1]
+        self.stack_vars += 'size_t ' + nm + '_crop[6] = {' + str(crop0) + ','\
+            + str(crop1) + ',' + str(crop2) + ',' + str(crop3) + \
+            ',' + str(crop4) + ',' + str(crop5) + '}; \n'
         self.stack_vars += '\n\n'
 
     def write_weights_ZeroPadding1D(self, layer):
@@ -597,6 +663,21 @@ class Weights2C():
         self.stack_vars += 'size_t ' + nm + '_pad[4] = {' + str(pad_top) + ','\
             + str(pad_bottom) + ',' + str(pad_left) + \
             ',' + str(pad_right) + '}; \n'
+        self.stack_vars += 'float ' + nm + '_fill = 0.0f; \n'
+        self.stack_vars += '\n\n'
+
+    def write_weights_ZeroPadding3D(self, layer):
+        nm = layer.name
+        self.write_outputs(layer)
+        pad0 = layer.get_config()['padding'][0][0]
+        pad1 = layer.get_config()['padding'][0][1]
+        pad2 = layer.get_config()['padding'][1][0]
+        pad3 = layer.get_config()['padding'][1][1]
+        pad4 = layer.get_config()['padding'][2][0]
+        pad5 = layer.get_config()['padding'][2][1]
+        self.stack_vars += 'size_t ' + nm + '_pad[6] = {' + str(pad0) + ','\
+            + str(pad1) + ',' + str(pad2) + ',' + str(pad3) + \
+            ',' + str(pad4) + ',' + str(pad5) + '}; \n'
         self.stack_vars += 'float ' + nm + '_fill = 0.0f; \n'
         self.stack_vars += '\n\n'
 

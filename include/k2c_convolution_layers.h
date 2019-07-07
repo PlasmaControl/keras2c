@@ -51,11 +51,50 @@ void k2c_pad2d(k2c_tensor* output, k2c_tensor* input, float fill, size_t pad[]) 
       output->array[i] = fill;}
   }
   // memcpy the old array in the middle
-  size_t offset = in_channels*(pad_left+pad_right+in_width)*pad_top + in_channels*pad_left;
+  size_t offset = in_channels*(pad_left+pad_right+in_width)*pad_top +
+    in_channels*pad_left;
   size_t num = in_channels*in_width;
   for (size_t i=0; i<in_height; i++) {
-    memcpy(&output->array[offset],&input->array[i*num],num*sizeof(input->array[0]));
+    memcpy(&output->array[offset],
+	   &input->array[i*num],
+	   num*sizeof(input->array[0]));
     offset += num+in_channels*(pad_left+pad_right);
+  }
+}
+
+void k2c_pad3d(k2c_tensor* output, k2c_tensor* input, float fill, size_t pad[]) {
+
+  size_t dim1 = input->shape[0];
+  size_t dim2 = input->shape[1];
+  size_t dim3 = input->shape[2];
+  size_t outdim1 = dim1 + pad[0] + pad[1];
+  size_t outdim2 = dim2 + pad[2] + pad[3];
+  size_t outdim3 = dim3 + pad[4] + pad[5];
+  size_t in_channels = input->shape[3];
+
+  // set output array to fill value
+  if (fabs(fill) < 1e-6) {
+    // fill is ~zero, use memset
+    memset(output->array,0,output->numel*sizeof(output->array[0]));
+  }
+  else {
+    for(size_t i=0; i<output->numel; i++) {
+      output->array[i] = fill;}
+  }
+  // memcpy the old array in the middle
+  size_t offset1 = in_channels*(outdim2*outdim3)*pad[0] + in_channels*outdim3*pad[2] + in_channels*pad[4];
+  size_t num = in_channels*dim3;
+  size_t outstep2 = num+in_channels*(pad[4]+pad[5]);
+  size_t outstep1 = outdim2*outdim3*in_channels;
+  size_t instep1 = dim2*dim3*in_channels;
+  size_t instep2 = dim3*in_channels;
+
+  for (size_t i=0; i<dim1; i++) {
+    for (size_t j=0; j<dim2; j++) {
+    memcpy(&output->array[offset1+i*outstep1 + j*outstep2],
+	   &input->array[i*instep1+j*instep2],
+	   num*sizeof(input->array[0]));
+    }
   }
 }
 
@@ -108,11 +147,53 @@ void k2c_conv2d(k2c_tensor* output, k2c_tensor* input, k2c_tensor* kernel,
 	    for (size_t q=0; q < in_channels; q++) {
 	      size_t outsub[K2C_MAX_NDIM] = {x0,x1,k};
 	      size_t inpsub[K2C_MAX_NDIM] = {x0*stride[0] + dilation[0]*z0,
-					     x1*stride[1] + dilation[1]*z1,q};
+					     x1*stride[1] + dilation[1]*z1,
+					     q};
 	      size_t kersub[K2C_MAX_NDIM] = {z0,z1,q,k};
 	      output->array[k2c_sub2idx(outsub,output->shape,output->ndim)] +=
 		kernel->array[k2c_sub2idx(kersub,kernel->shape,kernel->ndim)]*
 		input->array[k2c_sub2idx(inpsub,input->shape,input->ndim)];
+	    }
+	  }
+	}
+      }
+    }
+  }
+  k2c_bias_add(output,bias);
+  activation(output->array,output->numel);
+}
+
+void k2c_conv3d(k2c_tensor* output, k2c_tensor* input, k2c_tensor* kernel,
+		k2c_tensor* bias, size_t stride[], size_t dilation[],
+		   void (*activation) (float[], size_t)) {
+  /* 3D (spatial) convolution. Assumes a "channels last" structure
+   */
+  memset(output->array,0,output->numel*sizeof(output->array[0]));
+  size_t dim1 = output->shape[0];
+  size_t dim2 = output->shape[1];
+  size_t dim3 = output->shape[2];
+  size_t out_channels = output->shape[3];
+  size_t in_channels = input->shape[3];
+
+  for (size_t x0=0; x0 < dim1; x0++){
+    for (size_t x1=0; x1 < dim2; x1++) {
+      for (size_t x2=0; x2<dim3; x2++) {
+	for (size_t k=0; k < out_channels; k++) {
+	  for (size_t z0=0; z0 < kernel->shape[0]; z0++) {
+	    for (size_t z1=0; z1 < kernel->shape[1]; z1++) {
+	      for (size_t z2=0; z2 < kernel->shape[2]; z2++) {	      
+		for (size_t q=0; q < in_channels; q++) {
+		  size_t outsub[K2C_MAX_NDIM] = {x0,x1,x2,k};
+		  size_t inpsub[K2C_MAX_NDIM] = {x0*stride[0] + dilation[0]*z0,
+						 x1*stride[1] + dilation[1]*z1,
+						 x2*stride[2] + dilation[2]*z2,
+						 q};
+		  size_t kersub[K2C_MAX_NDIM] = {z0,z1,z2,q,k};
+		  output->array[k2c_sub2idx(outsub,output->shape,output->ndim)] +=
+		    kernel->array[k2c_sub2idx(kersub,kernel->shape,kernel->ndim)]*
+		    input->array[k2c_sub2idx(inpsub,input->shape,input->ndim)];
+		}
+	      }
 	    }
 	  }
 	}
@@ -147,6 +228,33 @@ void k2c_crop2d(k2c_tensor* output, k2c_tensor* input, size_t crop[]) {
   }
 }
 
+void k2c_crop3d(k2c_tensor* output, k2c_tensor* input, size_t crop[]) {
+
+  size_t dim1 = input->shape[0];
+  size_t dim2 = input->shape[1];
+  size_t dim3 = input->shape[2];
+  size_t outdim1 = dim1 - crop[0] - crop[1];
+  size_t outdim2 = dim2 - crop[2] - crop[3];
+  size_t outdim3 = dim3 - crop[4] - crop[5];
+  size_t in_channels = input->shape[3];
+
+  size_t offset1 = in_channels*(dim2*dim3)*crop[0] +
+    in_channels*dim3*crop[2] + in_channels*crop[4];
+  size_t num = in_channels*outdim3;
+  size_t instep2 = num+in_channels*(crop[4]+crop[5]);
+  size_t instep1 = dim2*dim3*in_channels;
+  size_t outstep1 = outdim2*outdim3*in_channels;
+  size_t outstep2 = outdim3*in_channels;
+
+  for (size_t i=0; i<outdim1; i++) {
+    for (size_t j=0; j<outdim2; j++) {
+    memcpy(&output->array[i*outstep1 + j*outstep2],
+	   &input->array[offset1+i*instep1+j*instep2],
+	   num*sizeof(input->array[0]));
+    }
+  }
+}
+
 void k2c_upsampling1d(k2c_tensor* output, k2c_tensor* input, size_t size) {
 
   size_t in_height = input->shape[0];
@@ -178,6 +286,24 @@ void k2c_upsampling2d(k2c_tensor* output, k2c_tensor* input, size_t size[]) {
   }
 }
       
+void k2c_upsampling3d(k2c_tensor* output, k2c_tensor* input, size_t size[]) {
 
+  size_t dim1 = output->shape[0];
+  size_t dim2 = output->shape[1];
+  size_t dim3 = output->shape[2];
+  size_t channels = input->shape[3];
+  
+  for (size_t i=0; i<dim1; i++) {
+    for (size_t j=0; j<dim2; j++) {
+      for (size_t k=0; k<dim3; k++) {
+	size_t insub[K2C_MAX_NDIM] = {i/size[0],j/size[1],k/size[2],0};
+	size_t outsub[K2C_MAX_NDIM] = {i,j,k,0};
+	memcpy(&output->array[k2c_sub2idx(outsub,output->shape,output->ndim)],
+	       &input->array[k2c_sub2idx(insub,input->shape,input->ndim)],
+	       channels*sizeof(input->array[0]));
+      }
+    }
+  }
+}
 
 #endif /* KERAS2C_CONVOLUTION_LAYERS_H */

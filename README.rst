@@ -14,7 +14,7 @@ It is designed to be as simple as possible for real time applications.
 Supported Layers
 ****************
 - **Core Layers**: Dense, Activation, Dropout, Flatten, Input, Reshape, Permute, RepeatVector,  ActivityRegularization, SpatialDropout1D, SpatialDropout2D, SpatialDropout3D
-- **Convolution Layers**: Conv1D, Conv2D, Cropping1D, Cropping2D, UpSampling1D, UpSampling2D, ZeroPadding1D, ZeroPadding2D
+- **Convolution Layers**: Conv1D, Conv2D, Conv3D, Cropping1D, Cropping2D, Cropping3D, UpSampling1D, UpSampling2D, UpSampling3D, ZeroPadding1D, ZeroPadding2D, ZeroPadding3D
 - **Pooling Layers**: MaxPooling1D, MaxPooling2D, AveragePooling1D, AveragePooling2D, GlobalMaxPooling1D, GlobalAveragePooling1D, GlobalMaxPooling2D, GlobalAveragePooling2D, GlobalMaxPooling3D,GlobalAveragePooling3D
 - **Recurrent Layers**: SimpleRNN, GRU, LSTM, SimpleRNNCell, GRUCell, LSTMCell
 - **Embedding Layers**: Embedding
@@ -26,7 +26,7 @@ Supported Layers
 ToDo
 ****
 - **Core Layers**: Lambda, Masking
-- **Convolution Layers**: SeparableConv1D, SeparableConv2D, DepthwiseConv2D, Conv2DTranspose, Conv3D, Conv3DTranspose, Cropping3D, UpSampling3D, ZeroPadding3D
+- **Convolution Layers**: SeparableConv1D, SeparableConv2D, DepthwiseConv2D, Conv2DTranspose, Conv3DTranspose
 - **Pooling Layers**: MaxPooling3D, AveragePooling3D
 - **Locally Connected Layers**: LocallyConnected1D, LocallyConnected2D
 - **Recurrent Layers**: ConvLSTM2D, ConvLSTM2DCell
