@@ -28,7 +28,7 @@ def make_test_suite(model, function_name, malloc_vars, num_tests=10, tol=1e-5):
   #      output_shape.insert(i, model.outputs[i].shape[1:])
 
     file = open(function_name + '_test_suite.c', "x+")
-    s = '#include <stdio.h> \n#include <math.h> \n#include <sys/time.h> \n#include "' + \
+    s = '#include <stdio.h> \n#include <math.h> \n#include <time.h> \n#include "' + \
         function_name + '.h" \n\n'
     s += 'float maxabs(k2c_tensor *tensor1, k2c_tensor *tensor2);\n'
     s += 'struct timeval GetTimeStamp(); \n \n'
@@ -71,7 +71,7 @@ def make_test_suite(model, function_name, malloc_vars, num_tests=10, tol=1e-5):
         s += 'float* ' + var + '; \n'
     s += function_name + \
         '_initialize(' + ','.join(['&' + var for var in malloc_vars]) + '); \n'
-    s += ' struct timeval t1 = GetTimeStamp(); \n'
+    s += 'clock_t t0 = clock(); \n'
     file.write(s)
 
     for i in range(num_tests):
@@ -84,12 +84,10 @@ def make_test_suite(model, function_name, malloc_vars, num_tests=10, tol=1e-5):
         s += '); \n'
         file.write(s)
     file.write('\n')
-    s = 'struct timeval t2 = GetTimeStamp(); \n'
-    s += 'typedef unsigned long long u64; \n'
-    s += 'u64 t1u = t1.tv_sec*1e6 + t1.tv_usec; \n'
-    s += 'u64 t2u = t2.tv_sec*1e6 + t2.tv_usec; \n'
+    s = 'clock_t t1 = clock(); \n'
     s += 'printf("Average time over ' + str(num_tests) + \
-        ' tests: %llu us \\n", (t2u-t1u)/' + str(num_tests) + '); \n'
+        ' tests: %e s \\n\",(double)(t1-t0)/(double)CLOCKS_PER_SEC/(double)' + \
+        str(num_tests) + '); \n'
     file.write(s)
 
     for i in range(num_tests):
@@ -122,10 +120,5 @@ def make_test_suite(model, function_name, malloc_vars, num_tests=10, tol=1e-5):
     y = fabs(tensor1->array[i]-tensor2->array[i]);
     if (y>x) {x=y;}}
     return x;}\n\n"""
-    file.write(s)
-    s = """struct timeval GetTimeStamp() {
-    struct timeval tv;
-    gettimeofday(&tv,NULL);
-    return tv;}"""
     file.write(s)
     file.close()

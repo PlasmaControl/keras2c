@@ -25,8 +25,8 @@ def build_and_run(name):
     cc = 'gcc ' + ccflags + ' -o ' + name + ' ' + name + '_test_suite.c -lm'
     subprocess.run(cc.split())
     rcode = subprocess.run(['./' + name]).returncode
-    if not rcode and not os.environ.get('CI'):
-        subprocess.run('rm ' + name + '*', shell=True)
+    # if not rcode and not os.environ.get('CI'):
+    #     subprocess.run('rm ' + name + '*', shell=True)
     return rcode
 
 

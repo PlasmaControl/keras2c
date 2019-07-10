@@ -90,7 +90,7 @@ def k2c(model, function_name, malloc=False, num_tests=10):
     function_name = str(function_name)
     filename = function_name + '.h'
     if isinstance(model, str):
-        model = keras.models.load_model(str(model_filepath))
+        model = keras.models.load_model(model)
     elif not isinstance(model, (keras.models.Model,
                                 keras.engine.training.Model)):
 

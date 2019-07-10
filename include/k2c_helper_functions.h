@@ -87,8 +87,6 @@ void k2c_idx2sub(size_t idx, size_t sub[], size_t shape[], size_t ndim) {
     sub[i] = idx2%shape[i];
     idx2 /= shape[i];
   }
-
-
 }
 
 void k2c_dot(k2c_tensor* C, k2c_tensor* A, k2c_tensor* B, size_t axesA[],

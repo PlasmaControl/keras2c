@@ -54,11 +54,12 @@ void k2c_pad2d(k2c_tensor* output, k2c_tensor* input, float fill, size_t pad[]) 
   size_t offset = in_channels*(pad_left+pad_right+in_width)*pad_top +
     in_channels*pad_left;
   size_t num = in_channels*in_width;
+  size_t step = num+in_channels*(pad_left+pad_right);
   for (size_t i=0; i<in_height; i++) {
     memcpy(&output->array[offset],
 	   &input->array[i*num],
 	   num*sizeof(input->array[0]));
-    offset += num+in_channels*(pad_left+pad_right);
+    offset += step;
   }
 }
 
