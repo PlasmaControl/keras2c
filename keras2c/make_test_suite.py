@@ -58,12 +58,12 @@ def make_test_suite(model, function_name, malloc_vars, num_tests=10, tol=1e-5):
             # write predictions
         if not isinstance(outputs, list):
             outputs = [outputs]
-            for j, _ in enumerate(model_outputs):
-                output = outputs[j][0, :]
-                file.write(Weights2C.array2c(output, 'keras_' +
-                                             model_outputs[j] + '_test' + str(i+1)))
-                file.write(Weights2C.array2c(np.zeros(output.shape), 'c_' +
-                                             model_outputs[j] + '_test' + str(i+1)))
+        for j, _ in enumerate(model_outputs):
+            output = outputs[j][0, :]
+            file.write(Weights2C.array2c(output, 'keras_' +
+                                         model_outputs[j] + '_test' + str(i+1)))
+            file.write(Weights2C.array2c(np.zeros(output.shape), 'c_' +
+                                         model_outputs[j] + '_test' + str(i+1)))
     s = ' float errors[' + str(num_tests*num_outputs) + '];\n'
     s += ' size_t num_tests = ' + str(num_tests) + '; \n'
     s += 'size_t num_outputs = ' + str(num_outputs) + '; \n'
