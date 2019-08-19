@@ -491,8 +491,11 @@ class Weights2C():
             num_tensors = len(inp)
             self.stack_vars += 'size_t ' + layer.name + '_num_tensors' + str(i) + \
                 ' = ' + str(num_tensors) + '; \n'
+            ax = layer.get_config()['axis']
+            if ax < 0:
+                ax += len(layer.get_input_at(i)[0].shape)
             self.stack_vars += 'size_t ' + layer.name + '_axis = ' +\
-                str(layer.get_config()['axis']-1) + '; \n'
+                str(ax-1) + '; \n'
         if outp not in self.model_io[1]:
             self.write_weights_array2c(np.zeros(outshp),
                                        outp + '_output')
