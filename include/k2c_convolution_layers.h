@@ -114,12 +114,22 @@ void k2c_conv1d(k2c_tensor* output, k2c_tensor* input, k2c_tensor* kernel,
     for (size_t k=0; k < out_channels; k++) {
       for (size_t z=0; z < kernel->shape[0]; z++) {
 	for (size_t q=0; q < in_channels; q++) {
-	  size_t outsub[K2C_MAX_NDIM] = {x0,k};
-	  size_t inpsub[K2C_MAX_NDIM] = {x0*stride + dilation*z,q};
-	  size_t kersub[K2C_MAX_NDIM] = {z,q,k};
-	  output->array[k2c_sub2idx(outsub,output->shape,output->ndim)] +=
-	    kernel->array[k2c_sub2idx(kersub,kernel->shape,kernel->ndim)]*
-	    input->array[k2c_sub2idx(inpsub,input->shape,input->ndim)];
+	  /* size_t outsub[K2C_MAX_NDIM] = {x0,k}; */
+	  /* size_t inpsub[K2C_MAX_NDIM] = {x0*stride + dilation*z,q}; */
+	  /* size_t kersub[K2C_MAX_NDIM] = {z,q,k}; */
+
+
+	  /* size_t outidx = x0*out_channels + k; */
+	  /* size_t inpidx = (x0*stride + dilation*z)*in_channels + q; */
+	  /* size_t keridx = z*(kernel->shape[2]*kernel->shape[1]) + q*(kernel->shape[1]) + k; */
+	  
+	  output->array[x0*out_channels + k] +=
+	    kernel->array[z*(kernel->shape[2]*kernel->shape[1]) +
+			  q*(kernel->shape[2]) + k]*
+	    input->array[(x0*stride + dilation*z)*in_channels + q];
+	  /* output->array[k2c_sub2idx(outsub,output->shape,output->ndim)] += */
+	  /*   kernel->array[k2c_sub2idx(kersub,kernel->shape,kernel->ndim)]* */
+	  /*   input->array[k2c_sub2idx(inpsub,input->shape,input->ndim)]; */
 	}
       }
     }
@@ -146,14 +156,27 @@ void k2c_conv2d(k2c_tensor* output, k2c_tensor* input, k2c_tensor* kernel,
 	for (size_t z0=0; z0 < kernel->shape[0]; z0++) {
 	  for (size_t z1=0; z1 < kernel->shape[1]; z1++) {
 	    for (size_t q=0; q < in_channels; q++) {
-	      size_t outsub[K2C_MAX_NDIM] = {x0,x1,k};
-	      size_t inpsub[K2C_MAX_NDIM] = {x0*stride[0] + dilation[0]*z0,
-					     x1*stride[1] + dilation[1]*z1,
-					     q};
-	      size_t kersub[K2C_MAX_NDIM] = {z0,z1,q,k};
-	      output->array[k2c_sub2idx(outsub,output->shape,output->ndim)] +=
-		kernel->array[k2c_sub2idx(kersub,kernel->shape,kernel->ndim)]*
-		input->array[k2c_sub2idx(inpsub,input->shape,input->ndim)];
+	      /* size_t outsub[K2C_MAX_NDIM] = {x0,x1,k}; */
+	      /* size_t inpsub[K2C_MAX_NDIM] = {x0*stride[0] + dilation[0]*z0, */
+	      /* 				     x1*stride[1] + dilation[1]*z1, */
+	      /* 				     q}; */
+	      /* size_t kersub[K2C_MAX_NDIM] = {z0,z1,q,k}; */
+
+	      /* size_t outidx = x0*(output->shape[2]*output->shape[1]) + x1*(output->shape[2]) + k; */
+	      /* size_t keridx = z0*(kernel->shape[3]*kernel->shape[2]*kernel->shape[1]) + z1*(kernel->shape[3]*kernel->shape[2]) + q*(kernel->shape[3]) + k; */
+	      /* size_t inpidx = (x0*stride[0] + dilation[0]*z0)*(input->shape[2]*input->shape[1]) + (x1*stride[1] + dilation[1]*z1)*(input->shape[2]) + q; */
+
+	      output->array[x0*(output->shape[2]*output->shape[1])
+			    + x1*(output->shape[2]) + k] +=
+		kernel->array[z0*(kernel->shape[3]*kernel->shape[2]*kernel->shape[1])
+			      + z1*(kernel->shape[3]*kernel->shape[2])
+			      + q*(kernel->shape[3]) + k]*
+		input->array[(x0*stride[0]
+			      + dilation[0]*z0)*(input->shape[2]*input->shape[1])
+			     + (x1*stride[1] + dilation[1]*z1)*(input->shape[2]) + q];
+	      /* output->array[k2c_sub2idx(outsub,output->shape,output->ndim)] += */
+	      /* 	kernel->array[k2c_sub2idx(kersub,kernel->shape,kernel->ndim)]* */
+	      /* 	input->array[k2c_sub2idx(inpsub,input->shape,input->ndim)]; */
 	    }
 	  }
 	}
@@ -184,15 +207,38 @@ void k2c_conv3d(k2c_tensor* output, k2c_tensor* input, k2c_tensor* kernel,
 	    for (size_t z1=0; z1 < kernel->shape[1]; z1++) {
 	      for (size_t z2=0; z2 < kernel->shape[2]; z2++) {	      
 		for (size_t q=0; q < in_channels; q++) {
-		  size_t outsub[K2C_MAX_NDIM] = {x0,x1,x2,k};
-		  size_t inpsub[K2C_MAX_NDIM] = {x0*stride[0] + dilation[0]*z0,
-						 x1*stride[1] + dilation[1]*z1,
-						 x2*stride[2] + dilation[2]*z2,
-						 q};
-		  size_t kersub[K2C_MAX_NDIM] = {z0,z1,z2,q,k};
-		  output->array[k2c_sub2idx(outsub,output->shape,output->ndim)] +=
-		    kernel->array[k2c_sub2idx(kersub,kernel->shape,kernel->ndim)]*
-		    input->array[k2c_sub2idx(inpsub,input->shape,input->ndim)];
+		  /* size_t outsub[K2C_MAX_NDIM] = {x0,x1,x2,k}; */
+		  /* size_t inpsub[K2C_MAX_NDIM] = {x0*stride[0] + dilation[0]*z0, */
+		  /* 				 x1*stride[1] + dilation[1]*z1, */
+		  /* 				 x2*stride[2] + dilation[2]*z2, */
+		  /* 				 q}; */
+		  /* size_t kersub[K2C_MAX_NDIM] = {z0,z1,z2,q,k}; */
+
+		  /* size_t outidx = x0*(output->shape[3]*output->shape[2]*output->shape[1]) + x1*(output->shape[3]*output->shape[2]) + x2*(output->shape[3]) + k; */
+		  /* size_t keridx = z0*(kernel->shape[4]*kernel->shape[3]*kernel->shape[2]*kernel->shape[1]) + z1*(kernel->shape[4]*kernel->shape[3]*kernel->shape[2]) + z2*(kernel->shape[4]*kernel->shape[3]) + q*(kernel->shape[4]) + k; */
+		  /* size_t inpidx = (x0*stride[0] + dilation[0]*z0)*(input->shape[3]*input->shape[2]*input->shape[1]) + (x1*stride[1] + dilation[1]*z1)*(input->shape[3]*input->shape[2]) + (x2*stride[2] + dilation[2]*z2)*(input->shape[3]) + q; */
+		  
+		  output->array[x0*(output->shape[3]*output->shape[2]
+				    *output->shape[1])
+				+ x1*(output->shape[3]*output->shape[2])
+				+ x2*(output->shape[3]) + k] +=
+		    kernel->array[z0*(kernel->shape[4]*kernel->shape[3]
+				      *kernel->shape[2]*kernel->shape[1])
+				  + z1*(kernel->shape[4]*kernel->shape[3]
+					*kernel->shape[2])
+				  + z2*(kernel->shape[4]*kernel->shape[3])
+				  + q*(kernel->shape[4]) + k]
+		    *input->array[(x0*stride[0] + dilation[0]*z0)
+				  *(input->shape[3]*input->shape[2]*input->shape[1])
+				  + (x1*stride[1] + dilation[1]*z1)
+				  *(input->shape[3]*input->shape[2])
+				  + (x2*stride[2] + dilation[2]*z2)
+				  *(input->shape[3]) + q];
+
+		  
+		  /* output->array[k2c_sub2idx(outsub,output->shape,output->ndim)] += */
+		  /*   kernel->array[k2c_sub2idx(kersub,kernel->shape,kernel->ndim)]* */
+		  /*   input->array[k2c_sub2idx(inpsub,input->shape,input->ndim)]; */
 		}
 	      }
 	    }
