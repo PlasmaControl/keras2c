@@ -36,21 +36,43 @@ void k2c_dense(k2c_tensor* output, k2c_tensor* input, k2c_tensor* kernel,
   }
 }
 
-void k2c_flatten(k2c_tensor* input) {
 
+void k2c_flatten(k2c_tensor *output, k2c_tensor* input) {
+
+  memcpy(output->array, input->array, input->numel*sizeof(input->array[0]));
   for (size_t i=0; i<input->ndim; i++) {
-    input->shape[i] = 1;}
-  input->shape[0] = input->numel;
-  input->ndim = 1;
+    output->shape[i] = 1;}
+  output->shape[0] = input->numel;
+  output->numel = input->numel;
+  output->ndim = 1;
 }
 
-void k2c_reshape(k2c_tensor* input, size_t newshp[], size_t newndim) {
-  for (size_t i=0; i<input->ndim; i++) {
-    input->shape[i] = 1;}
+/* void k2c_flatten(k2c_tensor* input) { */
+
+/*   for (size_t i=0; i<input->ndim; i++) { */
+/*     input->shape[i] = 1;} */
+/*   input->shape[0] = input->numel; */
+/*   input->ndim = 1; */
+/* } */
+
+
+void k2c_reshape(k2c_tensor *output, k2c_tensor* input, size_t newshp[],
+		 size_t newndim) {
+  
+  memcpy(output->array, input->array, input->numel*sizeof(input->array[0]));
   for (size_t i=0; i<newndim; i++) {
-    input->shape[i] = newshp[i];}
-  input->ndim = newndim;
+    output->shape[i] = newshp[i];}
+  output->ndim = newndim;
+  output->numel = input->numel;
 }
+
+/* void k2c_reshape(k2c_tensor* input, size_t newshp[], size_t newndim) { */
+/*   for (size_t i=0; i<input->ndim; i++) { */
+/*     input->shape[i] = 1;} */
+/*   for (size_t i=0; i<newndim; i++) { */
+/*     input->shape[i] = newshp[i];} */
+/*   input->ndim = newndim; */
+/* } */
 
 void k2c_permute_dims(k2c_tensor* output, k2c_tensor* input, 
 		      size_t permute[]) {

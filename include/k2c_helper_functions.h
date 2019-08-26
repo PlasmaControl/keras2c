@@ -32,8 +32,9 @@ void k2c_matmul(float C[], float A[], float B[], size_t outrows,
   for (size_t i = 0 ; i < outrows; i++) {
     size_t outrowidx = i*outcols;
     size_t inneridx = i*innerdim;
-    for (size_t j = 0;  j < outcols; j++) {
-      for (size_t k = 0; k < innerdim; k++) {
+    for (size_t k = 0; k < innerdim; k++) {
+      for (size_t j = 0;  j < outcols; j++) {
+
   	C[outrowidx+j] += A[inneridx+k] * B[k*outcols+j];
       }
     }

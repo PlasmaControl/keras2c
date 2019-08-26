@@ -347,17 +347,13 @@ class Layers2C():
     def write_layer_Reshape(self, layer, inputs, outputs, i):
         nm, _, inputs, outputs, is_model_input, is_model_output = self.format_io_names(
             layer, inputs, outputs, True)
-        self.layers += 'k2c_reshape(' + inputs + ',' + nm + \
+        self.layers += 'k2c_reshape(' + outputs + ',' + inputs + ',' + nm + \
             '_newshp,' + nm + '_newndim); \n'
-        self.write_dummy_layer(layer, inputs, outputs, i,
-                               is_model_input, is_model_output)
 
     def write_layer_Flatten(self, layer, inputs, outputs, i):
         _, _, inputs, outputs, is_model_input, is_model_output = self.format_io_names(
             layer, inputs, outputs, True)
-        self.layers += 'k2c_flatten(' + inputs + '); \n'
-        self.write_dummy_layer(layer, inputs, outputs, i,
-                               is_model_input, is_model_output)
+        self.layers += 'k2c_flatten(' + outputs + ',' + inputs + '); \n'
 
     def write_layer_Permute(self, layer, inputs, outputs, i):
         nm, _, inputs, outputs = self.format_io_names(layer, inputs, outputs)

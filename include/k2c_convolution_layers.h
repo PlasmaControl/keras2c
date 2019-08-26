@@ -111,10 +111,11 @@ void k2c_conv1d(k2c_tensor* output, k2c_tensor* input, k2c_tensor* kernel,
   size_t in_channels = input->shape[1];
 
   for (size_t x0=0; x0 < out_times; x0++){
-    for (size_t k=0; k < out_channels; k++) {
-      for (size_t z=0; z < kernel->shape[0]; z++) {
-	for (size_t q=0; q < in_channels; q++) {
-	  /* size_t outsub[K2C_MAX_NDIM] = {x0,k}; */
+    for (size_t z=0; z < kernel->shape[0]; z++) {
+      for (size_t q=0; q < in_channels; q++) {
+	for (size_t k=0; k < out_channels; k++) {
+
+	    /* size_t outsub[K2C_MAX_NDIM] = {x0,k}; */
 	  /* size_t inpsub[K2C_MAX_NDIM] = {x0*stride + dilation*z,q}; */
 	  /* size_t kersub[K2C_MAX_NDIM] = {z,q,k}; */
 
@@ -152,10 +153,11 @@ void k2c_conv2d(k2c_tensor* output, k2c_tensor* input, k2c_tensor* kernel,
 
   for (size_t x0=0; x0 < out_rows; x0++){
     for (size_t x1=0; x1 < out_cols; x1++) {
-      for (size_t k=0; k < out_channels; k++) {
-	for (size_t z0=0; z0 < kernel->shape[0]; z0++) {
-	  for (size_t z1=0; z1 < kernel->shape[1]; z1++) {
-	    for (size_t q=0; q < in_channels; q++) {
+      for (size_t z0=0; z0 < kernel->shape[0]; z0++) {
+	for (size_t z1=0; z1 < kernel->shape[1]; z1++) {
+	  for (size_t q=0; q < in_channels; q++) {
+	    for (size_t k=0; k < out_channels; k++) {
+
 	      /* size_t outsub[K2C_MAX_NDIM] = {x0,x1,k}; */
 	      /* size_t inpsub[K2C_MAX_NDIM] = {x0*stride[0] + dilation[0]*z0, */
 	      /* 				     x1*stride[1] + dilation[1]*z1, */
@@ -202,12 +204,12 @@ void k2c_conv3d(k2c_tensor* output, k2c_tensor* input, k2c_tensor* kernel,
   for (size_t x0=0; x0 < dim1; x0++){
     for (size_t x1=0; x1 < dim2; x1++) {
       for (size_t x2=0; x2<dim3; x2++) {
-	for (size_t k=0; k < out_channels; k++) {
-	  for (size_t z0=0; z0 < kernel->shape[0]; z0++) {
-	    for (size_t z1=0; z1 < kernel->shape[1]; z1++) {
-	      for (size_t z2=0; z2 < kernel->shape[2]; z2++) {	      
-		for (size_t q=0; q < in_channels; q++) {
-		  /* size_t outsub[K2C_MAX_NDIM] = {x0,x1,x2,k}; */
+	for (size_t z0=0; z0 < kernel->shape[0]; z0++) {
+	  for (size_t z1=0; z1 < kernel->shape[1]; z1++) {
+	    for (size_t z2=0; z2 < kernel->shape[2]; z2++) {	      
+	      for (size_t q=0; q < in_channels; q++) {
+		for (size_t k=0; k < out_channels; k++) {
+	  /* size_t outsub[K2C_MAX_NDIM] = {x0,x1,x2,k}; */
 		  /* size_t inpsub[K2C_MAX_NDIM] = {x0*stride[0] + dilation[0]*z0, */
 		  /* 				 x1*stride[1] + dilation[1]*z1, */
 		  /* 				 x2*stride[2] + dilation[2]*z2, */

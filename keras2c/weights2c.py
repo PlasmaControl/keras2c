@@ -540,6 +540,7 @@ class Weights2C():
 
     def write_weights_Reshape(self, layer):
         nm = layer.name
+        self.write_outputs(layer)
         newshp = layer.get_config()['target_shape']
         newndim = len(newshp)
         newshp = np.concatenate((newshp, np.ones(maxndim-newndim)))
@@ -701,8 +702,12 @@ class Weights2C():
         pass
 
     def write_weights_Flatten(self, layer):
-        # no weights needed
-        pass
+        _, outputs = get_layer_io_names(layer)
+        for i, outp in enumerate(outputs):
+            inshp = layer.get_input_at(i).shape[1:]
+            if outp not in self.model_io[1]:
+                self.write_weights_array2c(
+                    np.zeros(inshp).flatten(), outp + '_output')
 
     def write_weights_Activation(self, layer):
         # no weights needed
