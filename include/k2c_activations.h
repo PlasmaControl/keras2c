@@ -8,12 +8,12 @@
 
 // Regular Activations
 //*****************************************************************************
-void k2c_linear(float x[], size_t size){
+void k2c_linear(float x[], const size_t size){
   /* linear activation. Doesn't do anything, just a dummy fn */
 
 }
 
-void k2c_exponential(float x[], size_t size){
+void k2c_exponential(float x[], const size_t size){
   /* exponential activation */
   /* y = exp(x) */
   /* x is overwritten with the activated values */
@@ -22,7 +22,7 @@ void k2c_exponential(float x[], size_t size){
     x[i] = exp(x[i]);}
 }
 
-void k2c_relu(float x[], size_t size) {
+void k2c_relu(float x[], const size_t size) {
   /* Rectified Linear Unit activation (ReLU) */
   /*   y = max(x,0) */
   /* x is overwritten with the activated values */
@@ -34,7 +34,7 @@ void k2c_relu(float x[], size_t size) {
   }
 }
 
-void k2c_hard_sigmoid(float x[], size_t size) {
+void k2c_hard_sigmoid(float x[], const size_t size) {
   /* Hard Sigmoid activation */
   /*   y = {1 if x> 2.5 */
   /*        0.2*x+0.5 if -2.5<x<2.5 */
@@ -54,7 +54,7 @@ void k2c_hard_sigmoid(float x[], size_t size) {
   }
 }
 
-void k2c_tanh(float x[], size_t size) {
+void k2c_tanh(float x[], const size_t size) {
   /* standard tanh activation */
   /* x is overwritten with the activated values */
   for (size_t i=0; i<size; i++){
@@ -62,7 +62,7 @@ void k2c_tanh(float x[], size_t size) {
   }
 }
 
-void k2c_sigmoid(float x[], size_t size) {
+void k2c_sigmoid(float x[], const size_t size) {
   /* Sigmoid activation */
   /*   y = 1/(1+exp(-x)) */
   /* x is overwritten with the activated values */
@@ -71,7 +71,7 @@ void k2c_sigmoid(float x[], size_t size) {
   }
 }
 
-void k2c_softmax(float x[], size_t size) {
+void k2c_softmax(float x[], const size_t size) {
   /* Softmax activation */
   /*     z[i] = exp(x[i]-max(x)) */
   /*     y = z/sum(z) */
@@ -99,7 +99,7 @@ void k2c_softmax(float x[], size_t size) {
 
 }
 
-void k2c_softplus(float x[], size_t size) {
+void k2c_softplus(float x[], const size_t size) {
   /* Softplus activation */
   /*   y = ln(1+exp(x)) */
   /*   x is overwritten with the activated values */
@@ -108,7 +108,7 @@ void k2c_softplus(float x[], size_t size) {
   }
 }
 
-void k2c_softsign(float x[], size_t size) {
+void k2c_softsign(float x[], const size_t size) {
   /* Softsign activation */
   /*   y = x/(1+|x|) */
   /*   x is overwritten by the activated values */
@@ -120,7 +120,7 @@ void k2c_softsign(float x[], size_t size) {
 // Advanced Activations
 //*****************************************************************************
 
-void k2c_LeakyReLU(float x[], size_t size, float alpha){
+void k2c_LeakyReLU(float x[], const size_t size, const float alpha){
   /* Leaky version of a Rectified Linear Unit. */
   /* It allows a small gradient when the unit is not active: */
   /*   f(x) = alpha * x for x < 0, f(x) = x for x >= 0. */
@@ -132,7 +132,7 @@ void k2c_LeakyReLU(float x[], size_t size, float alpha){
   }
 }
 
-void k2c_PReLU(float x[], size_t size, float alpha[]) {
+void k2c_PReLU(float x[], const size_t size, const float alpha[]) {
   /*  Parametric Rectified Linear Unit. */
   /*  f(x) = alpha * x for x < 0, f(x) = x for x >= 0, */
   /*  where alpha is a learned array with the same shape as x. */
@@ -145,7 +145,7 @@ void k2c_PReLU(float x[], size_t size, float alpha[]) {
 }
   
 
-void k2c_ELU(float x[], size_t size, float alpha) {
+void k2c_ELU(float x[], const size_t size, const float alpha) {
   /* Exponential Linear Unit activation (ELU) */
   /*   y = {x if x>0 */
   /* 	 alpha*(e^x - 1) else} */
@@ -158,7 +158,7 @@ void k2c_ELU(float x[], size_t size, float alpha) {
   }
 }
 
-void k2c_ThresholdedReLU(float x[], size_t size, float theta) {
+void k2c_ThresholdedReLU(float x[], const size_t size, const float theta) {
   /* Thresholded Rectified Linear Unit. */
   /*   f(x) = x for x > theta, f(x) = 0 otherwise. */
   /* x is overwritten with the activated values */
@@ -170,8 +170,8 @@ void k2c_ThresholdedReLU(float x[], size_t size, float theta) {
 }
 
 
-void k2c_ReLU(float x[], size_t size, float max_value, float negative_slope,
-	  float threshold) {
+void k2c_ReLU(float x[], const size_t size, const float max_value, const float negative_slope,
+	  const float threshold) {
   /* Rectified Linear Unit activation function. */
   /* f(x) = max_value for x >= max_value, */
   /* f(x) = x for threshold <= x < max_value, */

@@ -6,30 +6,30 @@
 #include <stdio.h>
 #include "k2c_helper_functions.h"
 
-void k2c_lstmcell(float state[], float input[], k2c_tensor* kernel,
-		  k2c_tensor* recurrent_kernel, k2c_tensor* bias, float fwork[],
-		  void (*recurrent_activation) (float*, size_t),
-		  void (*output_activation)(float*, size_t)){
+void k2c_lstmcell(float state[], const float input[], const k2c_tensor* kernel,
+		  const k2c_tensor* recurrent_kernel, const k2c_tensor* bias, float fwork[],
+		  const void (*recurrent_activation) (float*, const size_t),
+		  const void (*output_activation)(float*, const size_t)){
 
 
-  size_t units = recurrent_kernel->shape[1];
-  size_t in_width = kernel->shape[0]/4;
+  const size_t units = recurrent_kernel->shape[1];
+  const size_t in_width = kernel->shape[0]/4;
   
   float *h_tm1 = &state[0];  // previous memory state
   float *c_tm1 = &state[units];  // previous carry state
-  size_t outrows = 1;
-  float *Wi = &kernel->array[0];
-  float *Wf = &kernel->array[in_width*units];
-  float *Wc = &kernel->array[2*in_width*units];
-  float *Wo = &kernel->array[3*in_width*units];
-  float *Ui = &recurrent_kernel->array[0];
-  float *Uf = &recurrent_kernel->array[units*units];
-  float *Uc = &recurrent_kernel->array[2*units*units];
-  float *Uo = &recurrent_kernel->array[3*units*units];
-  float *bi = &bias->array[0];
-  float *bf = &bias->array[units];
-  float *bc = &bias->array[2*units];
-  float *bo = &bias->array[3*units];
+  const size_t outrows = 1;
+  const float * const Wi = &kernel->array[0];
+  const float * const Wf = &kernel->array[in_width*units];
+  const float * const Wc = &kernel->array[2*in_width*units];
+  const float * const Wo = &kernel->array[3*in_width*units];
+  const float * const Ui = &recurrent_kernel->array[0];
+  const float * const Uf = &recurrent_kernel->array[units*units];
+  const float * const Uc = &recurrent_kernel->array[2*units*units];
+  const float * const Uo = &recurrent_kernel->array[3*units*units];
+  const float * const bi = &bias->array[0];
+  const float * const bf = &bias->array[units];
+  const float * const bc = &bias->array[2*units];
+  const float * const bo = &bias->array[3*units];
   float *xi = &fwork[0];
   float *xf = &fwork[units];
   float *xc = &fwork[2*units];
@@ -80,17 +80,17 @@ void k2c_lstmcell(float state[], float input[], k2c_tensor* kernel,
 
 }
 
-void k2c_lstm(k2c_tensor* output, k2c_tensor* input, float state[],
-	      k2c_tensor* kernel, k2c_tensor* recurrent_kernel,
-	      k2c_tensor* bias, float fwork[], int go_backwards,
-	      int return_sequences,
-	      void (*recurrent_activation) (float*, size_t),
-	      void (*output_activation)(float*, size_t)){
+void k2c_lstm(k2c_tensor* output, const k2c_tensor* input, float state[],
+	      const k2c_tensor* kernel, const k2c_tensor* recurrent_kernel,
+	      const k2c_tensor* bias, float fwork[], const int go_backwards,
+	      const int return_sequences,
+	      const void (*recurrent_activation) (float*, size_t),
+	      const void (*output_activation)(float*, size_t)){
 
 
-  size_t in_height = input->shape[0];
-  size_t in_width = input->shape[1];
-  size_t units = recurrent_kernel->shape[1];
+  const size_t in_height = input->shape[0];
+  const size_t in_width = input->shape[1];
+  const size_t units = recurrent_kernel->shape[1];
   if (go_backwards) {
     for (int i=in_height-1; i>-1; i--) {
       k2c_lstmcell(state, &input->array[i*in_width], kernel, recurrent_kernel,
@@ -118,14 +118,14 @@ void k2c_lstm(k2c_tensor* output, k2c_tensor* input, float state[],
 }
 
 
-void k2c_simpleRNNcell(float state[], float input[], k2c_tensor* kernel,
-		       k2c_tensor* recurrent_kernel, k2c_tensor* bias,
-		       float fwork[], void (*output_activation)(float*, size_t)) {
+void k2c_simpleRNNcell(float state[], const float input[], const k2c_tensor* kernel,
+		       const k2c_tensor* recurrent_kernel, const k2c_tensor* bias,
+		       float fwork[], const void (*output_activation)(float*, const size_t)) {
 
-  size_t units = recurrent_kernel->shape[1];
-  size_t in_width = kernel->shape[0];
+  const size_t units = recurrent_kernel->shape[1];
+  const size_t in_width = kernel->shape[0];
   
-  size_t outrows = 1;
+  const size_t outrows = 1;
   float *h1 = &fwork[0];
   float *h2 = &fwork[units];
   // h1 = input*kernel+bias
@@ -141,15 +141,15 @@ void k2c_simpleRNNcell(float state[], float input[], k2c_tensor* kernel,
    
 }
 
-void k2c_simpleRNN(k2c_tensor* output, k2c_tensor* input, float state[],
-		   k2c_tensor* kernel, k2c_tensor* recurrent_kernel,
-		   k2c_tensor* bias, float fwork[], int go_backwards,
-		   int return_sequences,
-		   void (*output_activation)(float*, size_t)) {
+void k2c_simpleRNN(k2c_tensor* output, const k2c_tensor* input, float state[],
+		   const k2c_tensor* kernel, const k2c_tensor* recurrent_kernel,
+		   const k2c_tensor* bias, float fwork[], const int go_backwards,
+		   const int return_sequences,
+		   const void (*output_activation)(float*, const size_t)) {
 
-  size_t in_width = input->shape[1];
-  size_t in_height = input->shape[0];
-  size_t units = recurrent_kernel->shape[1];
+  const size_t in_width = input->shape[1];
+  const size_t in_height = input->shape[0];
+  const size_t units = recurrent_kernel->shape[1];
   
   if (go_backwards) {
     for (int i=in_height-1; i>-1; i--) {
@@ -178,29 +178,29 @@ void k2c_simpleRNN(k2c_tensor* output, k2c_tensor* input, float state[],
 }
 
 
-void k2c_grucell(float state[], float input[], k2c_tensor* kernel,
-		 k2c_tensor* recurrent_kernel, k2c_tensor* bias, float fwork[],
-		 int reset_after,
-		 void (*recurrent_activation) (float*, size_t),
-		 void (*output_activation)(float*, size_t)) {
+void k2c_grucell(float state[], const float input[], const k2c_tensor* kernel,
+		 const k2c_tensor* recurrent_kernel, const k2c_tensor* bias, float fwork[],
+		 const int reset_after,
+		 const void (*recurrent_activation) (float*, const size_t),
+		 const void (*output_activation)(float*, const size_t)) {
 
-  size_t units = recurrent_kernel->shape[1];
-  size_t in_width = kernel->shape[0]/3;
+  const size_t units = recurrent_kernel->shape[1];
+  const size_t in_width = kernel->shape[0]/3;
   
   float *h_tm1 = &state[0];
-  size_t outrows = 1;
-  float *Wz = &kernel->array[0];
-  float *Wr = &kernel->array[in_width*units];
-  float *Wh = &kernel->array[2*in_width*units];
-  float *Uz = &recurrent_kernel->array[0];
-  float *Ur = &recurrent_kernel->array[units*units];
-  float *Uh = &recurrent_kernel->array[2*units*units];
-  float *bz = &bias->array[0];
-  float *br = &bias->array[units];
-  float *bh = &bias->array[2*units];
-  float *rbz = &bias->array[3*units];
-  float *rbr = &bias->array[4*units];
-  float *rbh = &bias->array[5*units];
+  const size_t outrows = 1;
+  const float * const Wz = &kernel->array[0];
+  const float * const Wr = &kernel->array[in_width*units];
+  const float * const Wh = &kernel->array[2*in_width*units];
+  const float * const Uz = &recurrent_kernel->array[0];
+  const float * const Ur = &recurrent_kernel->array[units*units];
+  const float * const Uh = &recurrent_kernel->array[2*units*units];
+  const float * const bz = &bias->array[0];
+  const float * const br = &bias->array[units];
+  const float * const bh = &bias->array[2*units];
+  const float * const rbz = &bias->array[3*units];
+  const float * const rbr = &bias->array[4*units];
+  const float * const rbh = &bias->array[5*units];
   float *xz = &fwork[0];
   float *xr = &fwork[units];
   float *xh = &fwork[2*units];
@@ -256,17 +256,17 @@ void k2c_grucell(float state[], float input[], k2c_tensor* kernel,
 }
 
 
-void k2c_gru(k2c_tensor* output, k2c_tensor* input, float state[],
-	     k2c_tensor* kernel, k2c_tensor* recurrent_kernel,
-	     k2c_tensor* bias, float fwork[], int reset_after,
-	     int go_backwards, int return_sequences,
-	     void (*recurrent_activation) (float*, size_t),
-	     void (*output_activation)(float*, size_t)){
+void k2c_gru(k2c_tensor* output, const k2c_tensor* input, float state[],
+	     const k2c_tensor* kernel, const k2c_tensor* recurrent_kernel,
+	     const k2c_tensor* bias, float fwork[], const int reset_after,
+	     const int go_backwards, const int return_sequences,
+	     const void (*recurrent_activation) (float*, const size_t),
+	     const void (*output_activation)(float*, const size_t)){
   
 
-  size_t in_width = input->shape[1];
-  size_t in_height = input->shape[0];
-  size_t units = recurrent_kernel->shape[1];
+  const size_t in_width = input->shape[1];
+  const size_t in_height = input->shape[0];
+  const size_t units = recurrent_kernel->shape[1];
 
   if (go_backwards) {
     for (int i=in_height-1; i>-1; i--) {

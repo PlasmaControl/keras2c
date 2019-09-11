@@ -6,11 +6,11 @@
 #include <string.h>
 #include "k2c_helper_functions.h"
 
-void k2c_global_max_pooling(k2c_tensor* output, k2c_tensor* input) {
+void k2c_global_max_pooling(k2c_tensor* output, const k2c_tensor* input) {
 
   // works for 1d,2d,3d
 
-  size_t in_chan = input->shape[input->ndim-1];
+  const size_t in_chan = input->shape[input->ndim-1];
   for (size_t i=0; i<in_chan; i++){
     output->array[i] = input->array[i];}
 
@@ -23,11 +23,11 @@ void k2c_global_max_pooling(k2c_tensor* output, k2c_tensor* input) {
 }
 
 
-void k2c_global_avg_pooling(k2c_tensor* output, k2c_tensor* input) {
+void k2c_global_avg_pooling(k2c_tensor* output, const k2c_tensor* input) {
 
-  size_t in_chan = input->shape[input->ndim-1];
+  const size_t in_chan = input->shape[input->ndim-1];
   memset(output->array,0,output->numel*sizeof(input->array[0]));
-  float num_inv = 1.0f/(input->numel/in_chan);
+  const float num_inv = 1.0f/(input->numel/in_chan);
   
   for (size_t i=0; i<input->numel; i+=in_chan){
     for (size_t j=0; j<in_chan;j++){
@@ -36,9 +36,9 @@ void k2c_global_avg_pooling(k2c_tensor* output, k2c_tensor* input) {
   }
 }
 
-void k2c_maxpool1d(k2c_tensor* output, k2c_tensor* input, size_t pool_size,
-		   size_t stride) {
-  size_t channels = input->shape[1];
+void k2c_maxpool1d(k2c_tensor* output, const k2c_tensor* input, const size_t pool_size,
+		   const size_t stride) {
+  const size_t channels = input->shape[1];
   
   for(size_t i=0; i<channels; i++) {
     for (size_t j=0, k=0; j<output->shape[0]*channels; j+=channels, k+=stride*channels) {
@@ -51,11 +51,11 @@ void k2c_maxpool1d(k2c_tensor* output, k2c_tensor* input, size_t pool_size,
   }
 }
 
-void k2c_maxpool2d(k2c_tensor* output, k2c_tensor* input, size_t pool_size[],
-		   size_t stride[]) {
+void k2c_maxpool2d(k2c_tensor* output, const k2c_tensor* input, const size_t pool_size[],
+		   const size_t stride[]) {
 
 
-  size_t channels = input->shape[2];
+  const size_t channels = input->shape[2];
 
   // i,j,l output indices
   /// i, k, m input indices
@@ -77,10 +77,10 @@ void k2c_maxpool2d(k2c_tensor* output, k2c_tensor* input, size_t pool_size[],
   }
 }
 
-void k2c_avgpool1d(k2c_tensor* output, k2c_tensor* input, size_t pool_size,
-		   size_t stride){
+void k2c_avgpool1d(k2c_tensor* output, const k2c_tensor* input, const size_t pool_size,
+		   const size_t stride){
 
-  size_t channels = input->shape[1];
+  const size_t channels = input->shape[1];
   memset(output->array,0,output->numel*sizeof(output->array[0]));
   for(size_t i=0; i<channels; i++) {
     for (size_t j=0, k=0; j<output->numel; j+=channels, k+=stride*channels) {
@@ -97,10 +97,10 @@ void k2c_avgpool1d(k2c_tensor* output, k2c_tensor* input, size_t pool_size,
   }
 }
 
-void k2c_avgpool2d(k2c_tensor* output, k2c_tensor* input, size_t pool_size[],
-		   size_t stride[]) {
+void k2c_avgpool2d(k2c_tensor* output, const k2c_tensor* input, const size_t pool_size[],
+		   const size_t stride[]) {
   memset(output->array,0,output->numel*sizeof(output->array[0]));
-  size_t channels = input->shape[2];
+  const size_t channels = input->shape[2];
   // i,j,l output indices
   /// i, k, m input indices
   for (size_t i=0; i< channels; i++) {

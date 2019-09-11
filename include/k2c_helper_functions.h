@@ -18,8 +18,8 @@ struct k2c_tensor
 typedef struct k2c_tensor k2c_tensor;
 
 
-void k2c_matmul(float C[], float A[], float B[], size_t outrows,
-	    size_t outcols, size_t innerdim) {
+void k2c_matmul(float C[], const float A[], const float B[], const size_t outrows,
+		const size_t outcols, const size_t innerdim) {
   /* Just your basic 1d matrix multiplication. Takes in 1d arrays
  A and B, results get stored in C */
   /*   Size A: outrows*innerdim */
@@ -30,8 +30,8 @@ void k2c_matmul(float C[], float A[], float B[], size_t outrows,
   memset(C, 0, outrows*outcols*sizeof(C[0]));
 
   for (size_t i = 0 ; i < outrows; i++) {
-    size_t outrowidx = i*outcols;
-    size_t inneridx = i*innerdim;
+    const size_t outrowidx = i*outcols;
+    const size_t inneridx = i*innerdim;
     for (size_t k = 0; k < innerdim; k++) {
       for (size_t j = 0;  j < outcols; j++) {
 
@@ -41,8 +41,8 @@ void k2c_matmul(float C[], float A[], float B[], size_t outrows,
   }
 }
 
-void k2c_affine_matmul(float C[], float A[], float B[], float d[], size_t outrows,
-	    size_t outcols, size_t innerdim) {
+void k2c_affine_matmul(float C[], const float A[], const float B[], const float d[],
+		       const size_t outrows,const size_t outcols, const size_t innerdim) {
   /* Computes C = A*B + d, where d is a vector that is added to each
  row of A*B*/
   /*   Size A: outrows*innerdim */
@@ -56,8 +56,8 @@ void k2c_affine_matmul(float C[], float A[], float B[], float d[], size_t outrow
 
   for (size_t i = 0 ; i < outrows; i++) {
 
-    size_t outrowidx = i*outcols;
-    size_t inneridx = i*innerdim;
+    const size_t outrowidx = i*outcols;
+    const size_t inneridx = i*innerdim;
     for (size_t j = 0;  j < outcols; j++) {
       for (size_t k = 0; k < innerdim; k++) {
 	C[outrowidx+j] += A[inneridx+k] * B[k*outcols+j];
@@ -67,7 +67,7 @@ void k2c_affine_matmul(float C[], float A[], float B[], float d[], size_t outrow
   }
 }
 
-size_t k2c_sub2idx(size_t sub[], size_t shape[], size_t ndim) {
+size_t k2c_sub2idx(const size_t sub[], const size_t shape[], const size_t ndim) {
   /* converts from subscript to linear indices in row major order */
 
   size_t idx = 0;
@@ -81,7 +81,7 @@ size_t k2c_sub2idx(size_t sub[], size_t shape[], size_t ndim) {
   return idx;
 }
 
-void k2c_idx2sub(size_t idx, size_t sub[], size_t shape[], size_t ndim) {
+void k2c_idx2sub(const size_t idx, size_t sub[], const size_t shape[], const size_t ndim) {
 
   size_t idx2 = idx;
   for (int i=ndim-1; i>=0; i--) {
@@ -90,8 +90,8 @@ void k2c_idx2sub(size_t idx, size_t sub[], size_t shape[], size_t ndim) {
   }
 }
 
-void k2c_dot(k2c_tensor* C, k2c_tensor* A, k2c_tensor* B, size_t axesA[],
-	     size_t axesB[], size_t naxes, int normalize, float fwork[]) {
+void k2c_dot(k2c_tensor* C, const k2c_tensor* A, const k2c_tensor* B, const size_t axesA[],
+	     const size_t axesB[], const size_t naxes, const int normalize, float fwork[]) {
 
   size_t permA[K2C_MAX_NDIM];
   size_t permB[K2C_MAX_NDIM];
@@ -105,8 +105,8 @@ void k2c_dot(k2c_tensor* C, k2c_tensor* A, k2c_tensor* B, size_t axesA[],
   size_t i,j;
   size_t newshpA[K2C_MAX_NDIM];
   size_t newshpB[K2C_MAX_NDIM];
-  size_t ndimA = A->ndim;
-  size_t ndimB = B->ndim;
+  const size_t ndimA = A->ndim;
+  const size_t ndimB = B->ndim;
   float *reshapeA = &fwork[0];   // temp working storage
   float *reshapeB = &fwork[A->numel];
 
@@ -209,7 +209,7 @@ void k2c_dot(k2c_tensor* C, k2c_tensor* A, k2c_tensor* B, size_t axesA[],
 	     free_axesB, prod_axesA);
 }
 
-void k2c_bias_add(k2c_tensor* A, k2c_tensor* b) {
+void k2c_bias_add(k2c_tensor* A, const k2c_tensor* b) {
   /* adds bias vector b to tensor A. Assumes b is a rank 1 tensor */
   /* that is added to the last dimension of A */
   for (size_t i=0; i<A->numel; i+=b->numel) {
@@ -218,7 +218,7 @@ void k2c_bias_add(k2c_tensor* A, k2c_tensor* b) {
   }
 }
 
-float* k2c_read_array(char* filename, size_t array_size) {
+float* k2c_read_array(const char* filename, const size_t array_size) {
     float* ptr = (float*) malloc(array_size * sizeof(float));
     size_t ctr = 0;
     FILE *finp;

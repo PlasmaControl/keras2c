@@ -6,8 +6,8 @@
 #include <stdio.h>
 #include "k2c_helper_functions.h"
 
-void k2c_dense(k2c_tensor* output, k2c_tensor* input, k2c_tensor* kernel,
-	       k2c_tensor* bias, void (*activation) (float[], size_t),
+void k2c_dense(k2c_tensor* output, const k2c_tensor* input, const k2c_tensor* kernel,
+	       const k2c_tensor* bias, const void (*activation) (float[], const size_t),
 	       float fwork[]){
 
   if (input->ndim <=2) {
@@ -17,18 +17,18 @@ void k2c_dense(k2c_tensor* output, k2c_tensor* input, k2c_tensor* kernel,
       outrows = input->shape[0];}
     else {
       outrows = 1;}
-    size_t outcols = kernel->shape[1];
-    size_t innerdim = kernel->shape[0];
-    size_t outsize = outrows*outcols;
+    const size_t outcols = kernel->shape[1];
+    const size_t innerdim = kernel->shape[0];
+    const size_t outsize = outrows*outcols;
     k2c_affine_matmul(output->array,input->array,kernel->array,bias->array,
 		      outrows,outcols,innerdim);
     activation(output->array,outsize);
   }
   else {
-    size_t axesA[1] = {input->ndim-1};
-    size_t axesB[1] = {0};
-    size_t naxes = 1;
-    int normalize = 0;
+    const size_t axesA[1] = {input->ndim-1};
+    const size_t axesB[1] = {0};
+    const size_t naxes = 1;
+    const int normalize = 0;
 
     k2c_dot(output, input, kernel, axesA, axesB, naxes, normalize, fwork);
     k2c_bias_add(output, bias);
@@ -37,7 +37,7 @@ void k2c_dense(k2c_tensor* output, k2c_tensor* input, k2c_tensor* kernel,
 }
 
 
-void k2c_flatten(k2c_tensor *output, k2c_tensor* input) {
+void k2c_flatten(k2c_tensor *output, const k2c_tensor* input) {
 
   memcpy(output->array, input->array, input->numel*sizeof(input->array[0]));
   for (size_t i=0; i<input->ndim; i++) {
@@ -47,17 +47,9 @@ void k2c_flatten(k2c_tensor *output, k2c_tensor* input) {
   output->ndim = 1;
 }
 
-/* void k2c_flatten(k2c_tensor* input) { */
 
-/*   for (size_t i=0; i<input->ndim; i++) { */
-/*     input->shape[i] = 1;} */
-/*   input->shape[0] = input->numel; */
-/*   input->ndim = 1; */
-/* } */
-
-
-void k2c_reshape(k2c_tensor *output, k2c_tensor* input, size_t newshp[],
-		 size_t newndim) {
+void k2c_reshape(k2c_tensor *output, const k2c_tensor* input, const size_t newshp[],
+		 const size_t newndim) {
   
   memcpy(output->array, input->array, input->numel*sizeof(input->array[0]));
   for (size_t i=0; i<newndim; i++) {
@@ -66,22 +58,15 @@ void k2c_reshape(k2c_tensor *output, k2c_tensor* input, size_t newshp[],
   output->numel = input->numel;
 }
 
-/* void k2c_reshape(k2c_tensor* input, size_t newshp[], size_t newndim) { */
-/*   for (size_t i=0; i<input->ndim; i++) { */
-/*     input->shape[i] = 1;} */
-/*   for (size_t i=0; i<newndim; i++) { */
-/*     input->shape[i] = newshp[i];} */
-/*   input->ndim = newndim; */
-/* } */
 
-void k2c_permute_dims(k2c_tensor* output, k2c_tensor* input, 
-		      size_t permute[]) {
+void k2c_permute_dims(k2c_tensor* output, const k2c_tensor* input, 
+		      const size_t permute[]) {
 
   size_t Asub[K2C_MAX_NDIM];
   size_t Bsub[K2C_MAX_NDIM];
   size_t newshp[K2C_MAX_NDIM];
   size_t oldshp[K2C_MAX_NDIM];
-  size_t ndim = input->ndim;
+  const size_t ndim = input->ndim;
   size_t bidx=0;
   for (size_t i=0; i<ndim; i++) {
     oldshp[i] = input->shape[i];}  
@@ -97,9 +82,9 @@ void k2c_permute_dims(k2c_tensor* output, k2c_tensor* input,
   }
 }
 
-void k2c_repeat_vector(k2c_tensor* output, k2c_tensor* input, size_t n) {
+void k2c_repeat_vector(k2c_tensor* output, const k2c_tensor* input, const size_t n) {
 
-  size_t in_width = input->shape[0];
+  const size_t in_width = input->shape[0];
   for (size_t i=0; i<n; i++) {
     for(size_t j=0; j<in_width; j++) {
       output->array[i*in_width + j] = input->array[j];}
