@@ -5,10 +5,10 @@
 #include <stddef.h>
 #include <stdio.h>
 #include "k2c_helper_functions.h"
+#include "k2c_activations.h"
 
 void k2c_dense(k2c_tensor* output, const k2c_tensor* input, const k2c_tensor* kernel,
-	       const k2c_tensor* bias, const void (*activation) (float[], const size_t),
-	       float fwork[]){
+	       const k2c_tensor* bias, k2c_activationType *activation, float fwork[]){
 
   if (input->ndim <=2) {
     size_t outrows;

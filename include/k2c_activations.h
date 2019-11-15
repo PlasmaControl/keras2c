@@ -5,15 +5,18 @@
 #include <math.h>
 #include <stdio.h>
 
+typedef void k2c_activationType(float x[], const size_t size);
+
 
 // Regular Activations
 //*****************************************************************************
-void k2c_linear(float x[], const size_t size){
+void k2c_linear_func(float x[], const size_t size){
   /* linear activation. Doesn't do anything, just a dummy fn */
 
 }
+k2c_activationType * k2c_linear = k2c_linear_func;
 
-void k2c_exponential(float x[], const size_t size){
+void k2c_exponential_func(float x[], const size_t size){
   /* exponential activation */
   /* y = exp(x) */
   /* x is overwritten with the activated values */
@@ -21,8 +24,9 @@ void k2c_exponential(float x[], const size_t size){
   for (size_t i=0; i<size; i++) {
     x[i] = exp(x[i]);}
 }
+k2c_activationType * k2c_exponential = k2c_exponential_func;
 
-void k2c_relu(float x[], const size_t size) {
+void k2c_relu_func(float x[], const size_t size) {
   /* Rectified Linear Unit activation (ReLU) */
   /*   y = max(x,0) */
   /* x is overwritten with the activated values */
@@ -33,8 +37,9 @@ void k2c_relu(float x[], const size_t size) {
     }
   }
 }
+k2c_activationType * k2c_relu = k2c_relu_func;
 
-void k2c_hard_sigmoid(float x[], const size_t size) {
+void k2c_hard_sigmoid_func(float x[], const size_t size) {
   /* Hard Sigmoid activation */
   /*   y = {1 if x> 2.5 */
   /*        0.2*x+0.5 if -2.5<x<2.5 */
@@ -53,16 +58,20 @@ void k2c_hard_sigmoid(float x[], const size_t size) {
     }
   }
 }
+k2c_activationType * k2c_hard_sigmoid = k2c_hard_sigmoid_func;
 
-void k2c_tanh(float x[], const size_t size) {
+
+void k2c_tanh_func(float x[], const size_t size) {
   /* standard tanh activation */
   /* x is overwritten with the activated values */
   for (size_t i=0; i<size; i++){
     x[i] = tanh(x[i]);
   }
 }
+k2c_activationType * k2c_tanh = k2c_tanh_func;
 
-void k2c_sigmoid(float x[], const size_t size) {
+
+void k2c_sigmoid_func(float x[], const size_t size) {
   /* Sigmoid activation */
   /*   y = 1/(1+exp(-x)) */
   /* x is overwritten with the activated values */
@@ -70,8 +79,9 @@ void k2c_sigmoid(float x[], const size_t size) {
     x[i] = 1/(1+exp(-x[i]));
   }
 }
+k2c_activationType * k2c_sigmoid = k2c_sigmoid_func;
 
-void k2c_softmax(float x[], const size_t size) {
+void k2c_softmax_func(float x[], const size_t size) {
   /* Softmax activation */
   /*     z[i] = exp(x[i]-max(x)) */
   /*     y = z/sum(z) */
@@ -96,10 +106,10 @@ void k2c_softmax(float x[], const size_t size) {
   for (size_t i=0; i < size; i++) {
     x[i] = x[i]*sum;
   }
-
 }
+k2c_activationType * k2c_softmax = k2c_softmax_func;
 
-void k2c_softplus(float x[], const size_t size) {
+void k2c_softplus_func(float x[], const size_t size) {
   /* Softplus activation */
   /*   y = ln(1+exp(x)) */
   /*   x is overwritten with the activated values */
@@ -107,8 +117,9 @@ void k2c_softplus(float x[], const size_t size) {
     x[i] = log1p(exp(x[i]));
   }
 }
+k2c_activationType * k2c_softplus = k2c_softplus_func;
 
-void k2c_softsign(float x[], const size_t size) {
+void k2c_softsign_func(float x[], const size_t size) {
   /* Softsign activation */
   /*   y = x/(1+|x|) */
   /*   x is overwritten by the activated values */
@@ -116,6 +127,7 @@ void k2c_softsign(float x[], const size_t size) {
     x[i] = x[i]/(1.0f + fabs(x[i]));
   }
 }
+k2c_activationType * k2c_softsign = k2c_softsign_func;
 
 // Advanced Activations
 //*****************************************************************************

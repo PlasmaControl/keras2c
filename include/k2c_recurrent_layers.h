@@ -5,11 +5,12 @@
 #include <math.h>
 #include <stdio.h>
 #include "k2c_helper_functions.h"
+#include "k2c_activations.h"
 
 void k2c_lstmcell(float state[], const float input[], const k2c_tensor* kernel,
 		  const k2c_tensor* recurrent_kernel, const k2c_tensor* bias, float fwork[],
-		  const void (*recurrent_activation) (float*, const size_t),
-		  const void (*output_activation)(float*, const size_t)){
+		  k2c_activationType *recurrent_activation,
+		  k2c_activationType *output_activation){
 
 
   const size_t units = recurrent_kernel->shape[1];
@@ -83,9 +84,8 @@ void k2c_lstmcell(float state[], const float input[], const k2c_tensor* kernel,
 void k2c_lstm(k2c_tensor* output, const k2c_tensor* input, float state[],
 	      const k2c_tensor* kernel, const k2c_tensor* recurrent_kernel,
 	      const k2c_tensor* bias, float fwork[], const int go_backwards,
-	      const int return_sequences,
-	      const void (*recurrent_activation) (float*, size_t),
-	      const void (*output_activation)(float*, size_t)){
+	      const int return_sequences, k2c_activationType *recurrent_activation,
+	      k2c_activationType *output_activation){
 
 
   const size_t in_height = input->shape[0];
@@ -120,7 +120,7 @@ void k2c_lstm(k2c_tensor* output, const k2c_tensor* input, float state[],
 
 void k2c_simpleRNNcell(float state[], const float input[], const k2c_tensor* kernel,
 		       const k2c_tensor* recurrent_kernel, const k2c_tensor* bias,
-		       float fwork[], const void (*output_activation)(float*, const size_t)) {
+		       float fwork[], k2c_activationType *output_activation) {
 
   const size_t units = recurrent_kernel->shape[1];
   const size_t in_width = kernel->shape[0];
@@ -144,8 +144,7 @@ void k2c_simpleRNNcell(float state[], const float input[], const k2c_tensor* ker
 void k2c_simpleRNN(k2c_tensor* output, const k2c_tensor* input, float state[],
 		   const k2c_tensor* kernel, const k2c_tensor* recurrent_kernel,
 		   const k2c_tensor* bias, float fwork[], const int go_backwards,
-		   const int return_sequences,
-		   const void (*output_activation)(float*, const size_t)) {
+		   const int return_sequences, k2c_activationType *output_activation) {
 
   const size_t in_width = input->shape[1];
   const size_t in_height = input->shape[0];
@@ -180,9 +179,8 @@ void k2c_simpleRNN(k2c_tensor* output, const k2c_tensor* input, float state[],
 
 void k2c_grucell(float state[], const float input[], const k2c_tensor* kernel,
 		 const k2c_tensor* recurrent_kernel, const k2c_tensor* bias, float fwork[],
-		 const int reset_after,
-		 const void (*recurrent_activation) (float*, const size_t),
-		 const void (*output_activation)(float*, const size_t)) {
+		 const int reset_after, k2c_activationType *recurrent_activation,
+		 k2c_activationType *output_activation) {
 
   const size_t units = recurrent_kernel->shape[1];
   const size_t in_width = kernel->shape[0]/3;
@@ -260,8 +258,8 @@ void k2c_gru(k2c_tensor* output, const k2c_tensor* input, float state[],
 	     const k2c_tensor* kernel, const k2c_tensor* recurrent_kernel,
 	     const k2c_tensor* bias, float fwork[], const int reset_after,
 	     const int go_backwards, const int return_sequences,
-	     const void (*recurrent_activation) (float*, const size_t),
-	     const void (*output_activation)(float*, const size_t)){
+	     k2c_activationType *recurrent_activation,
+	     k2c_activationType *output_activation){
   
 
   const size_t in_width = input->shape[1];

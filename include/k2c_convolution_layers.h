@@ -5,6 +5,7 @@
 #include <math.h>
 #include <stdio.h>
 #include "k2c_helper_functions.h"
+#include "k2c_activations.h"
 
 void k2c_pad1d(k2c_tensor* output, const k2c_tensor* input, const float fill,
 	       const size_t pad[]) {
@@ -103,7 +104,7 @@ void k2c_pad3d(k2c_tensor* output, const k2c_tensor* input, const float fill,
 
 void k2c_conv1d(k2c_tensor* output, const k2c_tensor* input, const k2c_tensor* kernel,
 		const k2c_tensor* bias, const size_t stride, const size_t dilation,
-		   const void (*activation) (float[], const size_t)) {
+		   k2c_activationType *activation) {
   /* 1D (temporal) convolution. Assumes a "channels last" structure
    */
   memset(output->array,0,output->numel*sizeof(output->array[0]));
@@ -130,7 +131,7 @@ void k2c_conv1d(k2c_tensor* output, const k2c_tensor* input, const k2c_tensor* k
 
 void k2c_conv2d(k2c_tensor* output, const k2c_tensor* input, const k2c_tensor* kernel,
 		const k2c_tensor* bias, const size_t stride[], const size_t dilation[],
-		const void (*activation) (float[], const size_t)) {
+		k2c_activationType *activation) {
   /* 2D (spatial) convolution. Assumes a "channels last" structure
    */
   memset(output->array,0,output->numel*sizeof(output->array[0]));
@@ -166,7 +167,7 @@ void k2c_conv2d(k2c_tensor* output, const k2c_tensor* input, const k2c_tensor* k
 
 void k2c_conv3d(k2c_tensor* output, const k2c_tensor* input, const k2c_tensor* kernel,
 		const k2c_tensor* bias, const size_t stride[], const size_t dilation[],
-		const void (*activation) (float[], const size_t)) {
+		k2c_activationType *activation) {
   /* 3D (spatial) convolution. Assumes a "channels last" structure
    */
   memset(output->array,0,output->numel*sizeof(output->array[0]));

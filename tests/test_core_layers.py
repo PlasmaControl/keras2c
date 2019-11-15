@@ -199,5 +199,25 @@ class TestNormalization(unittest.TestCase):
         self.assertEqual(rcode, 0)
 
 
+class TestSharedLayers(unittest.TestCase):
+    """tests for shared layers"""
+
+    def test_SharedLayer1(self):
+        inshp = (10, 20)
+        xi = keras.layers.Input(inshp)
+        x = keras.layers.Dense(20, activation='relu')(xi)
+        yi = keras.layers.Input(inshp)
+        y = keras.layers.Dense(20, activation='relu')(yi)
+        f = keras.layers.Dense(30, activation='relu')
+        x = f(x)
+        y = f(y)
+        z = keras.layers.Add()([x, y])
+        model = keras.models.Model(inputs=[xi, yi], outputs=z)
+        name = 'test___SharedLayer1' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)
+
+
 if __name__ == "__main__":
     unittest.main()
