@@ -1,11 +1,8 @@
-#ifndef KERAS2C_CORE_LAYERS_H
-#define KERAS2C_CORE_LAYERS_H
-
 #include <math.h>
 #include <stddef.h>
 #include <stdio.h>
-#include "k2c_helper_functions.h"
-#include "k2c_activations.h"
+#include <string.h>
+#include "k2c_include.h"
 
 void k2c_dense(k2c_tensor* output, const k2c_tensor* input, const k2c_tensor* kernel,
 	       const k2c_tensor* bias, k2c_activationType *activation, float fwork[]){
@@ -90,7 +87,3 @@ void k2c_repeat_vector(k2c_tensor* output, const k2c_tensor* input, const size_t
       output->array[i*in_width + j] = input->array[j];}
   }
 }
-
-
-
-#endif /* KERAS2C_CORE_LAYERS_H */

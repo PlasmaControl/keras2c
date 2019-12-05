@@ -24,12 +24,25 @@ def build_and_run(name):
         ccflags = '-g -Og -std=c99 -fprofile-arcs -ftest-coverage -I./include/'
     else:
         ccflags = '-Ofast -std=c99 -I./include/'
-    cc = 'gcc ' + ccflags + ' -o ' + name + ' ' + name + '_test_suite.c -lm'
-    subprocess.run(cc.split())
-    rcode = subprocess.run(['./' + name]).returncode
-    if not rcode and not os.environ.get('CI'):
-        subprocess.run('rm ' + name + '*', shell=True)
-    return rcode
+    cc = 'gcc ' + ccflags + '-I' + name + '.h ' + ' -o ' + name + ' ' + \
+        './include/k2c_activations.c ' + \
+        './include/k2c_convolution_layers.c ' + \
+        './include/k2c_core_layers.c ' + \
+        './include/k2c_embedding_layers.c ' + \
+        './include/k2c_helper_functions.c ' + \
+        './include/k2c_merge_layers.c ' + \
+        './include/k2c_normalization_layers.c ' + \
+        './include/k2c_pooling_layers.c ' + \
+        './include/k2c_recurrent_layers.c ' + \
+        name + '.c ' + name + '_test_suite.c -lm'
+    buildcode = subprocess.run(cc.split()).returncode
+    if not buildcode:
+        rcode = subprocess.run(['./' + name]).returncode
+        if not rcode and not os.environ.get('CI'):
+            subprocess.run('rm ' + name + '*', shell=True)
+        return rcode
+    else:
+        return buildcode
 
 
 class TestCoreLayers(unittest.TestCase):

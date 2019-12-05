@@ -1,11 +1,8 @@
-#ifndef KERAS2C_NORMALIZATION_LAYERS_H
-#define KERAS2C_NORMALIZATION_LAYERS_H
-
 #include <math.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
-#include "k2c_helper_functions.h"
+#include "k2c_include.h"
 
 
 void k2c_batch_norm(k2c_tensor* outputs, const k2c_tensor* inputs, const k2c_tensor* mean,
@@ -22,8 +19,5 @@ void k2c_batch_norm(k2c_tensor* outputs, const k2c_tensor* inputs, const k2c_ten
       stdev->array[idx] *
       gamma->array[idx] +
       beta->array[idx];
-	  }
+  }
 }
-
-#endif /* KERAS2C_NORMALIZATION_LAYERS_H */
-

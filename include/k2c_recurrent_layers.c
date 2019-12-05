@@ -1,11 +1,7 @@
-#ifndef KERAS2C_RECURRENT_H
-#define KERAS2C_RECURRENT_H
-
 #include <stddef.h>
 #include <math.h>
 #include <stdio.h>
-#include "k2c_helper_functions.h"
-#include "k2c_activations.h"
+#include "k2c_include.h"
 
 void k2c_lstmcell(float state[], const float input[], const k2c_tensor* kernel,
 		  const k2c_tensor* recurrent_kernel, const k2c_tensor* bias, float fwork[],
@@ -292,8 +288,3 @@ void k2c_gru(k2c_tensor* output, const k2c_tensor* input, float state[],
       output->array[i] = state[i];}
   }
 }
-
-
-
-
-#endif /* KERAS2C_RECURRENT_H */

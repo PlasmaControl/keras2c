@@ -1,7 +1,7 @@
 #include <string.h>
 #include <stddef.h>
 #include <stdarg.h>
-#include "k2c_helper_functions.h"
+#include "k2c_include.h"
 
 void k2c_add(k2c_tensor* output, const size_t num_tensors,...){
 /*  Element-wise sum of several tensors. */

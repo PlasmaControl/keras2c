@@ -1,11 +1,10 @@
-#ifndef KERAS2C_ACTIVATIONS_H
-#define KERAS2C_ACTIVATIONS_H
-
 #include <stddef.h>
 #include <math.h>
 #include <stdio.h>
+#include "k2c_include.h"
 
-typedef void k2c_activationType(float x[], const size_t size);
+
+/* typedef void k2c_activationType(float x[], const size_t size); */
 
 
 // Regular Activations
@@ -182,8 +181,8 @@ void k2c_ThresholdedReLU(float x[], const size_t size, const float theta) {
 }
 
 
-void k2c_ReLU(float x[], const size_t size, const float max_value, const float negative_slope,
-	  const float threshold) {
+void k2c_ReLU(float x[], const size_t size, const float max_value,
+	      const float negative_slope, const float threshold) {
   /* Rectified Linear Unit activation function. */
   /* f(x) = max_value for x >= max_value, */
   /* f(x) = x for threshold <= x < max_value, */
@@ -197,5 +196,3 @@ void k2c_ReLU(float x[], const size_t size, const float max_value, const float n
       x[i] = negative_slope*(x[i] - threshold);}
   }
 }
-
-#endif /* KERAS2C_ACTIVATIONS_H */

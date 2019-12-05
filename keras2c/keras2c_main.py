@@ -23,10 +23,8 @@ __email__ = "wconlin@princeton.edu"
 
 def model2c(model, file, function_name, malloc=False):
     model_inputs, model_outputs = get_model_io_names(model)
-    s = "#ifndef " + function_name.upper() + "_H \n"
-    s += "#define " + function_name.upper() + "_H \n"
-    s += '#include <stdio.h> \n#include <stddef.h> \n#include <math.h> \n#include <string.h> \n'
-    s += '#include <stdarg.h> \n#include "k2c_include.h" \n'
+    s = '#include <stdio.h> \n#include <stddef.h> \n#include <math.h> \n#include <string.h> \n'
+    s += '#include <stdarg.h> \n#include "./include/k2c_include.h" \n'
     s += '\n \n'
     file.write(s)
 
@@ -42,17 +40,23 @@ def model2c(model, file, function_name, malloc=False):
     if len(malloc_vars.keys()):
         function_signature += ',' + ','.join(['float* ' +
                                               key for key in malloc_vars.keys()])
-    function_signature += ') { \n\n'
+    function_signature += ')'
 
     file.write(function_signature)
+    file.write(' { \n\n')
     file.write(stack_vars)
     file.write(layers)
     file.write('\n } \n\n')
 
-    write_function_initialize(file, function_name, malloc_vars)
-    write_function_terminate(file, function_name, malloc_vars)
-    s = "#endif /* " + function_name.upper() + "_H */"
-    file.write(s)
+    init_sig = write_function_initialize(file, function_name, malloc_vars)
+    term_sig = write_function_terminate(file, function_name, malloc_vars)
+
+    with open(function_name + '.h', 'x+') as header:
+        header.write('#pragma once \n')
+        header.write(function_signature + '; \n')
+        header.write(init_sig + '; \n')
+        header.write(term_sig + '; \n')
+
     return malloc_vars.keys()
 
 
@@ -60,9 +64,9 @@ def write_function_initialize(file, function_name, malloc_vars):
     function_init_signature = 'void ' + function_name + '_initialize('
     function_init_signature += ','.join(['float** ' +
                                          key for key in malloc_vars.keys()])
-    function_init_signature += ') { \n\n'
+    function_init_signature += ')'
     file.write(function_init_signature)
-    s = ''
+    s = ' { \n\n'
     for key in malloc_vars.keys():
         fname = function_name + key + ".csv"
         np.savetxt(fname, malloc_vars[key], fmt="%.8e", delimiter=',')
@@ -70,25 +74,27 @@ def write_function_initialize(file, function_name, malloc_vars):
             fname + "\"," + str(malloc_vars[key].size) + "); \n"
     s += "} \n\n"
     file.write(s)
+    return function_init_signature
 
 
 def write_function_terminate(file, function_name, malloc_vars):
     function_term_signature = 'void ' + function_name + '_terminate('
     function_term_signature += ','.join(['float* ' +
                                          key for key in malloc_vars.keys()])
-    function_term_signature += ') { \n\n'
+    function_term_signature += ')'
     file.write(function_term_signature)
-    s = ''
+    s = ' { \n\n'
     for key in malloc_vars.keys():
         s += "free(" + key + "); \n"
     s += "} \n\n"
     file.write(s)
+    return function_term_signature
 
 
 def k2c(model, function_name, malloc=False, num_tests=10):
 
     function_name = str(function_name)
-    filename = function_name + '.h'
+    filename = function_name + '.c'
     if isinstance(model, str):
         model = keras.models.load_model(model, compile=False)
     elif not isinstance(model, (keras.models.Model,

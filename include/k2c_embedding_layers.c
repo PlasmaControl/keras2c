@@ -1,10 +1,7 @@
-#ifndef KERAS2C_EMBEDDING_LAYERS_H
-#define KERAS2C_EMBEDDING_LAYERS_H
-
 #include <stddef.h>
 #include <math.h>
 #include <stdio.h>
-#include "k2c_helper_functions.h"
+#include "k2c_include.h"
 
 void k2c_embedding(k2c_tensor* outputs, const k2c_tensor* inputs, const k2c_tensor* kernel) {
 
@@ -15,4 +12,4 @@ void k2c_embedding(k2c_tensor* outputs, const k2c_tensor* inputs, const k2c_tens
     }
   }
 }
-#endif /* KERAS2C_EMBEDDING_LAYERS_H */
+

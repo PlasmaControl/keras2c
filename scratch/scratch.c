@@ -14,6 +14,59 @@ struct k2c_tensor
   size_t shape[K2C_MAX_NDIM];
 };
 typedef struct k2c_tensor k2c_tensor;
+
+
+void model(k2c_tensor A, k2c_tensor B, int reset_states) {
+
+  static float lstm_state[20];
+  if (reset_states) {
+    memset(lstm_state,0,20*sizeof(float));
+  }
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 void k2c_matmul(float C[], float A[], float B[], size_t outrows,
 		size_t outcols, size_t innerdim) ;
 void printer(float x[], int size);

@@ -1,11 +1,8 @@
-#ifndef KERAS2C_CONVOLUTION_LAYERS_H
-#define KERAS2C_CONVOLUTION_LAYERS_H
-
 #include <stddef.h>
 #include <math.h>
 #include <stdio.h>
-#include "k2c_helper_functions.h"
-#include "k2c_activations.h"
+#include <string.h>
+#include "k2c_include.h"
 
 void k2c_pad1d(k2c_tensor* output, const k2c_tensor* input, const float fill,
 	       const size_t pad[]) {
@@ -314,5 +311,3 @@ void k2c_upsampling3d(k2c_tensor* output, const k2c_tensor* input, const size_t 
     }
   }
 }
-
-#endif /* KERAS2C_CONVOLUTION_LAYERS_H */

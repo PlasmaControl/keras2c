@@ -1,10 +1,7 @@
-#ifndef KERAS2C_POOLING_LAYERS_H
-#define KERAS2C_POOLING_LAYERS_H
-
 #include <math.h>
 #include <stddef.h>
 #include <string.h>
-#include "k2c_helper_functions.h"
+#include "k2c_include.h"
 
 void k2c_global_max_pooling(k2c_tensor* output, const k2c_tensor* input) {
 
@@ -122,6 +119,3 @@ void k2c_avgpool2d(k2c_tensor* output, const k2c_tensor* input, const size_t poo
     }
   }
 }
-
-#endif /* KERAS2C_POOLING_LAYERS */
-

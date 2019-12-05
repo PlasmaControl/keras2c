@@ -1,22 +1,9 @@
-#ifndef KERAS2C_HELPER_FUNCTIONS_H
-#define KERAS2C_HELPER_FUNCTIONS_H
-
 #include <math.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define K2C_MAX_NDIM 5
-
-struct k2c_tensor
-{
-  float *array;
-  size_t ndim;
-  size_t numel;
-  size_t shape[K2C_MAX_NDIM];
-};
-typedef struct k2c_tensor k2c_tensor;
-
+#include "k2c_include.h"
 
 void k2c_matmul(float C[], const float A[], const float B[], const size_t outrows,
 		const size_t outcols, const size_t innerdim) {
@@ -231,5 +218,3 @@ float* k2c_read_array(const char* filename, const size_t array_size) {
     fclose(finp);
     return ptr;
 }
-
-#endif /* KERAS2C_HELPER_FUNCTIONS_H */
