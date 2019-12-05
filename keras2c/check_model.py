@@ -91,10 +91,6 @@ def config_supported_check(model):
             valid = False
             log += "'return_state' option for layer '" + layer.name + \
                    "' is not supported at this time. \n"
-        if config.get('stateful'):
-            valid = False
-            log += "'stateful' option for layer '" + layer.name + \
-                   "' is not supported at this time. \n"
         if config.get('shared_axes'):
             valid = False
             log += "shared axes option for layer '" + layer.name + \

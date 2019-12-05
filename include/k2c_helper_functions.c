@@ -209,12 +209,13 @@ float* k2c_read_array(const char* filename, const size_t array_size) {
     float* ptr = (float*) malloc(array_size * sizeof(float));
     size_t ctr = 0;
     FILE *finp;
+    int foo;
     finp = fopen(filename, "r");
     if(NULL == finp) {
       printf("Unable to open file %s \n",filename);
       exit(-1);}
     while((!feof(finp)) && (ctr < array_size)) { 
-      fscanf(finp, "%f,", &ptr[ctr++]);}
+      foo = fscanf(finp, "%f,", &ptr[ctr++]);}
     fclose(finp);
     return ptr;
 }

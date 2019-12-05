@@ -18,13 +18,15 @@ __email__ = "wconlin@princeton.edu"
 
 class Weights2C():
 
-    def __init__(self, model, malloc=False):
+    def __init__(self, model, function_name, malloc=False):
 
         self.model = model
+        self.function_name = function_name
         self.model_io = get_model_io_names(self.model)
         self.malloc = malloc
         self.stack_vars = ''
         self.malloc_vars = {}
+        self.static_vars = {}
 
     @staticmethod
     def array2c(array, name, malloc=False):
@@ -81,7 +83,18 @@ class Weights2C():
         for layer in self.model.layers:
             method = getattr(self, 'write_weights_' + layer_type(layer))
             method(layer)
-        return self.stack_vars, self.malloc_vars
+        return self.stack_vars, self.malloc_vars, self.write_static_vars()
+
+    def write_static_vars(self):
+        if len(self.static_vars) > 0:
+            s = 'static struct ' + self.function_name + '_static_vars \n'
+            s += '{ \n'
+            for k, v in self.static_vars.items():
+                s += 'float ' + k + '[' + str(v) + ']; \n'
+            s += '} ' + self.function_name + '_states; \n'
+        else:
+            s = ''
+        return s
 
     def write_outputs(self, layer):
         _, outputs = get_layer_io_names(layer)
@@ -146,8 +159,14 @@ class Weights2C():
             str(int(layer.get_config()['go_backwards'])) + ';\n'
         self.stack_vars += 'int ' + layer.name + '_return_sequences = ' + \
             str(int(layer.get_config()['return_sequences'])) + ';\n'
-        self.stack_vars += 'float ' + layer.name + \
-                           '_state[' + str(2*units) + '] = {0}; \n'
+        if layer.get_config()['stateful']:
+            self.static_vars.update({layer.name + '_state': 2*units})
+            self.stack_vars += 'float * ' + layer.name + '_state = &' + \
+                self.function_name + '_states.' + \
+                layer.name + '_state[0]; \n'
+        else:
+            self.stack_vars += 'float ' + layer.name + \
+                               '_state[' + str(2*units) + '] = {0}; \n'
 
         weights = layer.get_weights()
         kernel = weights[0]
@@ -176,8 +195,14 @@ class Weights2C():
             str(int(layer.get_config()['go_backwards'])) + ';\n'
         self.stack_vars += 'int ' + layer.name + '_return_sequences = ' + \
             str(int(layer.get_config()['return_sequences'])) + ';\n'
-        self.stack_vars += 'float ' + layer.name + \
-            '_state[' + str(units) + '] = {0}; \n'
+        if layer.get_config()['stateful']:
+            self.static_vars.update({layer.name + '_state': units})
+            self.stack_vars += 'float * ' + layer.name + '_state = &' + \
+                self.function_name + '_states.' + \
+                layer.name + '_state[0]; \n'
+        else:
+            self.stack_vars += 'float ' + layer.name + \
+                '_state[' + str(units) + '] = {0}; \n'
 
         weights = layer.get_weights()
         kernel = weights[0]
@@ -212,8 +237,14 @@ class Weights2C():
             str(int(layer.get_config()['return_sequences'])) + ';\n'
         self.stack_vars += 'float ' + layer.name + \
             '_fwork[' + str(2*units) + '] = {0}; \n'
-        self.stack_vars += 'float ' + layer.name + \
-            '_state[' + str(units) + '] = {0}; \n'
+        if layer.get_config()['stateful']:
+            self.static_vars.update({layer.name + '_state': units})
+            self.stack_vars += 'float * ' + layer.name + '_state = &' + \
+                self.function_name + '_states.' + \
+                layer.name + '_state[0]; \n'
+        else:
+            self.stack_vars += 'float ' + layer.name + \
+                '_state[' + str(units) + '] = {0}; \n'
 
         weights = layer.get_weights()
         kernel = weights[0]

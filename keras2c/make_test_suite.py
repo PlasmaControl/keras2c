@@ -15,7 +15,7 @@ __maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
 __email__ = "wconlin@princeton.edu"
 
 
-def make_test_suite(model, function_name, malloc_vars, num_tests=10, tol=1e-5):
+def make_test_suite(model, function_name, malloc_vars, num_tests=10, stateful=False, tol=1e-5):
     print('Writing tests')
     input_shape = []
     # output_shape = []
@@ -23,7 +23,8 @@ def make_test_suite(model, function_name, malloc_vars, num_tests=10, tol=1e-5):
     num_inputs = len(model_inputs)
     num_outputs = len(model_outputs)
     for i in range(num_inputs):
-        input_shape.insert(i, model.inputs[i].shape[1:])
+        input_shape.insert(
+            i, model.inputs[i].shape[:] if stateful else model.inputs[i].shape[1:])
   #  for i in range(num_outputs):
   #      output_shape.insert(i, model.outputs[i].shape[1:])
 
@@ -39,18 +40,23 @@ def make_test_suite(model, function_name, malloc_vars, num_tests=10, tol=1e-5):
     s = 'int main(){\n'
     file.write(s)
     for i in range(num_tests):
+        if i == num_tests//2 and stateful:
+            model.reset_states()
         # generate random input and write to file
         ct = 0
         while True:
             rand_inputs = []
             for j, _ in enumerate(model_inputs):
                 rand_input = 4*np.random.random(input_shape[j]) - 2
-                rand_input = rand_input[np.newaxis, ...]
+                if not stateful:
+                    rand_input = rand_input[np.newaxis, ...]
                 rand_inputs.insert(j, rand_input)
                 # make predictions
             outputs = model.predict(rand_inputs)
             if np.isfinite(outputs).all():
                 break
+            else:
+                ct += 1
             if ct > 20:
                 raise Exception('Cannot find inputs to the \
                 network that result in a finite output')
@@ -72,12 +78,22 @@ def make_test_suite(model, function_name, malloc_vars, num_tests=10, tol=1e-5):
     s += 'size_t num_outputs = ' + str(num_outputs) + '; \n'
     for var in malloc_vars:
         s += 'float* ' + var + '; \n'
-    s += function_name + \
-        '_initialize(' + ','.join(['&' + var for var in malloc_vars]) + '); \n'
+
+    init_sig = function_name + '_initialize(' + \
+        ','.join(['&' + var for var in malloc_vars])
+    if stateful and len(malloc_vars):
+        init_sig += ',1); \n'
+    elif stateful:
+        init_sig += '1); \n'
+    else:
+        init_sig += '); \n'
+    s += init_sig
     s += 'clock_t t0 = clock(); \n'
     file.write(s)
 
     for i in range(num_tests):
+        if i == num_tests//2 and stateful:
+            file.write(init_sig)
         s = function_name + '('
         model_in = ['&test' + str(i+1) + '_' + inp +
                     '_input' for inp in model_inputs]

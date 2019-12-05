@@ -29,7 +29,8 @@ def model2c(model, file, function_name, malloc=False):
     file.write(s)
 
     print('Gathering Weights')
-    stack_vars, malloc_vars = Weights2C(model, malloc).write_weights()
+    stack_vars, malloc_vars, static_vars = Weights2C(
+        model, function_name, malloc).write_weights()
     layers = Layers2C(model, malloc).write_layers()
 
     function_signature = 'void ' + function_name + '('
@@ -41,15 +42,18 @@ def model2c(model, file, function_name, malloc=False):
         function_signature += ',' + ','.join(['float* ' +
                                               key for key in malloc_vars.keys()])
     function_signature += ')'
-
+    file.write(static_vars + '\n\n')
     file.write(function_signature)
     file.write(' { \n\n')
     file.write(stack_vars)
     file.write(layers)
     file.write('\n } \n\n')
+    stateful = len(static_vars) > 0
 
-    init_sig = write_function_initialize(file, function_name, malloc_vars)
-    term_sig = write_function_terminate(file, function_name, malloc_vars)
+    init_sig = write_function_initialize(
+        file, function_name, malloc_vars, stateful)
+    term_sig = write_function_terminate(
+        file, function_name, malloc_vars, stateful)
 
     with open(function_name + '.h', 'x+') as header:
         header.write('#pragma once \n')
@@ -57,16 +61,23 @@ def model2c(model, file, function_name, malloc=False):
         header.write(init_sig + '; \n')
         header.write(term_sig + '; \n')
 
-    return malloc_vars.keys()
+    return malloc_vars.keys(), stateful
 
 
-def write_function_initialize(file, function_name, malloc_vars):
+def write_function_initialize(file, function_name, malloc_vars, stateful):
     function_init_signature = 'void ' + function_name + '_initialize('
     function_init_signature += ','.join(['float** ' +
-                                         key for key in malloc_vars.keys()])
+                                         key + ' \n' for key in malloc_vars.keys()])
+    if stateful and len(malloc_vars):
+        function_init_signature += ',int reset_states'
+    elif stateful:
+        function_init_signature += 'int reset_states'
     function_init_signature += ')'
     file.write(function_init_signature)
     s = ' { \n\n'
+    if stateful:
+        s += 'if (reset_states) { \n memset(&' + function_name + \
+            '_states,0,sizeof(' + function_name + '_states)); \n return; }\n'
     for key in malloc_vars.keys():
         fname = function_name + key + ".csv"
         np.savetxt(fname, malloc_vars[key], fmt="%.8e", delimiter=',')
@@ -77,7 +88,7 @@ def write_function_initialize(file, function_name, malloc_vars):
     return function_init_signature
 
 
-def write_function_terminate(file, function_name, malloc_vars):
+def write_function_terminate(file, function_name, malloc_vars, stateful):
     function_term_signature = 'void ' + function_name + '_terminate('
     function_term_signature += ','.join(['float* ' +
                                          key for key in malloc_vars.keys()])
@@ -109,12 +120,12 @@ def k2c(model, function_name, malloc=False, num_tests=10):
     print('All checks passed')
 
     file = open(filename, "x+")
-    malloc_vars = model2c(model, file, function_name, malloc)
+    malloc_vars, stateful = model2c(model, file, function_name, malloc)
     file.close()
     s = 'Done \n'
     s += "C code is in '" + function_name + ".h' \n"
     if num_tests > 0:
-        make_test_suite(model, function_name, malloc_vars, num_tests)
+        make_test_suite(model, function_name, malloc_vars, num_tests, stateful)
         s += "Tests are in '" + function_name + "_test_suite.c' \n"
     if malloc:
         s += "Weight arrays are in .csv files of the form 'model_name_layer_name_array_type.csv' \n"

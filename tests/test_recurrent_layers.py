@@ -24,11 +24,12 @@ class TestRecurrentLayers(unittest.TestCase):
     """tests for recurrent layers"""
 
     def test_SimpleRNN1(self):
-        inshp = (12, 46)
+        inshp = (1, 12, 46)
         units = 17
-        a = keras.layers.Input(inshp)
+        a = keras.layers.Input(batch_shape=inshp)
         b = keras.layers.SimpleRNN(units, activation='relu',
-                                   return_sequences=False)(a)
+                                   return_sequences=False,
+                                   stateful=True)(a)
         model = keras.models.Model(inputs=a, outputs=b)
         name = 'test___SimpleRNN1' + str(int(time.time()))
         keras2c_main.k2c(model, name)
@@ -90,14 +91,15 @@ class TestRecurrentLayers(unittest.TestCase):
         self.assertEqual(rcode, 0)
 
     def test_LSTM3(self):
-        inshp = (4, 80)
+        inshp = (1, 4, 80)
         units = 23
-        a = keras.layers.Input(inshp)
+        a = keras.layers.Input(batch_shape=inshp)
         b = keras.layers.LSTM(units, go_backwards=False,
                               return_sequences=True,
                               activation='sigmoid',
                               recurrent_activation='tanh',
-                              use_bias=False)(a)
+                              use_bias=False,
+                              stateful=True)(a)
         model = keras.models.Model(inputs=a, outputs=b)
         name = 'test___LSTM3' + str(int(time.time()))
         keras2c_main.k2c(model, name)
@@ -118,14 +120,15 @@ class TestRecurrentLayers(unittest.TestCase):
         self.assertEqual(rcode, 0)
 
     def test_GRU2(self):
-        inshp = (12, 46)
+        inshp = (1, 12, 46)
         units = 17
-        a = keras.layers.Input(inshp)
+        a = keras.layers.Input(batch_shape=inshp)
         b = keras.layers.GRU(units, activation='softplus',
                              recurrent_activation='sigmoid',
                              return_sequences=True,
                              go_backwards=True,
-                             reset_after=True)(a)
+                             reset_after=True,
+                             stateful=True)(a)
         model = keras.models.Model(inputs=a, outputs=b)
         name = 'test___GRU2' + str(int(time.time()))
         keras2c_main.k2c(model, name)
