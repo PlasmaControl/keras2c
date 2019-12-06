@@ -23,8 +23,10 @@ __email__ = "wconlin@princeton.edu"
 
 def model2c(model, file, function_name, malloc=False):
     model_inputs, model_outputs = get_model_io_names(model)
-    s = '#include <stdio.h> \n#include <stddef.h> \n#include <math.h> \n#include <string.h> \n'
-    s += '#include <stdarg.h> \n#include "./include/k2c_include.h" \n'
+    s = '#include <math.h> \n '
+    s += '#include <string.h> \n'
+    s += '#include "./include/k2c_include.h" \n'
+    s += '#include "./include/k2c_tensor_include.h" \n'
     s += '\n \n'
     file.write(s)
 
@@ -50,34 +52,41 @@ def model2c(model, file, function_name, malloc=False):
     file.write('\n } \n\n')
     stateful = len(static_vars) > 0
 
-    init_sig = write_function_initialize(
-        file, function_name, malloc_vars, stateful)
-    term_sig = write_function_terminate(
-        file, function_name, malloc_vars, stateful)
-
+    init_sig = write_function_initialize(file, function_name, malloc_vars)
+    term_sig = write_function_terminate(file, function_name, malloc_vars)
+    if stateful:
+        reset_sig = write_function_reset(file, function_name)
     with open(function_name + '.h', 'x+') as header:
         header.write('#pragma once \n')
+        header.write('#include "./include/k2c_tensor_include.h" \n')
         header.write(function_signature + '; \n')
         header.write(init_sig + '; \n')
         header.write(term_sig + '; \n')
 
+        if stateful:
+            header.write(reset_sig + '; \n')
+
     return malloc_vars.keys(), stateful
 
 
-def write_function_initialize(file, function_name, malloc_vars, stateful):
+def write_function_reset(file, function_name):
+    function_reset_signature = 'void ' + function_name + '_reset_states()'
+    file.write(function_reset_signature)
+    s = ' { \n\n'
+    s += 'memset(&' + function_name + \
+         '_states,0,sizeof(' + function_name + '_states)); \n'
+    s += "} \n\n"
+    file.write(s)
+    return function_reset_signature
+
+
+def write_function_initialize(file, function_name, malloc_vars):
     function_init_signature = 'void ' + function_name + '_initialize('
     function_init_signature += ','.join(['float** ' +
                                          key + ' \n' for key in malloc_vars.keys()])
-    if stateful and len(malloc_vars):
-        function_init_signature += ',int reset_states'
-    elif stateful:
-        function_init_signature += 'int reset_states'
     function_init_signature += ')'
     file.write(function_init_signature)
     s = ' { \n\n'
-    if stateful:
-        s += 'if (reset_states) { \n memset(&' + function_name + \
-            '_states,0,sizeof(' + function_name + '_states)); \n return; }\n'
     for key in malloc_vars.keys():
         fname = function_name + key + ".csv"
         np.savetxt(fname, malloc_vars[key], fmt="%.8e", delimiter=',')
@@ -88,7 +97,7 @@ def write_function_initialize(file, function_name, malloc_vars, stateful):
     return function_init_signature
 
 
-def write_function_terminate(file, function_name, malloc_vars, stateful):
+def write_function_terminate(file, function_name, malloc_vars):
     function_term_signature = 'void ' + function_name + '_terminate('
     function_term_signature += ','.join(['float* ' +
                                          key for key in malloc_vars.keys()])

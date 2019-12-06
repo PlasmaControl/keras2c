@@ -24,7 +24,7 @@ class TestRecurrentLayers(unittest.TestCase):
     """tests for recurrent layers"""
 
     def test_SimpleRNN1(self):
-        inshp = (1, 12, 46)
+        inshp = (4, 4, 46)
         units = 17
         a = keras.layers.Input(batch_shape=inshp)
         b = keras.layers.SimpleRNN(units, activation='relu',
@@ -91,7 +91,7 @@ class TestRecurrentLayers(unittest.TestCase):
         self.assertEqual(rcode, 0)
 
     def test_LSTM3(self):
-        inshp = (1, 4, 80)
+        inshp = (3, 4, 80)
         units = 23
         a = keras.layers.Input(batch_shape=inshp)
         b = keras.layers.LSTM(units, go_backwards=False,
@@ -120,7 +120,7 @@ class TestRecurrentLayers(unittest.TestCase):
         self.assertEqual(rcode, 0)
 
     def test_GRU2(self):
-        inshp = (1, 12, 46)
+        inshp = (5, 12, 46)
         units = 17
         a = keras.layers.Input(batch_shape=inshp)
         b = keras.layers.GRU(units, activation='softplus',

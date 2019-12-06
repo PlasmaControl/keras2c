@@ -80,20 +80,17 @@ def make_test_suite(model, function_name, malloc_vars, num_tests=10, stateful=Fa
         s += 'float* ' + var + '; \n'
 
     init_sig = function_name + '_initialize(' + \
-        ','.join(['&' + var for var in malloc_vars])
-    if stateful and len(malloc_vars):
-        init_sig += ',1); \n'
-    elif stateful:
-        init_sig += '1); \n'
-    else:
-        init_sig += '); \n'
+        ','.join(['&' + var for var in malloc_vars]) + '); \n'
     s += init_sig
+    if stateful:
+        reset_sig = function_name + '_reset_states();'
+        s += reset_sig
     s += 'clock_t t0 = clock(); \n'
     file.write(s)
 
     for i in range(num_tests):
         if i == num_tests//2 and stateful:
-            file.write(init_sig)
+            file.write(reset_sig)
         s = function_name + '('
         model_in = ['&test' + str(i+1) + '_' + inp +
                     '_input' for inp in model_inputs]

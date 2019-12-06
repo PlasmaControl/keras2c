@@ -161,9 +161,9 @@ class Weights2C():
             str(int(layer.get_config()['return_sequences'])) + ';\n'
         if layer.get_config()['stateful']:
             self.static_vars.update({layer.name + '_state': 2*units})
-            self.stack_vars += 'float * ' + layer.name + '_state = &' + \
+            self.stack_vars += 'float * ' + layer.name + '_state = ' + \
                 self.function_name + '_states.' + \
-                layer.name + '_state[0]; \n'
+                layer.name + '_state; \n'
         else:
             self.stack_vars += 'float ' + layer.name + \
                                '_state[' + str(2*units) + '] = {0}; \n'
@@ -197,9 +197,9 @@ class Weights2C():
             str(int(layer.get_config()['return_sequences'])) + ';\n'
         if layer.get_config()['stateful']:
             self.static_vars.update({layer.name + '_state': units})
-            self.stack_vars += 'float * ' + layer.name + '_state = &' + \
+            self.stack_vars += 'float * ' + layer.name + '_state = ' + \
                 self.function_name + '_states.' + \
-                layer.name + '_state[0]; \n'
+                layer.name + '_state; \n'
         else:
             self.stack_vars += 'float ' + layer.name + \
                 '_state[' + str(units) + '] = {0}; \n'
@@ -239,9 +239,9 @@ class Weights2C():
             '_fwork[' + str(2*units) + '] = {0}; \n'
         if layer.get_config()['stateful']:
             self.static_vars.update({layer.name + '_state': units})
-            self.stack_vars += 'float * ' + layer.name + '_state = &' + \
+            self.stack_vars += 'float * ' + layer.name + '_state = ' + \
                 self.function_name + '_states.' + \
-                layer.name + '_state[0]; \n'
+                layer.name + '_state; \n'
         else:
             self.stack_vars += 'float ' + layer.name + \
                 '_state[' + str(units) + '] = {0}; \n'
