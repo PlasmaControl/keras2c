@@ -20,8 +20,9 @@ void k2c_exponential_func(float x[], const size_t size){
   /* y = exp(x) */
   /* x is overwritten with the activated values */
 
-  for (size_t i=0; i<size; i++) {
-    x[i] = exp(x[i]);}
+  for (size_t i=0; i<size; ++i) {
+    x[i] = exp(x[i]);
+  }
 }
 k2c_activationType * k2c_exponential = k2c_exponential_func;
 
@@ -30,7 +31,7 @@ void k2c_relu_func(float x[], const size_t size) {
   /*   y = max(x,0) */
   /* x is overwritten with the activated values */
 
-  for (size_t i=0; i < size; i++) {
+  for (size_t i=0; i < size; ++i) {
     if (x[i] <= 0.0f){
       x[i] = 0.0f;
     }
@@ -45,7 +46,7 @@ void k2c_hard_sigmoid_func(float x[], const size_t size) {
   /*        0 if x<2.5 */
   /* x is overwritten with the activated values */
 
-  for (size_t i=0; i < size; i++) {
+  for (size_t i=0; i < size; ++i) {
     if (x[i] <= -2.5f){
       x[i] = 0.0f;
     }
@@ -63,7 +64,7 @@ k2c_activationType * k2c_hard_sigmoid = k2c_hard_sigmoid_func;
 void k2c_tanh_func(float x[], const size_t size) {
   /* standard tanh activation */
   /* x is overwritten with the activated values */
-  for (size_t i=0; i<size; i++){
+  for (size_t i=0; i<size; ++i){
     x[i] = tanh(x[i]);
   }
 }
@@ -74,7 +75,7 @@ void k2c_sigmoid_func(float x[], const size_t size) {
   /* Sigmoid activation */
   /*   y = 1/(1+exp(-x)) */
   /* x is overwritten with the activated values */
-  for (size_t i=0; i < size; i++) {
+  for (size_t i=0; i < size; ++i) {
     x[i] = 1/(1+exp(-x[i]));
   }
 }
@@ -88,21 +89,22 @@ void k2c_softmax_func(float x[], const size_t size) {
 
   float xmax = x[0];
   float sum = 0;
-  for (size_t i=0; i < size; i++) {
+  for (size_t i=0; i < size; ++i) {
     if (x[i]>xmax) {
-      xmax = x[i];}
+      xmax = x[i];
+    }
   }
 
-  for (size_t i=0; i < size; i++) {
+  for (size_t i=0; i < size; ++i) {
     x[i] = exp(x[i]-xmax);
   }
 
-  for (size_t i=0; i < size; i++) {
+  for (size_t i=0; i < size; ++i) {
     sum += x[i];
   }
 
   sum = 1.0f/sum; // divide once and multiply -> fast
-  for (size_t i=0; i < size; i++) {
+  for (size_t i=0; i < size; ++i) {
     x[i] = x[i]*sum;
   }
 }
@@ -112,7 +114,7 @@ void k2c_softplus_func(float x[], const size_t size) {
   /* Softplus activation */
   /*   y = ln(1+exp(x)) */
   /*   x is overwritten with the activated values */
-  for (size_t i=0; i < size; i++) {
+  for (size_t i=0; i < size; ++i) {
     x[i] = log1p(exp(x[i]));
   }
 }
@@ -122,7 +124,7 @@ void k2c_softsign_func(float x[], const size_t size) {
   /* Softsign activation */
   /*   y = x/(1+|x|) */
   /*   x is overwritten by the activated values */
-  for (size_t i=0; i < size; i++) {
+  for (size_t i=0; i < size; ++i) {
     x[i] = x[i]/(1.0f + fabs(x[i]));
   }
 }
@@ -137,9 +139,10 @@ void k2c_LeakyReLU(float x[], const size_t size, const float alpha){
   /*   f(x) = alpha * x for x < 0, f(x) = x for x >= 0. */
   /*   x is overwritten by the activated values */
 
-  for (size_t i=0; i<size; i++) {
+  for (size_t i=0; i<size; ++i) {
     if (x[i]<0){
-      x[i] = alpha*x[i];}
+      x[i] = alpha*x[i];
+    }
   }
 }
 
@@ -149,9 +152,10 @@ void k2c_PReLU(float x[], const size_t size, const float alpha[]) {
   /*  where alpha is a learned array with the same shape as x. */
   /*  x is overwritten by the activated values */
 
-  for (size_t i=0; i<size; i++) {
+  for (size_t i=0; i<size; ++i) {
     if (x[i]<0.0f) {
-      x[i] = x[i]*alpha[i];}
+      x[i] = x[i]*alpha[i];
+    }
   }
 }
   
@@ -162,7 +166,7 @@ void k2c_ELU(float x[], const size_t size, const float alpha) {
   /* 	 alpha*(e^x - 1) else} */
   /* x is overwritten with the activated values */
     
-  for (size_t i=0; i < size; i++) {
+  for (size_t i=0; i < size; ++i) {
     if (x[i] <= 0.0f){
       x[i] = alpha*expm1(x[i]);
     }
@@ -174,9 +178,10 @@ void k2c_ThresholdedReLU(float x[], const size_t size, const float theta) {
   /*   f(x) = x for x > theta, f(x) = 0 otherwise. */
   /* x is overwritten with the activated values */
 
-  for (size_t i=0; i<size; i++) {
+  for (size_t i=0; i<size; ++i) {
     if (x[i]<= theta) {
-      x[i] = 0;}
+      x[i] = 0;
+    }
   }
 }
 
@@ -189,10 +194,12 @@ void k2c_ReLU(float x[], const size_t size, const float max_value,
   /* f(x) = negative_slope * (x - threshold) otherwise. */
   /* x is overwritten with the activated values */
 
-  for (size_t i=0; i<size; i++) {
+  for (size_t i=0; i<size; ++i) {
     if (x[i] >= max_value) {
-      x[i] = max_value;}
+      x[i] = max_value;
+    }
     else if (x[i] < threshold) {
-      x[i] = negative_slope*(x[i] - threshold);}
+      x[i] = negative_slope*(x[i] - threshold);
+    }
   }
 }

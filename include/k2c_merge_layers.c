@@ -15,9 +15,9 @@ void k2c_add(k2c_tensor* output, const size_t num_tensors,...){
   va_start (args, num_tensors);     
   memset(output->array, 0, output->numel*sizeof(output->array[0]));
   
-  for (size_t i = 0; i < num_tensors; i++){
+  for (size_t i = 0; i < num_tensors; ++i){
     arrptr = va_arg(args, k2c_tensor*);
-    for (size_t j=0; j<output->numel; j++){
+    for (size_t j=0; j<output->numel; ++j){
       output->array[j] += arrptr->array[j];
     }
   }
@@ -30,9 +30,10 @@ void k2c_subtract(k2c_tensor* output, const size_t num_tensors,
   /* output[i] = tensor1[i] - tensor2[i] */
   /* results are stored in output array */
 
-  for (size_t i=0;i<output->numel;i++){
+  for (size_t i=0;i<output->numel;++i){
     output->array[i] = tensor1->array[i]-
-      tensor2->array[i];}
+      tensor2->array[i];
+  }
 }
 
 void k2c_multiply(k2c_tensor* output, const size_t num_tensors,...){
@@ -46,12 +47,13 @@ void k2c_multiply(k2c_tensor* output, const size_t num_tensors,...){
   const k2c_tensor *arrptr;
   va_start (args, num_tensors);
 
-  for (size_t i=0;i<output->numel;i++){
-    output->array[i] = 1.0f;}
+  for (size_t i=0;i<output->numel;++i){
+    output->array[i] = 1.0f;
+  }
   
-  for (size_t i = 0; i < num_tensors; i++){
+  for (size_t i = 0; i < num_tensors; ++i){
     arrptr = va_arg(args, k2c_tensor*);
-    for (size_t j=0; j<output->numel; j++){
+    for (size_t j=0; j<output->numel; ++j){
       output->array[j] *= arrptr->array[j];
     }
   }
@@ -71,9 +73,9 @@ void k2c_average(k2c_tensor* output, const size_t num_tensors,...){
   
   va_start (args, num_tensors);     
   memset(output->array, 0, output->numel*sizeof(output->array[0]));
-  for (size_t i = 0; i < num_tensors; i++){
+  for (size_t i = 0; i < num_tensors; ++i){
     arrptr = va_arg(args, k2c_tensor*);
-    for (size_t j=0; j<output->numel; j++){
+    for (size_t j=0; j<output->numel; ++j){
       output->array[j] += arrptr->array[j]*num_tensors_inv;
     }
   }
@@ -93,14 +95,16 @@ void k2c_max(k2c_tensor* output, const size_t num_tensors,...){
   va_start (args, num_tensors);
   arrptr = va_arg(args, k2c_tensor*);
 
-  for (size_t i=0;i<output->numel;i++){
-    output->array[i] = arrptr->array[i];}
+  for (size_t i=0;i<output->numel;++i){
+    output->array[i] = arrptr->array[i];
+  }
   
-  for (size_t i = 0; i < num_tensors-1; i++){
+  for (size_t i = 0; i < num_tensors-1; ++i){
     arrptr = va_arg(args, k2c_tensor*);
-    for (size_t j=0; j<output->numel; j++){
+    for (size_t j=0; j<output->numel; ++j){
       if (output->array[j]<arrptr->array[j]){
-	output->array[j] = arrptr->array[j];}
+	output->array[j] = arrptr->array[j];
+      }
     }
   }
   va_end (args);             
@@ -118,14 +122,16 @@ void k2c_min(k2c_tensor* output, const size_t num_tensors,...) {
   va_start (args, num_tensors);
   arrptr = va_arg(args, k2c_tensor*);
 
-  for (size_t i=0;i<output->numel;i++){
-    output->array[i] = arrptr->array[i];}
+  for (size_t i=0;i<output->numel;++i){
+    output->array[i] = arrptr->array[i];
+  }
   
-  for (size_t i = 0; i < num_tensors-1; i++){
+  for (size_t i = 0; i < num_tensors-1; ++i){
     arrptr = va_arg(args, k2c_tensor*);
-    for (size_t j=0; j<output->numel; j++){
+    for (size_t j=0; j<output->numel; ++j){
       if (output->array[j]>arrptr->array[j]){
-	output->array[j] = arrptr->array[j];}
+	output->array[j] = arrptr->array[j];
+      }
     }
   }
   va_end (args);             
@@ -146,9 +152,9 @@ void k2c_concatenate(k2c_tensor* output, const size_t axis, const size_t num_ten
   size_t insub[K2C_MAX_NDIM], outsub[K2C_MAX_NDIM];
   va_start (args, num_tensors);     
 
-  for (size_t i=0; i<num_tensors; i++) {
+  for (size_t i=0; i<num_tensors; ++i) {
     arrptr = va_arg(args, k2c_tensor*);
-    for (size_t j=0; j<arrptr->numel; j++) {
+    for (size_t j=0; j<arrptr->numel; ++j) {
       k2c_idx2sub(j,insub,arrptr->shape,arrptr->ndim);
       memcpy(outsub,insub,K2C_MAX_NDIM*sizeof(size_t));
       outsub[axis] += offset;
