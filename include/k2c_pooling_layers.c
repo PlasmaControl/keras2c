@@ -3,9 +3,15 @@
 #include <string.h>
 #include "k2c_include.h"
 
-void k2c_global_max_pooling(k2c_tensor* output, const k2c_tensor* input) {
 
-  // works for 1d,2d,3d
+/**
+ * Global max pooling.
+ * works for 1D, 2D, or 3D inputs.
+ *
+ * :param output: output tensor.
+ * :param input: input tensor.
+ */
+void k2c_global_max_pooling(k2c_tensor* output, const k2c_tensor* input) {
 
   const size_t in_chan = input->shape[input->ndim-1];
   for (size_t i=0; i<in_chan; ++i){
@@ -22,6 +28,13 @@ void k2c_global_max_pooling(k2c_tensor* output, const k2c_tensor* input) {
 }
 
 
+/**
+ * Global average pooling.
+ * works for 1D, 2D, or 3D inputs.
+ *
+ * :param output: output tensor.
+ * :param input: input tensor.
+ */
 void k2c_global_avg_pooling(k2c_tensor* output, const k2c_tensor* input) {
 
   const size_t in_chan = input->shape[input->ndim-1];
@@ -35,6 +48,15 @@ void k2c_global_avg_pooling(k2c_tensor* output, const k2c_tensor* input) {
   }
 }
 
+
+/**
+ * Max pooling for 1D (temporal) data.
+ *
+ * :param output: output tensor.
+ * :param input: input tensor.
+ * :param pool_size: size of the max pooling window.
+ * :param stride: factor by which to downscale.
+ */
 void k2c_maxpool1d(k2c_tensor* output, const k2c_tensor* input, const size_t pool_size,
 		   const size_t stride) {
   const size_t channels = input->shape[1];
@@ -51,12 +73,20 @@ void k2c_maxpool1d(k2c_tensor* output, const k2c_tensor* input, const size_t poo
   }
 }
 
+
+/**
+ * Max pooling for 2D (spatial) data.
+ *
+ * :param output: output tensor.
+ * :param input: input tensor.
+ * :param pool_size: array[2] size of the max pooling window. Order is {pool size dim 1, pool size dim 2}.
+ * :param stride: array[2] factor by which to downscale. Order is {stride dim 1, stride dim 2}.
+ */
 void k2c_maxpool2d(k2c_tensor* output, const k2c_tensor* input, const size_t pool_size[],
 		   const size_t stride[]) {
 
 
   const size_t channels = input->shape[2];
-
   // i,j,l output indices
   /// i, k, m input indices
   for (size_t i=0; i< channels; ++i) {
@@ -78,6 +108,15 @@ void k2c_maxpool2d(k2c_tensor* output, const k2c_tensor* input, const size_t poo
   }
 }
 
+
+/**
+ * Average pooling for 1D (temporal) data.
+ *
+ * :param output: output tensor.
+ * :param input: input tensor.
+ * :param pool_size: size of the average pooling window.
+ * :param stride: factor by which to downscale.
+ */
 void k2c_avgpool1d(k2c_tensor* output, const k2c_tensor* input, const size_t pool_size,
 		   const size_t stride){
 
@@ -97,6 +136,15 @@ void k2c_avgpool1d(k2c_tensor* output, const k2c_tensor* input, const size_t poo
   }
 }
 
+
+/**
+ * Average pooling for 2D (spatial) data.
+ *
+ * :param output: output tensor.
+ * :param input: input tensor.
+ * :param pool_size: array[2] size of the average pooling window. Order is {pool size dim 1, pool size dim 2}.
+ * :param stride: array[2] factor by which to downscale. Order is {stride dim 1, stride dim 2}.
+ */
 void k2c_avgpool2d(k2c_tensor* output, const k2c_tensor* input, const size_t pool_size[],
 		   const size_t stride[]) {
   memset(output->array,0,output->numel*sizeof(output->array[0]));

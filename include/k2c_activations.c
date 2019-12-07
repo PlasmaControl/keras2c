@@ -4,21 +4,28 @@
 #include "k2c_include.h"
 
 
-/* typedef void k2c_activationType(float x[], const size_t size); */
 
-
-// Regular Activations
-//*****************************************************************************
+/**
+ * Linear activation function.
+ *   y=x
+ *
+ * :param x: array of input values. Gets overwritten by output.
+ * :param size: length of input array.
+ */
 void k2c_linear_func(float x[], const size_t size){
-  /* linear activation. Doesn't do anything, just a dummy fn */
 
 }
 k2c_activationType * k2c_linear = k2c_linear_func;
 
+
+/**
+ * Exponential activation function.
+ *   y = exp(x)
+ *
+ * :param x: array of input values. Gets overwritten by output.
+ * :param size: length of input array.
+ */
 void k2c_exponential_func(float x[], const size_t size){
-  /* exponential activation */
-  /* y = exp(x) */
-  /* x is overwritten with the activated values */
 
   for (size_t i=0; i<size; ++i) {
     x[i] = exp(x[i]);
@@ -26,10 +33,15 @@ void k2c_exponential_func(float x[], const size_t size){
 }
 k2c_activationType * k2c_exponential = k2c_exponential_func;
 
+
+/**
+ * ReLU activation function.
+ *   y = max(x,0)
+ *
+ * :param x: array of input values. Gets overwritten by output.
+ * :param size: length of input array.
+ */
 void k2c_relu_func(float x[], const size_t size) {
-  /* Rectified Linear Unit activation (ReLU) */
-  /*   y = max(x,0) */
-  /* x is overwritten with the activated values */
 
   for (size_t i=0; i < size; ++i) {
     if (x[i] <= 0.0f){
@@ -39,12 +51,17 @@ void k2c_relu_func(float x[], const size_t size) {
 }
 k2c_activationType * k2c_relu = k2c_relu_func;
 
+
+/**
+ * ReLU activation function.
+ *   y = {1          if      x> 2.5}
+ *       {0.2*x+0.5  if -2.5<x< 2.5}
+ *       {0          if      x<-2.5} 
+ *
+ * :param x: array of input values. Gets overwritten by output.
+ * :param size: length of input array.
+ */
 void k2c_hard_sigmoid_func(float x[], const size_t size) {
-  /* Hard Sigmoid activation */
-  /*   y = {1 if x> 2.5 */
-  /*        0.2*x+0.5 if -2.5<x<2.5 */
-  /*        0 if x<2.5 */
-  /* x is overwritten with the activated values */
 
   for (size_t i=0; i < size; ++i) {
     if (x[i] <= -2.5f){
@@ -61,9 +78,15 @@ void k2c_hard_sigmoid_func(float x[], const size_t size) {
 k2c_activationType * k2c_hard_sigmoid = k2c_hard_sigmoid_func;
 
 
+/**
+ * Tanh activation function.
+ *   y = tanh(x)
+ *
+ * :param x: array of input values. Gets overwritten by output.
+ * :param size: length of input array.
+ */
 void k2c_tanh_func(float x[], const size_t size) {
-  /* standard tanh activation */
-  /* x is overwritten with the activated values */
+
   for (size_t i=0; i<size; ++i){
     x[i] = tanh(x[i]);
   }
@@ -71,21 +94,31 @@ void k2c_tanh_func(float x[], const size_t size) {
 k2c_activationType * k2c_tanh = k2c_tanh_func;
 
 
+/**
+ * Sigmoid activation function.
+ *   y = 1/(1+exp(-x))
+ *
+ * :param x: array of input values. Gets overwritten by output.
+ * :param size: length of input array.
+ */
 void k2c_sigmoid_func(float x[], const size_t size) {
-  /* Sigmoid activation */
-  /*   y = 1/(1+exp(-x)) */
-  /* x is overwritten with the activated values */
+
   for (size_t i=0; i < size; ++i) {
     x[i] = 1/(1+exp(-x[i]));
   }
 }
 k2c_activationType * k2c_sigmoid = k2c_sigmoid_func;
 
+
+/**
+ * Soft max activation function.
+ *   z[i] = exp(x[i]-max(x))
+ *   y = z/sum(z)
+ *
+ * :param x: array of input values. Gets overwritten by output.
+ * :param size: length of input array.
+ */
 void k2c_softmax_func(float x[], const size_t size) {
-  /* Softmax activation */
-  /*     z[i] = exp(x[i]-max(x)) */
-  /*     y = z/sum(z) */
-  /* x is overwritten with the activated values */
 
   float xmax = x[0];
   float sum = 0;
@@ -103,41 +136,57 @@ void k2c_softmax_func(float x[], const size_t size) {
     sum += x[i];
   }
 
-  sum = 1.0f/sum; // divide once and multiply -> fast
+  sum = 1.0f/sum; 
   for (size_t i=0; i < size; ++i) {
     x[i] = x[i]*sum;
   }
 }
 k2c_activationType * k2c_softmax = k2c_softmax_func;
 
+
+/**
+ * Soft plus activation function.
+ *   y = ln(1+exp(x))
+ *
+ * :param x: array of input values. Gets overwritten by output.
+ * :param size: length of input array.
+ */
 void k2c_softplus_func(float x[], const size_t size) {
-  /* Softplus activation */
-  /*   y = ln(1+exp(x)) */
-  /*   x is overwritten with the activated values */
+
   for (size_t i=0; i < size; ++i) {
     x[i] = log1p(exp(x[i]));
   }
 }
 k2c_activationType * k2c_softplus = k2c_softplus_func;
 
+
+/**
+ * Soft sign activation function.
+ *   y = x/(1+|x|)
+ *
+ * :param x: array of input values. Gets overwritten by output.
+ * :param size: length of input array.
+ */
 void k2c_softsign_func(float x[], const size_t size) {
-  /* Softsign activation */
-  /*   y = x/(1+|x|) */
-  /*   x is overwritten by the activated values */
+
   for (size_t i=0; i < size; ++i) {
     x[i] = x[i]/(1.0f + fabs(x[i]));
   }
 }
 k2c_activationType * k2c_softsign = k2c_softsign_func;
 
-// Advanced Activations
-//*****************************************************************************
 
+/**
+ * Leaky version of a Rectified Linear Unit.
+ * It allows a small gradient when the unit is not active:
+ *   y = {alpha*x    if x < 0}
+ *       {x          if x >= 0}
+ *
+ * :param x: array of input values. Gets overwritten by output.
+ * :param size: length of input array.
+ * :param alpha: slope of negative portion of activation curve.
+ */
 void k2c_LeakyReLU(float x[], const size_t size, const float alpha){
-  /* Leaky version of a Rectified Linear Unit. */
-  /* It allows a small gradient when the unit is not active: */
-  /*   f(x) = alpha * x for x < 0, f(x) = x for x >= 0. */
-  /*   x is overwritten by the activated values */
 
   for (size_t i=0; i<size; ++i) {
     if (x[i]<0){
@@ -146,11 +195,19 @@ void k2c_LeakyReLU(float x[], const size_t size, const float alpha){
   }
 }
 
+
+/**
+ * Parametric Rectified Linear Unit.
+ * It allows a small gradient when the unit is not active:
+ *   y = {alpha*x    if x < 0}
+ *       {x          if x >= 0}
+ * Where alpha is a learned array with the same shape as x.
+ *
+ * :param x: array of input values. Gets overwritten by output.
+ * :param size: length of input array.
+ * :param alpha: slope of negative portion of activation curve for each unit.
+ */
 void k2c_PReLU(float x[], const size_t size, const float alpha[]) {
-  /*  Parametric Rectified Linear Unit. */
-  /*  f(x) = alpha * x for x < 0, f(x) = x for x >= 0, */
-  /*  where alpha is a learned array with the same shape as x. */
-  /*  x is overwritten by the activated values */
 
   for (size_t i=0; i<size; ++i) {
     if (x[i]<0.0f) {
@@ -160,11 +217,16 @@ void k2c_PReLU(float x[], const size_t size, const float alpha[]) {
 }
   
 
+/**
+ * Exponential Linear Unit activation (ELU).
+ *   y = {alpha*(exp(x) - 1)  if x <  0}
+ *       {x                   if x >= 0}
+ *
+ * :param x: array of input values. Gets overwritten by output.
+ * :param size: length of input array.
+ * :param alpha: slope of negative portion of activation curve.
+ */
 void k2c_ELU(float x[], const size_t size, const float alpha) {
-  /* Exponential Linear Unit activation (ELU) */
-  /*   y = {x if x>0 */
-  /* 	 alpha*(e^x - 1) else} */
-  /* x is overwritten with the activated values */
     
   for (size_t i=0; i < size; ++i) {
     if (x[i] <= 0.0f){
@@ -173,10 +235,17 @@ void k2c_ELU(float x[], const size_t size, const float alpha) {
   }
 }
 
+
+/**
+ * Thresholded Rectified Linear Unit.
+ *   y = {x    if x >  theta}
+         {0    if x <= theta}
+ *
+ * :param x: array of input values. Gets overwritten by output.
+ * :param size: length of input array.
+ * :param theta: threshold for activation.
+ */
 void k2c_ThresholdedReLU(float x[], const size_t size, const float theta) {
-  /* Thresholded Rectified Linear Unit. */
-  /*   f(x) = x for x > theta, f(x) = 0 otherwise. */
-  /* x is overwritten with the activated values */
 
   for (size_t i=0; i<size; ++i) {
     if (x[i]<= theta) {
@@ -185,21 +254,27 @@ void k2c_ThresholdedReLU(float x[], const size_t size, const float theta) {
   }
 }
 
-
+/**
+ * Rectified Linear Unit activation function.
+ *   y = {max_value       if          x >= max_value}
+ *       {x               if theta <= x <  max_value}
+ *       {alpha*(x-theta) if          x < theta}
+ *
+ * :param x: array of input values. Gets overwritten by output.
+ * :param size: length of input array.
+ * :param max_value: maximum value for activated x.
+ * :param alpha: slope of negative portion of activation curve.
+ * :param theta: threshold for activation.
+ */
 void k2c_ReLU(float x[], const size_t size, const float max_value,
-	      const float negative_slope, const float threshold) {
-  /* Rectified Linear Unit activation function. */
-  /* f(x) = max_value for x >= max_value, */
-  /* f(x) = x for threshold <= x < max_value, */
-  /* f(x) = negative_slope * (x - threshold) otherwise. */
-  /* x is overwritten with the activated values */
+	      const float alpha, const float theta) {
 
   for (size_t i=0; i<size; ++i) {
     if (x[i] >= max_value) {
       x[i] = max_value;
     }
-    else if (x[i] < threshold) {
-      x[i] = negative_slope*(x[i] - threshold);
+    else if (x[i] < theta) {
+      x[i] = alpha*(x[i] - theta);
     }
   }
 }

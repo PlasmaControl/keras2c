@@ -5,13 +5,21 @@
 #include <string.h>
 #include "k2c_include.h"
 
+
+/**
+ * Just your basic 1d matrix multipication.
+ * computes C = A*B 
+ * assumes A,B,C are all 1d arrays of matrices stored in row major order.
+ *
+ * :param C: output array.
+ * :param A: input array 1.
+ * :param B: input array 2.
+ * :param outrows: number of rows of C and A.
+ * :param outcols: number of cols of C and B.
+ * :param innderdim: number of cols of A and rows of B
+ */
 void k2c_matmul(float C[], const float A[], const float B[], const size_t outrows,
 		const size_t outcols, const size_t innerdim) {
-  /* Just your basic 1d matrix multiplication. Takes in 1d arrays
- A and B, results get stored in C */
-  /*   Size A: outrows*innerdim */
-  /*   Size B: innerdim*outcols */
-  /*   Size C: outrows*outcols */
 
   // make sure output is empty
   memset(C, 0, outrows*outcols*sizeof(C[0]));
@@ -27,14 +35,23 @@ void k2c_matmul(float C[], const float A[], const float B[], const size_t outrow
   }
 }
 
+
+/**
+ * Affine matrix multiplication.
+ * computes C = A*B + d, where d is a vector that is added to each
+ row of A*B
+ * assumes A,B,C are all 1d arrays of matrices stored in row major order
+ *
+ * :param C: output array.
+ * :param A: input array 1.
+ * :param B: input array 2.
+ * :param d: input array 3.
+ * :param outrows: number of rows of C, A and d.
+ * :param outcols: number of cols of C and B.
+ * :param innderdim: number of cols of A and rows of B
+ */
 void k2c_affine_matmul(float C[], const float A[], const float B[], const float d[],
 		       const size_t outrows,const size_t outcols, const size_t innerdim) {
-  /* Computes C = A*B + d, where d is a vector that is added to each
- row of A*B*/
-  /*   Size A: outrows*innerdim */
-  /*   Size B: innerdim*outcols */
-  /*   Size C: outrows*outcols */
-  /*   Size d: outrows */
 
   // make sure output is empty
 
@@ -52,6 +69,15 @@ void k2c_affine_matmul(float C[], const float A[], const float B[], const float 
   }
 }
 
+
+/**
+ * Converts subscripts to linear indices in row major order.
+ *
+ * :param sub: array[ndim] subscript to convert.
+ * :param shape: array[ndim] shape of array being indexed.
+ * :param ndim: number of dimensions of array being indexed.
+ * :return: linear index in row major order.
+ */
 size_t k2c_sub2idx(const size_t sub[], const size_t shape[], const size_t ndim) {
   /* converts from subscript to linear indices in row major order */
 
@@ -67,6 +93,15 @@ size_t k2c_sub2idx(const size_t sub[], const size_t shape[], const size_t ndim) 
   return idx;
 }
 
+
+/**
+ * Converts linear indices to subscripts in row major order.
+ *
+ * :param idx: linear index in row major order.
+ * :param sub: array[ndim] output subscript.
+ * :param shape: array[ndim] shape of array being indexed.
+ * :param ndim: number of dimensions of array being indexed.
+ */
 void k2c_idx2sub(const size_t idx, size_t sub[], const size_t shape[], const size_t ndim) {
 
   size_t idx2 = idx;
@@ -76,6 +111,19 @@ void k2c_idx2sub(const size_t idx, size_t sub[], const size_t shape[], const siz
   }
 }
 
+
+/**
+ * Dot product (tensor contraction) between 2 tensors. C=A*B
+ *
+ * :param C: output tensor.
+ * :param A: input tensor 1.
+ * :param B: input tensor 2.
+ * :param axesA: array[naxes] of axes of A being contracted.
+ * :param axesB: array[naxes] of axes of B being contracted.
+ * :param naxes: number of axes being contracted from each input.
+ * :param normalize: (0,1) whether to L2-normalize samples along the dot product axis before taking the dot product. If set to 1, then the output of the dot product is the cosine proximity between the two samples.
+ * :param fwork: array of working space, size(fwork) = size(A) + size(B)
+ */
 void k2c_dot(k2c_tensor* C, const k2c_tensor* A, const k2c_tensor* B, const size_t axesA[],
 	     const size_t axesB[], const size_t naxes, const int normalize, float fwork[]) {
 
@@ -207,9 +255,16 @@ void k2c_dot(k2c_tensor* C, const k2c_tensor* A, const k2c_tensor* B, const size
 	     free_axesB, prod_axesA);
 }
 
+
+/**
+ * Adds bias vector b to tensor A.
+ * assumes b is a rank 1 tensor that is added to the last dimension of A.
+ *
+ * :param A: input tensor. Overwritten with outputs.
+ * :param b: bias tensor.
+ */
 void k2c_bias_add(k2c_tensor* A, const k2c_tensor* b) {
-  /* adds bias vector b to tensor A. Assumes b is a rank 1 tensor */
-  /* that is added to the last dimension of A */
+
   for (size_t i=0; i<A->numel; i+=b->numel) {
     for (size_t j=0; j<b->numel; ++j) {
       A->array[i+j] += b->array[j];
@@ -217,6 +272,14 @@ void k2c_bias_add(k2c_tensor* A, const k2c_tensor* b) {
   }
 }
 
+
+/**
+ * Reads array from csv file.
+ *
+ * :param filename: file to read from. Assumed comma separated ascii text.
+ * :param array_size: how many values to read from the file.
+ * :return: pointer to allocated array.
+ */
 float* k2c_read_array(const char* filename, const size_t array_size) {
     float* ptr = (float*) malloc(array_size * sizeof(float));
     size_t ctr = 0;

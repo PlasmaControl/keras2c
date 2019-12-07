@@ -3,6 +3,20 @@
 #include <stdio.h>
 #include "k2c_include.h"
 
+
+/**
+ * Cell for the LSTM layer.
+ * "units" is the dimension of the output space
+ *
+ * :param state: array[2*units] recurrent state.
+ * :param input: array of input data.
+ * :param kernel: kernel tensor.
+ * :param recurrent_kernel: recurrent kernel tensor
+ * :param bias: bias tensor.
+ * :param fwork: array[8*units] working storage.
+ * :param recurrent_activation: activation function to apply to internal state.
+ * :param output_activation: activation function to apply to output.
+ */
 void k2c_lstmcell(float state[], const float input[], const k2c_tensor* kernel,
 		  const k2c_tensor* recurrent_kernel, const k2c_tensor* bias, float fwork[],
 		  k2c_activationType *recurrent_activation,
@@ -61,7 +75,6 @@ void k2c_lstmcell(float state[], const float input[], const k2c_tensor* kernel,
     yc[i] = yf[i]*c_tm1[i] + yi[i]*yc[i];
   }
 
-  
   // yo = recurrent_activation(xo + h_tm1*Uo); 
   k2c_affine_matmul(yo, h_tm1, Uo, xo, outrows, units, units);
   recurrent_activation(yo, units);
@@ -80,6 +93,23 @@ void k2c_lstmcell(float state[], const float input[], const k2c_tensor* kernel,
 
 }
 
+
+/**
+ * Long Short-Term Memory (LSTM) layer.
+ * "units" is the dimension of the output space
+ *
+ * :param output: output tensor.
+ * :param input: input tensor.
+ * :param state: array[2*units] recurrent state.
+ * :param kernel: kernel tensor.
+ * :param recurrent_kernel: recurrent kernel tensor
+ * :param bias: bias tensor.
+ * :param fwork: array[8*units] working storage.
+ * :param go_backwards: whether to process input sequences forwards (1) or backwards (0).
+ * :param return_sequences: whether to return the last output in the output sequence (0), or the full sequence (1).
+ * :param recurrent_activation: activation function to apply to internal state.
+ * :param output_activation: activation function to apply to output.
+ */
 void k2c_lstm(k2c_tensor* output, const k2c_tensor* input, float state[],
 	      const k2c_tensor* kernel, const k2c_tensor* recurrent_kernel,
 	      const k2c_tensor* bias, float fwork[], const int go_backwards,
@@ -120,6 +150,18 @@ void k2c_lstm(k2c_tensor* output, const k2c_tensor* input, float state[],
 }
 
 
+/**
+ * Cell for the RNN layer.
+ * "units" is the dimension of the output space
+ *
+ * :param state: array[units] recurrent state.
+ * :param input: array of input data.
+ * :param kernel: kernel tensor.
+ * :param recurrent_kernel: recurrent kernel tensor
+ * :param bias: bias tensor.
+ * :param fwork: array[2*units] working storage.
+ * :param output_activation: activation function to apply to output.
+ */
 void k2c_simpleRNNcell(float state[], const float input[], const k2c_tensor* kernel,
 		       const k2c_tensor* recurrent_kernel, const k2c_tensor* bias,
 		       float fwork[], k2c_activationType *output_activation) {
@@ -142,6 +184,22 @@ void k2c_simpleRNNcell(float state[], const float input[], const k2c_tensor* ker
   }
 }
 
+
+/**
+ * Fully-connected RNN where the output is to be fed back to input.
+ * "units" is the dimension of the output space
+ *
+ * :param output: output tensor.
+ * :param input: input tensor.
+ * :param state: array[units] recurrent state.
+ * :param kernel: kernel tensor.
+ * :param recurrent_kernel: recurrent kernel tensor
+ * :param bias: bias tensor.
+ * :param fwork: array[2*units] working storage.
+ * :param go_backwards: whether to process input sequences forwards (1) or backwards (0).
+ * :param return_sequences: whether to return the last output in the output sequence (0), or the full sequence (1).
+ * :param output_activation: activation function to apply to output.
+ */
 void k2c_simpleRNN(k2c_tensor* output, const k2c_tensor* input, float state[],
 		   const k2c_tensor* kernel, const k2c_tensor* recurrent_kernel,
 		   const k2c_tensor* bias, float fwork[], const int go_backwards,
@@ -181,6 +239,20 @@ void k2c_simpleRNN(k2c_tensor* output, const k2c_tensor* input, float state[],
 }
 
 
+/**
+ * Cell for the GRU layer.
+ * "units" is the dimension of the output space
+ *
+ * :param state: array[units] recurrent state.
+ * :param input: array of input data.
+ * :param kernel: kernel tensor.
+ * :param recurrent_kernel: recurrent kernel tensor
+ * :param bias: bias tensor.
+ * :param fwork: array[6*units] working storage.
+ * :param reset_after: whether to apply the reset gate before (0) or after (1) the matrix multiplication.
+ * :param recurrent_activation: activation function to apply to internal state.
+ * :param output_activation: activation function to apply to output.
+ */
 void k2c_grucell(float state[], const float input[], const k2c_tensor* kernel,
 		 const k2c_tensor* recurrent_kernel, const k2c_tensor* bias, float fwork[],
 		 const int reset_after, k2c_activationType *recurrent_activation,
@@ -263,6 +335,23 @@ void k2c_grucell(float state[], const float input[], const k2c_tensor* kernel,
 }
 
 
+/**
+ * Gated Recurrent Unit.
+ * "units" is the dimension of the output space
+ *
+ * :param output: output tensor.
+ * :param input: input tensor.
+ * :param state: array[units] recurrent state.
+ * :param kernel: kernel tensor.
+ * :param recurrent_kernel: recurrent kernel tensor
+ * :param bias: bias tensor.
+ * :param fwork: array[6*units] working storage.
+ * :param reset_after: whether to apply the reset gate before (0) or after (1) the matrix multiplication.
+ * :param go_backwards: whether to process input sequences forwards (1) or backwards (0).
+ * :param return_sequences: whether to return the last output in the output sequence (0), or the full sequence (1).
+ * :param recurrent_activation: activation function to apply to internal state.
+ * :param output_activation: activation function to apply to output.
+ */
 void k2c_gru(k2c_tensor* output, const k2c_tensor* input, float state[],
 	     const k2c_tensor* kernel, const k2c_tensor* recurrent_kernel,
 	     const k2c_tensor* bias, float fwork[], const int reset_after,
