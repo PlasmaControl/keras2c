@@ -117,10 +117,8 @@ class Weights2C():
             foo = layer.backward_layer.input_shape
         except:
             temp_input = np.ones((layer.input_shape[1:]))[np.newaxis, :]
-            foo = layer.forward_layer.__call__(K.constant(
-                temp_input, name=layer.name + '_subinput'))
-            foo = layer.backward_layer.__call__(K.constant(
-                temp_input, name=layer.name + '_subinput'))
+            foo = layer.forward_layer.__call__(K.constant(temp_input))
+            foo = layer.backward_layer.__call__(K.constant(temp_input))
         self.write_weights_layer(layer.backward_layer)
         self.write_weights_layer(layer.forward_layer)
         if layer.merge_mode:
@@ -150,8 +148,7 @@ class Weights2C():
             foo = layer.layer.input_shape
         except:
             temp_input = np.ones((layer.input_shape[2:]))[np.newaxis, :]
-            foo = layer.layer.__call__(K.constant(
-                temp_input, name=layer.name + '_timeslice_input'))
+            foo = layer.layer.__call__(K.constant(temp_input))
         self.write_weights_layer(layer.layer)
         timeslice_input = np.squeeze(np.zeros(layer.layer.input_shape))
         timeslice_output = np.squeeze(np.zeros(layer.layer.output_shape))
