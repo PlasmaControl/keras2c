@@ -7,6 +7,8 @@ Gets weights and other parameters from each layer and writes to C file
 import numpy as np
 from keras2c.io_parsing import layer_type, get_layer_io_names, get_model_io_names
 from keras import backend as K
+import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 maxndim = 5
 
 

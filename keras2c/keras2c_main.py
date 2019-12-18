@@ -4,14 +4,16 @@ Converts keras model to C code
 """
 
 # imports
-import keras
-import numpy as np
-from keras2c.make_test_suite import make_test_suite
-from keras2c.check_model import check_model
+from keras2c.layer2c import Layers2C
+from keras2c.weights2c import Weights2C
 from keras2c.io_parsing import layer_type, get_all_io_names, get_layer_io_names, \
     get_model_io_names, flatten
-from keras2c.weights2c import Weights2C
-from keras2c.layer2c import Layers2C
+from keras2c.check_model import check_model
+from keras2c.make_test_suite import make_test_suite
+import numpy as np
+import keras
+import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 
 
 __author__ = "Rory Conlin"
@@ -165,7 +167,7 @@ def write_function_terminate(file, function_name, malloc_vars):
     return function_term_signature
 
 
-def k2c(model, function_name, malloc=False, num_tests=10,verbose=True):
+def k2c(model, function_name, malloc=False, num_tests=10, verbose=True):
     """Converts keras model to C code and generates test suite
 
     Args:
@@ -199,12 +201,15 @@ def k2c(model, function_name, malloc=False, num_tests=10,verbose=True):
         print('All checks passed')
 
     file = open(filename, "x+")
-    malloc_vars, stateful = model2c(model, file, function_name, malloc,verbose)
+    malloc_vars, stateful = model2c(
+        model, file, function_name, malloc, verbose)
     file.close()
     s = 'Done \n'
-    s += "C code is in '" + function_name + ".c' with header file '" + function_name + ".h' \n"
+    s += "C code is in '" + function_name + \
+        ".c' with header file '" + function_name + ".h' \n"
     if num_tests > 0:
-        make_test_suite(model, function_name, malloc_vars, num_tests, stateful,verbose)
+        make_test_suite(model, function_name, malloc_vars,
+                        num_tests, stateful, verbose)
         s += "Tests are in '" + function_name + "_test_suite.c' \n"
     if malloc:
         s += "Weight arrays are in .csv files of the form 'model_name_layer_name_array_type.csv' \n"
