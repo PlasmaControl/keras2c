@@ -20,7 +20,7 @@ def layer_type(layer):
         type (str): what kind of layer it is. Eg "Dense", "Conv2D", "SimpleRNN"
     """
 
-    return str(layer.__class__).split('.')[-1][0:-2]
+    return layer.__class__.__name__
 
 
 def get_all_io_names(model):
@@ -88,13 +88,12 @@ def get_layer_io_names(layer):
             temp_list = []
             list_length = len(layer.get_input_at(i))
             for j in range(list_length):
-                name = str(layer.get_input_at(i)[j]).split()[
-                    0].split('"')[1].split('/')[0].split(':')[0]
+                name = layer.get_input_at(i)[j].name.split(':')[
+                    0].split('/')[0]
                 temp_list.append(name)
             inputs.insert(i, temp_list)
         else:
-            name = str(layer.get_input_at(i)).split()[0].split(
-                '"')[1].split('/')[0].split(':')[0]
+            name = layer.get_input_at(i).name.split(':')[0].split('/')[0]
             inputs.insert(i, name)
 
     outputs = []
@@ -104,13 +103,12 @@ def get_layer_io_names(layer):
             temp_list = []
             list_length = len(layer.get_output_at(i))
             for j in range(list_length):
-                name = str(layer.get_output_at(i)[j]).split()[
-                    0].split('"')[1].split('/')[0].split(':')[0]
+                name = layer.get_output_at(i)[j].name.split(':')[
+                    0].split('/')[0]
                 temp_list.append(name)
             outputs.insert(i, temp_list)
         else:
-            name = str(layer.get_output_at(i)).split()[
-                0].split('"')[1].split('/')[0].split(':')[0]
+            name = layer.get_output_at(i).name.split(':')[0].split('/')[0]
             outputs.insert(i, name)
 
     return inputs, outputs
@@ -132,12 +130,10 @@ def get_model_io_names(model):
     inputs = []
     outputs = []
     for i in range(num_inputs):
-        nm = str(model.inputs[i]).split()[0].split(
-            '"')[1].split('/')[0].split(':')[0]
+        nm = model.inputs[i].name.split(':')[0].split('/')[0]
         inputs.append(nm)
     for i in range(num_outputs):
-        nm = str(model.outputs[i]).split()[0].split(
-            '"')[1].split('/')[0].split(':')[0]
+        nm = model.outputs[i].name.split(':')[0].split('/')[0]
         outputs.append(nm)
     return inputs, outputs
 

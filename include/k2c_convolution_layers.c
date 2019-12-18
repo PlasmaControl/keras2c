@@ -1,4 +1,3 @@
-#include <stddef.h>
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -132,7 +131,7 @@ void k2c_pad3d(k2c_tensor* output, const k2c_tensor* input, const float fill,
  * :param output: output tensor.
  * :param input: input tensor.
  * :param kernel: kernel tensor.
- * "param bias: bias tensor.
+ * :param bias: bias tensor.
  * :param stride: stride length of the convolution.
  * :param dilation: dilation rate to use for dilated convolution.
  * :param activation: activation function to apply to output.
@@ -171,7 +170,7 @@ void k2c_conv1d(k2c_tensor* output, const k2c_tensor* input, const k2c_tensor* k
  * :param output: output tensor.
  * :param input: input tensor.
  * :param kernel: kernel tensor.
- * "param bias: bias tensor.
+ * :param bias: bias tensor.
  * :param stride: array[2] of stride length of the convolution. Order is {stride dim 1, stride dim 2}.
  * :param dilation: array[2] dilation rate to use for dilated convolution. Order is {dilation dim 1, dilation dim 2}.
  * :param activation: activation function to apply to output.
@@ -219,7 +218,7 @@ void k2c_conv2d(k2c_tensor* output, const k2c_tensor* input, const k2c_tensor* k
  * :param output: output tensor.
  * :param input: input tensor.
  * :param kernel: kernel tensor.
- * "param bias: bias tensor.
+ * :param bias: bias tensor.
  * :param stride: array[3] of stride length of the convolution. Order is {stride dim 1, stride dim 2, stride dim 3}.
  * :param dilation: array[3] dilation rate to use for dilated convolution. Order is {dilation dim 1, dilation dim 2, dilation dim 3}.
  * :param activation: activation function to apply to output.

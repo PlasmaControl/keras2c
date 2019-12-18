@@ -1,4 +1,3 @@
-#include <stddef.h>
 #include <math.h>
 #include <stdio.h>
 #include "k2c_include.h"

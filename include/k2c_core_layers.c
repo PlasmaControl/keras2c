@@ -1,5 +1,4 @@
 #include <math.h>
-#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 #include "k2c_include.h"
@@ -11,7 +10,7 @@
  * :param output: output tensor.
  * :param input: input tensor.
  * :param kernel: kernel tensor.
- * "param bias: bias tensor.
+ * :param bias: bias tensor.
  * :param activation: activation function to apply to output.
  * :param fwork: array of working space, size(fwork) = size(input) + size(kernel)
  */

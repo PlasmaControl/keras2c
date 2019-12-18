@@ -21,7 +21,7 @@ __email__ = "wconlin@princeton.edu"
 
 def build_and_run(name, return_output=False):
     if os.environ.get('CI'):
-        ccflags = '-g -Og -std=c99 -fprofile-arcs -ftest-coverage -I./include/'
+        ccflags = '-g -Og -std=c99 --coverage -I./include/'
     else:
         ccflags = '-Ofast -std=c99 -I./include/'
     cc = 'gcc ' + ccflags + '-I' + name + '.h ' + ' -o ' + name + ' ' + \

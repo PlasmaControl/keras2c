@@ -1,5 +1,4 @@
 #include <math.h>
-#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -54,7 +53,6 @@ void k2c_affine_matmul(float C[], const float A[], const float B[], const float 
 		       const size_t outrows,const size_t outcols, const size_t innerdim) {
 
   // make sure output is empty
-
   memset(C, 0, outrows*outcols*sizeof(C[0]));
 
   for (size_t i = 0 ; i < outrows; ++i) {
@@ -79,7 +77,6 @@ void k2c_affine_matmul(float C[], const float A[], const float B[], const float 
  * :return: linear index in row major order.
  */
 size_t k2c_sub2idx(const size_t sub[], const size_t shape[], const size_t ndim) {
-  /* converts from subscript to linear indices in row major order */
 
   size_t idx = 0;
   size_t temp = 0;

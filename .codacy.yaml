@@ -4,7 +4,13 @@ engines:
    exclude_paths:
      - keras2c/**
 exclude_paths:
-  - 'tests/**'
-  - 'scratch/**'
-  - 'keras2c/__*'
   - './*'
+  - 'benchmarks/**'
+  - 'docs/**'
+  - 'example/**'
+  - '.ipynb_checkpoints/**'
+  - 'keras2c/__*'
+  - '__pycache__/**'
+  - '.pytest_cache/**'
+  - 'scratch/**'
+  - 'tests/**'

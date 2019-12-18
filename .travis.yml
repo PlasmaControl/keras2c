@@ -2,13 +2,11 @@ language: python
 python:
   - "3.5"
   - "3.6"
+  - "3.7"
+  - "3.8"
 env:
     - CODECOV_TOKEN="24cf7341-7201-48d7-acfc-e3208302a2b6"
 matrix:
-  include:
-    - python: 3.7
-      dist: xenial
-      sudo: true
   allow_failures:
     - python: "3.5"
     - python: "3.6"
@@ -20,6 +18,7 @@ script:
   - python -m pytest --cov=keras2c/
 
 after_success:
+  - mv include/gc* ./
   - gcov *.gcda
   - rm test_*{.gcov,.gcda,.gcno}
   - bash <(curl -s https://codecov.io/bash)
