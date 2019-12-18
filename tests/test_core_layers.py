@@ -19,17 +19,34 @@ __maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
 __email__ = "wconlin@princeton.edu"
 
 
-def build_and_run(name):
+def build_and_run(name, return_output=False):
     if os.environ.get('CI'):
         ccflags = '-g -Og -std=c99 -fprofile-arcs -ftest-coverage -I./include/'
     else:
         ccflags = '-Ofast -std=c99 -I./include/'
-    cc = 'gcc ' + ccflags + ' -o ' + name + ' ' + name + '_test_suite.c -lm'
-    subprocess.run(cc.split())
-    rcode = subprocess.run(['./' + name]).returncode
-    if not rcode and not os.environ.get('CI'):
-        subprocess.run('rm ' + name + '*', shell=True)
-    return rcode
+    cc = 'gcc ' + ccflags + '-I' + name + '.h ' + ' -o ' + name + ' ' + \
+        './include/k2c_activations.c ' + \
+        './include/k2c_convolution_layers.c ' + \
+        './include/k2c_core_layers.c ' + \
+        './include/k2c_embedding_layers.c ' + \
+        './include/k2c_helper_functions.c ' + \
+        './include/k2c_merge_layers.c ' + \
+        './include/k2c_normalization_layers.c ' + \
+        './include/k2c_pooling_layers.c ' + \
+        './include/k2c_recurrent_layers.c ' + \
+        name + '.c ' + name + '_test_suite.c -lm'
+    buildcode = subprocess.run(cc.split()).returncode
+    if not buildcode:
+        proc_output = subprocess.run(['./' + name])
+        rcode = proc_output.returncode
+        if not rcode and not os.environ.get('CI'):
+            subprocess.run('rm ' + name + '*', shell=True)
+        if return_output:
+            return rcode, proc_output.stdout
+        else:
+            return rcode
+    else:
+        return buildcode
 
 
 class TestCoreLayers(unittest.TestCase):

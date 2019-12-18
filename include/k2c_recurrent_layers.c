@@ -1,12 +1,22 @@
-#ifndef KERAS2C_RECURRENT_H
-#define KERAS2C_RECURRENT_H
-
 #include <stddef.h>
 #include <math.h>
 #include <stdio.h>
-#include "k2c_helper_functions.h"
-#include "k2c_activations.h"
+#include "k2c_include.h"
 
+
+/**
+ * Cell for the LSTM layer.
+ * "units" is the dimension of the output space
+ *
+ * :param state: array[2*units] recurrent state.
+ * :param input: array of input data.
+ * :param kernel: kernel tensor.
+ * :param recurrent_kernel: recurrent kernel tensor
+ * :param bias: bias tensor.
+ * :param fwork: array[8*units] working storage.
+ * :param recurrent_activation: activation function to apply to internal state.
+ * :param output_activation: activation function to apply to output.
+ */
 void k2c_lstmcell(float state[], const float input[], const k2c_tensor* kernel,
 		  const k2c_tensor* recurrent_kernel, const k2c_tensor* bias, float fwork[],
 		  k2c_activationType *recurrent_activation,
@@ -61,26 +71,45 @@ void k2c_lstmcell(float state[], const float input[], const k2c_tensor* kernel,
   // yc = yf.*c_tm1 + yi.*output_activation(xc + h_tm1*Uc);
   k2c_affine_matmul(yc, h_tm1, Uc, xc, outrows, units, units);
   output_activation(yc, units);
-  for (size_t i=0; i < units; i++){
-    yc[i] = yf[i]*c_tm1[i] + yi[i]*yc[i];}
+  for (size_t i=0; i < units; ++i){
+    yc[i] = yf[i]*c_tm1[i] + yi[i]*yc[i];
+  }
 
-  
   // yo = recurrent_activation(xo + h_tm1*Uo); 
   k2c_affine_matmul(yo, h_tm1, Uo, xo, outrows, units, units);
   recurrent_activation(yo, units);
 
   // h = yo.*output_activation(yc); 
   // state = [h;yc];
-  for (size_t i=0; i < units; i++){
-    state[units+i] = yc[i];}
+  for (size_t i=0; i < units; ++i){
+    state[units+i] = yc[i];
+  }
 
   output_activation(yc, units);
 
-  for (size_t i=0; i < units; i++){
-    state[i] = yo[i]*yc[i];}
+  for (size_t i=0; i < units; ++i){
+    state[i] = yo[i]*yc[i];
+  }
 
 }
 
+
+/**
+ * Long Short-Term Memory (LSTM) layer.
+ * "units" is the dimension of the output space
+ *
+ * :param output: output tensor.
+ * :param input: input tensor.
+ * :param state: array[2*units] recurrent state.
+ * :param kernel: kernel tensor.
+ * :param recurrent_kernel: recurrent kernel tensor
+ * :param bias: bias tensor.
+ * :param fwork: array[8*units] working storage.
+ * :param go_backwards: whether to process input sequences forwards (1) or backwards (0).
+ * :param return_sequences: whether to return the last output in the output sequence (0), or the full sequence (1).
+ * :param recurrent_activation: activation function to apply to internal state.
+ * :param output_activation: activation function to apply to output.
+ */
 void k2c_lstm(k2c_tensor* output, const k2c_tensor* input, float state[],
 	      const k2c_tensor* kernel, const k2c_tensor* recurrent_kernel,
 	      const k2c_tensor* bias, float fwork[], const int go_backwards,
@@ -92,32 +121,47 @@ void k2c_lstm(k2c_tensor* output, const k2c_tensor* input, float state[],
   const size_t in_width = input->shape[1];
   const size_t units = recurrent_kernel->shape[1];
   if (go_backwards) {
-    for (int i=in_height-1; i>-1; i--) {
+    for (int i=in_height-1; i>-1; --i) {
       k2c_lstmcell(state, &input->array[i*in_width], kernel, recurrent_kernel,
 		   bias, fwork, recurrent_activation, output_activation);
       if (return_sequences) {
-	for (size_t j=0; j<units; j++) {
-	  output->array[(in_height-1-i)*units+j] = state[j];}
+	for (size_t j=0; j<units; ++j) {
+	  output->array[(in_height-1-i)*units+j] = state[j];
+	}
       }
     }
   }
   else{   
-    for (size_t i=0; i < in_height; i++){
+    for (size_t i=0; i < in_height; ++i){
       k2c_lstmcell(state, &input->array[i*in_width], kernel, recurrent_kernel,
 		   bias, fwork, recurrent_activation, output_activation);
       if (return_sequences) {
-	for (size_t j=0; j<units; j++) {
-	  output->array[i*units+j] = state[j];}
+	for (size_t j=0; j<units; ++j) {
+	  output->array[i*units+j] = state[j];
+	}
       }
     }
   }
   if (!return_sequences) {
-    for (size_t i=0; i < units; i++){
-      output->array[i] = state[i];}
+    for (size_t i=0; i < units; ++i){
+      output->array[i] = state[i];
+    }
   }
 }
 
 
+/**
+ * Cell for the RNN layer.
+ * "units" is the dimension of the output space
+ *
+ * :param state: array[units] recurrent state.
+ * :param input: array of input data.
+ * :param kernel: kernel tensor.
+ * :param recurrent_kernel: recurrent kernel tensor
+ * :param bias: bias tensor.
+ * :param fwork: array[2*units] working storage.
+ * :param output_activation: activation function to apply to output.
+ */
 void k2c_simpleRNNcell(float state[], const float input[], const k2c_tensor* kernel,
 		       const k2c_tensor* recurrent_kernel, const k2c_tensor* bias,
 		       float fwork[], k2c_activationType *output_activation) {
@@ -135,12 +179,27 @@ void k2c_simpleRNNcell(float state[], const float input[], const k2c_tensor* ker
   k2c_affine_matmul(h2,state,recurrent_kernel->array,h1,outrows,units,units);
   output_activation(h2,units);
  
-  for (size_t i=0;i<units;i++) {
+  for (size_t i=0;i<units;++i) {
     state[i] = h2[i];
   }
-   
 }
 
+
+/**
+ * Fully-connected RNN where the output is to be fed back to input.
+ * "units" is the dimension of the output space
+ *
+ * :param output: output tensor.
+ * :param input: input tensor.
+ * :param state: array[units] recurrent state.
+ * :param kernel: kernel tensor.
+ * :param recurrent_kernel: recurrent kernel tensor
+ * :param bias: bias tensor.
+ * :param fwork: array[2*units] working storage.
+ * :param go_backwards: whether to process input sequences forwards (1) or backwards (0).
+ * :param return_sequences: whether to return the last output in the output sequence (0), or the full sequence (1).
+ * :param output_activation: activation function to apply to output.
+ */
 void k2c_simpleRNN(k2c_tensor* output, const k2c_tensor* input, float state[],
 		   const k2c_tensor* kernel, const k2c_tensor* recurrent_kernel,
 		   const k2c_tensor* bias, float fwork[], const int go_backwards,
@@ -151,32 +210,49 @@ void k2c_simpleRNN(k2c_tensor* output, const k2c_tensor* input, float state[],
   const size_t units = recurrent_kernel->shape[1];
   
   if (go_backwards) {
-    for (int i=in_height-1; i>-1; i--) {
+    for (int i=in_height-1; i>-1; --i) {
       k2c_simpleRNNcell(state,&input->array[i*in_width],kernel,recurrent_kernel,bias,
 			fwork, output_activation);
       if (return_sequences) {
-	for (size_t j=0; j<units; j++) {
-	  output->array[(in_height-1-i)*units+j] = state[j];}
+	for (size_t j=0; j<units; ++j) {
+	  output->array[(in_height-1-i)*units+j] = state[j];
+	}
       }
     }
   }
   else {
-    for (size_t i=0; i<in_height; i++) {
+    for (size_t i=0; i<in_height; ++i) {
       k2c_simpleRNNcell(state,&input->array[i*in_width],kernel,recurrent_kernel,bias,
 			fwork, output_activation);
       if (return_sequences) {
-	for (size_t j=0; j<units; j++) {
-	  output->array[i*units+j] = state[j];}
+	for (size_t j=0; j<units; ++j) {
+	  output->array[i*units+j] = state[j];
+	}
       }
     }
   }
   if (!return_sequences) {
-    for (size_t i=0; i < units; i++){
-      output->array[i] = state[i];}
+    for (size_t i=0; i < units; ++i){
+      output->array[i] = state[i];
+    }
   }
 }
 
 
+/**
+ * Cell for the GRU layer.
+ * "units" is the dimension of the output space
+ *
+ * :param state: array[units] recurrent state.
+ * :param input: array of input data.
+ * :param kernel: kernel tensor.
+ * :param recurrent_kernel: recurrent kernel tensor
+ * :param bias: bias tensor.
+ * :param fwork: array[6*units] working storage.
+ * :param reset_after: whether to apply the reset gate before (0) or after (1) the matrix multiplication.
+ * :param recurrent_activation: activation function to apply to internal state.
+ * :param output_activation: activation function to apply to output.
+ */
 void k2c_grucell(float state[], const float input[], const k2c_tensor* kernel,
 		 const k2c_tensor* recurrent_kernel, const k2c_tensor* bias, float fwork[],
 		 const int reset_after, k2c_activationType *recurrent_activation,
@@ -220,7 +296,7 @@ void k2c_grucell(float state[], const float input[], const k2c_tensor* kernel,
 
   //    z = np.tanh(x_z + recurrent_z)
   //    r = np.tanh(x_r + recurrent_r)
-  for (size_t i=0; i<units; i++) {
+  for (size_t i=0; i<units; ++i) {
     yz[i] = xz[i] + yz[i];
     yr[i] = xr[i] + yr[i];
   }
@@ -229,31 +305,53 @@ void k2c_grucell(float state[], const float input[], const k2c_tensor* kernel,
 
   //    reset gate applied after/before matrix multiplication
   if (reset_after) {
-  //        recurrent_h = h_tm1@recurrent_kernel_h + recurrent_bias_h
+  //        recurrent_h = h_tm1*recurrent_kernel_h + recurrent_bias_h
     k2c_affine_matmul(yh, h_tm1, Uh, rbh, outrows, units, units);
     //        recurrent_h = r .* recurrent_h
-    for (size_t i=0; i<units; i++) {
-      yh[i] = yr[i] * yh[i];}
+    for (size_t i=0; i<units; ++i) {
+      yh[i] = yr[i] * yh[i];
+    }
   }
   else {
-    //        recurrent_h = (r .* h_tm1)@recurrent_kernel_h
-    for (size_t i=0; i<units; i++) {
-      yh[i] = yr[i]*h_tm1[i];}
+    //        recurrent_h = (r .* h_tm1)*recurrent_kernel_h
+    for (size_t i=0; i<units; ++i) {
+      yh[i] = yr[i]*h_tm1[i];
+    }
     k2c_matmul(xz, yh, Uh, outrows, units, units); //reuse xz as new yh
-    for (size_t i=0; i<units; i++) {
-      yh[i] = xz[i];}
+    for (size_t i=0; i<units; ++i) {
+      yh[i] = xz[i];
+    }
   }
   //    hh = np.tanh(x_h + recurrent_h)
-  for (size_t i=0; i<units; i++) {
-    xr[i] = xh[i] + yh[i];} // reuse xr = hh
+  for (size_t i=0; i<units; ++i) {
+    xr[i] = xh[i] + yh[i];  // reuse xr = hh
+  }
   output_activation(xr, units);
 
   //    h = z .* h_tm1 + (1 - z) .* hh
-  for (size_t i=0; i<units; i++) {
-    state[i] = yz[i] * h_tm1[i] + (1.0f-yz[i])*xr[i];}
+  for (size_t i=0; i<units; ++i) {
+    state[i] = yz[i] * h_tm1[i] + (1.0f-yz[i])*xr[i];
+  }
 }
 
 
+/**
+ * Gated Recurrent Unit.
+ * "units" is the dimension of the output space
+ *
+ * :param output: output tensor.
+ * :param input: input tensor.
+ * :param state: array[units] recurrent state.
+ * :param kernel: kernel tensor.
+ * :param recurrent_kernel: recurrent kernel tensor
+ * :param bias: bias tensor.
+ * :param fwork: array[6*units] working storage.
+ * :param reset_after: whether to apply the reset gate before (0) or after (1) the matrix multiplication.
+ * :param go_backwards: whether to process input sequences forwards (1) or backwards (0).
+ * :param return_sequences: whether to return the last output in the output sequence (0), or the full sequence (1).
+ * :param recurrent_activation: activation function to apply to internal state.
+ * :param output_activation: activation function to apply to output.
+ */
 void k2c_gru(k2c_tensor* output, const k2c_tensor* input, float state[],
 	     const k2c_tensor* kernel, const k2c_tensor* recurrent_kernel,
 	     const k2c_tensor* bias, float fwork[], const int reset_after,
@@ -267,33 +365,31 @@ void k2c_gru(k2c_tensor* output, const k2c_tensor* input, float state[],
   const size_t units = recurrent_kernel->shape[1];
 
   if (go_backwards) {
-    for (int i=in_height-1; i>-1; i--) {
+    for (int i=in_height-1; i>-1; --i) {
       k2c_grucell(state, &input->array[i*in_width], kernel, recurrent_kernel, bias,
 		  fwork, reset_after, recurrent_activation, output_activation);
       if (return_sequences) {
-	for (size_t j=0; j<units; j++) {
-	  output->array[(in_height-1-i)*units+j] = state[j];}
+	for (size_t j=0; j<units; ++j) {
+	  output->array[(in_height-1-i)*units+j] = state[j];
+	}
       }
     }
   }
   else {
-    for (int i=0; i<in_height; i++) {
+    for (int i=0; i<in_height; ++i) {
       k2c_grucell(state, &input->array[i*in_width], kernel, recurrent_kernel, bias,
 		  fwork, reset_after, recurrent_activation, output_activation);
       if (return_sequences) {
-	for (size_t j=0; j<units; j++) {
-	  output->array[i*units+j] = state[j];}
+	for (size_t j=0; j<units; ++j) {
+	  output->array[i*units+j] = state[j];
+	}
       }
     }
   }
   
   if (!return_sequences) {
-    for (size_t i=0; i<units; i++) {
-      output->array[i] = state[i];}
+    for (size_t i=0; i<units; ++i) {
+      output->array[i] = state[i];
+    }
   }
 }
-
-
-
-
-#endif /* KERAS2C_RECURRENT_H */

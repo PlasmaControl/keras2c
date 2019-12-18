@@ -10,18 +10,44 @@ __maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
 __email__ = "wconlin@princeton.edu"
 
 
-# types, names, io
-
 def layer_type(layer):
+    """Gets the type of a layer
+
+    Args:
+        layer (keras Layer): layer you want the type of
+
+    Returns:
+        type (str): what kind of layer it is. Eg "Dense", "Conv2D", "SimpleRNN"
+    """
+
     return str(layer.__class__).split('.')[-1][0:-2]
 
 
 def get_all_io_names(model):
+    """Gets names of all  node names in the model
+
+    Args:
+        model (keras Model): model to parse
+
+    Returns:
+        io (list): names of all the nodes in the model
+    """
+
     a = [get_layer_io_names(layer) for layer in model.layers]
     return list(set(flatten(a)))
 
 
 def get_layer_num_io(layer):
+    """Gets the number of inputs and outputs for a layer
+
+    Args:
+        layer (keras Layer): layer you want to parse
+
+    Returns:
+        num_inputs (int): number of input nodes to the layer
+        num_outputs (int): number of output nodes from the layer
+    """
+
     num_inputs = 0
     error = False
     while not error:
@@ -43,6 +69,16 @@ def get_layer_num_io(layer):
 
 
 def get_layer_io_names(layer):
+    """Gets the names of the inputs and outputs of a layer
+
+    Args:
+        layer (keras Layer): layer you want to parse
+
+    Returns:
+        inputs (list): names of all the input nodes to the layer
+        outputs (list): names of all the output nodes from the layer
+    """
+
     num_inputs, num_outputs = get_layer_num_io(layer)
     inputs = []
     # num_inputs>1 -> shared layer
@@ -81,6 +117,16 @@ def get_layer_io_names(layer):
 
 
 def get_model_io_names(model):
+    """Gets names of the input and output nodes of the model
+
+    Args:
+        model (keras Model): model to parse
+
+    Returns:
+        inputs (list): names of all the input nodes
+        outputs (list): names of all the output nodes
+    """
+
     num_inputs = len(model.inputs)
     num_outputs = len(model.outputs)
     inputs = []
@@ -97,6 +143,14 @@ def get_model_io_names(model):
 
 
 def flatten(x):
+    """Flattens a nested list or tuple
+
+    Args:
+        x (list or tuple): nested list or tuple of lists or tuples to flatten
+
+    Returns:
+        x (list): flattened input
+    """
     if isinstance(x, list) or isinstance(x, tuple):
         return [a for i in x for a in flatten(i)]
     else:

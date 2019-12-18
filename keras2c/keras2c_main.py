@@ -21,18 +21,37 @@ __maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
 __email__ = "wconlin@princeton.edu"
 
 
-def model2c(model, file, function_name, malloc=False):
+def model2c(model, file, function_name, malloc=False, verbose=True):
+    """Generates C code for model
+
+    Writes main function definition to "function_name.c" and a public header 
+    with declarations to "function_name.h"
+
+    Args:
+        model (keras Model): model to convert
+        file (open file instance): where to write main function
+        function_name (str): name of C function
+        malloc (bool): whether to allocate variables on the stack or heap
+        verbose (bool): whether to print info to stdout
+
+    Returns:
+        malloc_vars (list): names of variables loaded at runtime and stored on the heap
+        stateful (bool): whether the model must maintain state between calls
+    """
+
     model_inputs, model_outputs = get_model_io_names(model)
-    s = "#ifndef " + function_name.upper() + "_H \n"
-    s += "#define " + function_name.upper() + "_H \n"
-    s += '#include <stdio.h> \n#include <stddef.h> \n#include <math.h> \n#include <string.h> \n'
-    s += '#include <stdarg.h> \n#include "k2c_include.h" \n'
+    s = '#include <math.h> \n '
+    s += '#include <string.h> \n'
+    s += '#include "./include/k2c_include.h" \n'
+    s += '#include "./include/k2c_tensor_include.h" \n'
     s += '\n \n'
     file.write(s)
 
-    print('Gathering Weights')
-    stack_vars, malloc_vars = Weights2C(model, malloc).write_weights()
-    layers = Layers2C(model, malloc).write_layers()
+    if verbose:
+        print('Gathering Weights')
+    stack_vars, malloc_vars, static_vars = Weights2C(
+        model, function_name, malloc).write_weights(verbose)
+    layers = Layers2C(model, malloc).write_layers(verbose)
 
     function_signature = 'void ' + function_name + '('
     function_signature += ', '.join(['k2c_tensor* ' +
@@ -42,27 +61,74 @@ def model2c(model, file, function_name, malloc=False):
     if len(malloc_vars.keys()):
         function_signature += ',' + ','.join(['float* ' +
                                               key for key in malloc_vars.keys()])
-    function_signature += ') { \n\n'
-
+    function_signature += ')'
+    file.write(static_vars + '\n\n')
     file.write(function_signature)
+    file.write(' { \n\n')
     file.write(stack_vars)
     file.write(layers)
     file.write('\n } \n\n')
+    stateful = len(static_vars) > 0
 
-    write_function_initialize(file, function_name, malloc_vars)
-    write_function_terminate(file, function_name, malloc_vars)
-    s = "#endif /* " + function_name.upper() + "_H */"
+    init_sig = write_function_initialize(file, function_name, malloc_vars)
+    term_sig = write_function_terminate(file, function_name, malloc_vars)
+    if stateful:
+        reset_sig = write_function_reset(file, function_name)
+    with open(function_name + '.h', 'x+') as header:
+        header.write('#pragma once \n')
+        header.write('#include "./include/k2c_tensor_include.h" \n')
+        header.write(function_signature + '; \n')
+        header.write(init_sig + '; \n')
+        header.write(term_sig + '; \n')
+
+        if stateful:
+            header.write(reset_sig + '; \n')
+
+    return malloc_vars.keys(), stateful
+
+
+def write_function_reset(file, function_name):
+    """Writes a reset function for stateful models
+
+    Reset function is used to clear internal state of the model
+
+    Args:
+        file (open file instance): file to write to
+        function_name (str): name of main function
+
+    Returns:
+       signature (str): delcaration of the reset function
+    """
+
+    function_reset_signature = 'void ' + function_name + '_reset_states()'
+    file.write(function_reset_signature)
+    s = ' { \n\n'
+    s += 'memset(&' + function_name + \
+         '_states,0,sizeof(' + function_name + '_states)); \n'
+    s += "} \n\n"
     file.write(s)
-    return malloc_vars.keys()
+    return function_reset_signature
 
 
 def write_function_initialize(file, function_name, malloc_vars):
+    """Writes an initialize function
+
+    Initialize function is used to load variables into memory and do other start up tasks
+
+    Args:
+        file (open file instance): file to write to
+        function_name (str): name of main function
+
+    Returns:
+       signature (str): delcaration of the initialization function
+    """
+
     function_init_signature = 'void ' + function_name + '_initialize('
     function_init_signature += ','.join(['float** ' +
-                                         key for key in malloc_vars.keys()])
-    function_init_signature += ') { \n\n'
+                                         key + ' \n' for key in malloc_vars.keys()])
+    function_init_signature += ')'
     file.write(function_init_signature)
-    s = ''
+    s = ' { \n\n'
     for key in malloc_vars.keys():
         fname = function_name + key + ".csv"
         np.savetxt(fname, malloc_vars[key], fmt="%.8e", delimiter=',')
@@ -70,25 +136,54 @@ def write_function_initialize(file, function_name, malloc_vars):
             fname + "\"," + str(malloc_vars[key].size) + "); \n"
     s += "} \n\n"
     file.write(s)
+    return function_init_signature
 
 
 def write_function_terminate(file, function_name, malloc_vars):
+    """Writes a terminate function
+
+    Terminate function is used to deallocate memory after completion
+
+    Args:
+        file (open file instance): file to write to
+        function_name (str): name of main function
+
+    Returns:
+       signature (str): delcaration of the terminate function
+    """
+
     function_term_signature = 'void ' + function_name + '_terminate('
     function_term_signature += ','.join(['float* ' +
                                          key for key in malloc_vars.keys()])
-    function_term_signature += ') { \n\n'
+    function_term_signature += ')'
     file.write(function_term_signature)
-    s = ''
+    s = ' { \n\n'
     for key in malloc_vars.keys():
         s += "free(" + key + "); \n"
     s += "} \n\n"
     file.write(s)
+    return function_term_signature
 
 
-def k2c(model, function_name, malloc=False, num_tests=10):
+def k2c(model, function_name, malloc=False, num_tests=10,verbose=True):
+    """Converts keras model to C code and generates test suite
+
+    Args:
+        model (keras Model or str): model to convert or path to saved .h5 file
+        function_name (str): name of main function
+        malloc (bool): whether to allocate variables on the stack or heap
+        num_tests (int): how many tests to generate in the test suite
+
+    Raises:
+        ValueError: if model is not instance of keras.models.Model 
+            or keras.engine.training.Model
+
+    Returns:
+        None
+    """
 
     function_name = str(function_name)
-    filename = function_name + '.h'
+    filename = function_name + '.c'
     if isinstance(model, str):
         model = keras.models.load_model(model, compile=False)
     elif not isinstance(model, (keras.models.Model,
@@ -100,17 +195,19 @@ def k2c(model, function_name, malloc=False, num_tests=10):
 
     # check that the model can be converted
     check_model(model, function_name)
-    print('All checks passed')
+    if verbose:
+        print('All checks passed')
 
     file = open(filename, "x+")
-    malloc_vars = model2c(model, file, function_name, malloc)
+    malloc_vars, stateful = model2c(model, file, function_name, malloc,verbose)
     file.close()
     s = 'Done \n'
-    s += "C code is in '" + function_name + ".h' \n"
+    s += "C code is in '" + function_name + ".c' with header file '" + function_name + ".h' \n"
     if num_tests > 0:
-        make_test_suite(model, function_name, malloc_vars, num_tests)
+        make_test_suite(model, function_name, malloc_vars, num_tests, stateful,verbose)
         s += "Tests are in '" + function_name + "_test_suite.c' \n"
     if malloc:
         s += "Weight arrays are in .csv files of the form 'model_name_layer_name_array_type.csv' \n"
         s += "They should be placed in the directory from which the main program is run."
-    print(s)
+    if verbose:
+        print(s)

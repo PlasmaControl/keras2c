@@ -22,7 +22,7 @@ class Layers2C():
         self.layers = ''
         self.malloc = malloc
 
-    def write_layers(self):
+    def write_layers(self, verbose=True):
         written_io = set(self.model_inputs)
         unwritten_io = set(get_all_io_names(self.model)) - written_io
         while len(unwritten_io) > 0:
@@ -32,7 +32,8 @@ class Layers2C():
                     if (set(flatten(inp)).issubset(written_io) and
                             set(flatten(outp)).issubset(unwritten_io))or \
                             layer_type(layer) == 'InputLayer':
-                        print('Writing layer ', outp)
+                        if verbose:
+                            print('Writing layer ', outp)
                         method = getattr(
                             self, 'write_layer_' + layer_type(layer))
                         method(layer, inp, outp, i)
@@ -50,13 +51,13 @@ class Layers2C():
         if isinstance(inp, list):
             inp_nm = []
             for j in inp:
-                if j in self.model_inputs:
+                if j in self.model_inputs or 'timeslice' in j:
                     inp_nm.append(j + '_input')
                     is_model_input = True
                 else:
                     inp_nm.append('&' + j + '_output')
         else:
-            if inp in self.model_inputs:
+            if inp in self.model_inputs or 'timeslice' in inp:
                 inp_nm = inp + '_input'
                 is_model_input = True
             else:
@@ -64,13 +65,13 @@ class Layers2C():
         if isinstance(outp, list):
             outp_nm = []
             for o in outp:
-                if o in self.model_outputs:
-                    outp_nm.append(outp + '_output')
+                if o in self.model_outputs or 'timeslice' in o:
+                    outp_nm.append(o + '_output')
                     is_model_output = True
                 else:
                     outp_nm.append('&' + outp + '_output')
         else:
-            if outp in self.model_outputs:
+            if outp in self.model_outputs or 'timeslice' in outp:
                 outp_nm = outp + '_output'
                 is_model_output = True
             else:
@@ -79,6 +80,50 @@ class Layers2C():
             return nm, pnm, inp_nm, outp_nm, is_model_input, is_model_output
         else:
             return nm, pnm, inp_nm, outp_nm
+
+    def write_layer_TimeDistributed(self, layer, inputs, outputs, i):
+        # nm, pnm, inputs, outputs = self.format_io_names(layer, inputs, outputs)
+        self.layers += 'for(size_t i=0; i<' + layer.name + \
+            '_timesteps; ++i) { \n'
+        if inputs in self.model_inputs:
+            self.layers += layer.layer.name + '_timeslice_input.array = &' + \
+                inputs + '_input->array[i*' + layer.name + '_in_offset]; \n'
+        else:
+            self.layers += layer.layer.name + '_timeslice_input.array = &' + \
+                inputs + '_output.array[i*' + layer.name + '_in_offset]; \n'
+        if outputs in self.model_outputs:
+            self.layers += layer.layer.name + '_timeslice_output.array = &' + \
+                outputs + '_output->array[i*' + layer.name + '_out_offset]; \n'
+        else:
+            self.layers += layer.layer.name + '_timeslice_output.array = &' + \
+                outputs + '_output.array[i*' + layer.name + '_out_offset]; \n'
+
+        inp = '&' + layer.layer.name + '_timeslice'
+        outp = '&' + layer.layer.name + '_timeslice'
+        method = getattr(self, 'write_layer_' + layer_type(layer.layer))
+        method(layer.layer, inp, outp, i)
+        self.layers += '\n } \n'
+
+    def write_layer_Bidirectional(self, layer, inputs, outputs, i):
+        subname = layer.layer.name
+        method = getattr(self, 'write_layer_' + layer_type(layer.layer))
+        method(layer.forward_layer, inputs,
+               'forward_' + subname, i)
+        method(layer.backward_layer, inputs,
+               'backward_' + subname, i)
+        mode = layer.merge_mode
+        inputs = ['forward_' + subname,
+                  'backward_' + subname]
+        if layer.layer.return_sequences:
+            self.layers += 'k2c_flip(&backward_' + subname + '_output,0); \n'
+        if mode == 'sum':
+            self.write_layer_Merge(layer, inputs, outputs, i, 'Add')
+        elif mode == 'mul':
+            self.write_layer_Merge(layer, inputs, outputs, i, 'Multiply')
+        elif mode == 'ave':
+            self.write_layer_Merge(layer, inputs, outputs, i, 'Average')
+        elif mode == 'concat':
+            self.write_layer_Concatenate(layer, inputs, outputs, i)
 
     def write_layer_LSTM(self, layer, inputs, outputs, i):
         nm, pnm, inputs, outputs = self.format_io_names(layer, inputs, outputs)
@@ -189,36 +234,36 @@ class Layers2C():
         self.layers += outputs + ',' + inputs + '); \n'
 
     def write_layer_Add(self, layer, inputs, outputs, i):
-        self.write_layer_Merge(layer, inputs, outputs, i)
+        self.write_layer_Merge(layer, inputs, outputs, i, 'Add')
 
     def write_layer_Subtract(self, layer, inputs, outputs, i):
-        self.write_layer_Merge(layer, inputs, outputs, i)
+        self.write_layer_Merge(layer, inputs, outputs, i, 'Subtract')
 
     def write_layer_Multiply(self, layer, inputs, outputs, i):
-        self.write_layer_Merge(layer, inputs, outputs, i)
+        self.write_layer_Merge(layer, inputs, outputs, i, 'Multiply')
 
     def write_layer_Maximum(self, layer, inputs, outputs, i):
-        self.write_layer_Merge(layer, inputs, outputs, i)
+        self.write_layer_Merge(layer, inputs, outputs, i, 'Maximum')
 
     def write_layer_Minimum(self, layer, inputs, outputs, i):
-        self.write_layer_Merge(layer, inputs, outputs, i)
+        self.write_layer_Merge(layer, inputs, outputs, i, 'Minimum')
 
     def write_layer_Average(self, layer, inputs, outputs, i):
-        self.write_layer_Merge(layer, inputs, outputs, i)
+        self.write_layer_Merge(layer, inputs, outputs, i, 'Average')
 
-    def write_layer_Merge(self, layer, inputs, outputs, i):
+    def write_layer_Merge(self, layer, inputs, outputs, i, mode):
         nm, _, inputs, outputs = self.format_io_names(layer, inputs, outputs)
-        if 'Subtract' == layer_type(layer):
+        if mode == 'Subtract':
             self.layers += 'k2c_subtract('
-        elif 'Add' == layer_type(layer):
+        elif mode == 'Add':
             self.layers += 'k2c_add('
-        elif 'Multiply' == layer_type(layer):
+        elif mode == 'Multiply':
             self.layers += 'k2c_multiply('
-        elif 'Average' == layer_type(layer):
+        elif mode == 'Average':
             self.layers += 'k2c_average('
-        elif 'Maximum' == layer_type(layer):
+        elif mode == 'Maximum':
             self.layers += 'k2c_max('
-        elif 'Minimum' == layer_type(layer):
+        elif mode == 'Minimum':
             self.layers += 'k2c_min('
         self.layers += outputs + ',' + nm + '_num_tensors' + str(i) + ','
         c = ','.join(inputs)
