@@ -3,13 +3,12 @@ python:
   - "3.5"
   - "3.6"
   - "3.7"
-  - "3.8"
+
 env:
     - CODECOV_TOKEN="24cf7341-7201-48d7-acfc-e3208302a2b6"
 matrix:
   allow_failures:
     - python: "3.5"
-    - python: "3.6"
 
 install:
   - pip install -r requirements.txt
