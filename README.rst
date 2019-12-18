@@ -22,7 +22,8 @@ Supported Layers
 - **Advanced Activation Layers**: LeakyReLU, PReLU, ELU, ThresholdedReLU, Softmax, ReLU
 - **Normalization Layers**: BatchNormalization
 - **Noise Layers**: GaussianNoise, GaussianDropout, AlphaDropout
-
+- **Layer Wrappers**: TimeDistributed, Bidirectional
+  
 ToDo
 ****
 - **Core Layers**: Lambda, Masking
@@ -31,7 +32,6 @@ ToDo
 - **Locally Connected Layers**: LocallyConnected1D, LocallyConnected2D
 - **Recurrent Layers**: ConvLSTM2D, ConvLSTM2DCell
 - **Merge Layers**: Broadcasting merge between different sizes
-- **Layer Wrappers**: TimeDistributed, Bidirectional
 - **Misc**: models made from submodels
 
 

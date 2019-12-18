@@ -15,8 +15,9 @@ __maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
 __email__ = "wconlin@princeton.edu"
 
 
-def make_test_suite(model, function_name, malloc_vars, num_tests=10, stateful=False, tol=1e-5):
-    print('Writing tests')
+def make_test_suite(model, function_name, malloc_vars, num_tests=10, stateful=False, verbose=True, tol=1e-5):
+    if verbose:
+        print('Writing tests')
     input_shape = []
     # output_shape = []
     model_inputs, model_outputs = get_model_io_names(model)

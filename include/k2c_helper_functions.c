@@ -274,6 +274,49 @@ void k2c_bias_add(k2c_tensor* A, const k2c_tensor* b) {
 
 
 /**
+ * Flips a tensor along specified axis.
+ * overwrites input with flipped output.
+ *
+ * :param A: input tensor. Overwritten with outputs.
+ * :param axis: axis along which to flip
+ */
+
+void k2c_flip(k2c_tensor *A, const size_t axis) {
+  const size_t ndim = A->ndim;
+  const size_t * shape = A->shape;
+  const size_t numel = A->numel;
+  size_t sub[K2C_MAX_NDIM] = {0};
+  const size_t step = 1;
+  size_t k = 0;
+  size_t idx = 0;
+  float temp;
+
+  size_t reduced_size = 1;
+  for (size_t i=axis; i<ndim; ++i) {
+    reduced_size *= shape[i];
+  }
+  const size_t threshold = reduced_size/2;
+  const size_t jump = reduced_size;
+  
+  while (k<numel) {
+    k2c_idx2sub(k, sub, shape, ndim);
+    sub[axis] = shape[axis]-sub[axis]-1;
+    idx = k2c_sub2idx(sub, shape, ndim);
+    temp = A->array[k];
+    A->array[k] = A->array[idx];
+    A->array[idx] = temp;
+    if ((k+step) % jump >= threshold) {
+      k = (k + step -threshold + jump);
+    }
+    else {
+      k += step;
+    }
+  }
+}
+
+
+
+/**
  * Reads array from csv file.
  *
  * :param filename: file to read from. Assumed comma separated ascii text.

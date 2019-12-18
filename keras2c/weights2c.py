@@ -6,6 +6,7 @@ Gets weights and other parameters from each layer and writes to C file
 # imports
 import numpy as np
 from keras2c.io_parsing import layer_type, get_layer_io_names, get_model_io_names
+from keras import backend as K
 maxndim = 5
 
 
@@ -79,7 +80,7 @@ class Weights2C():
         method = getattr(self, 'write_weights_' + layer_type(layer))
         return method(layer)
 
-    def write_weights(self):
+    def write_weights(self, verbose=True):
         for layer in self.model.layers:
             method = getattr(self, 'write_weights_' + layer_type(layer))
             method(layer)
@@ -98,11 +99,74 @@ class Weights2C():
 
     def write_outputs(self, layer):
         _, outputs = get_layer_io_names(layer)
-        for i, outp in enumerate(outputs):
-            outshp = layer.get_output_at(i).shape[1:]
-            if outp not in self.model_io[1]:
+        if len(outputs) > 1:
+            for i, outp in enumerate(outputs):
+                outshp = layer.get_output_at(i).shape[1:]
+                if outp not in self.model_io[1]:
+                    self.write_weights_array2c(
+                        np.zeros(outshp), outp + '_output')
+        else:
+            outshp = layer.output_shape[1:]
+            if outputs[0] not in self.model_io[1]:
                 self.write_weights_array2c(
-                    np.zeros(outshp), outp + '_output')
+                    np.zeros(outshp), outputs[0] + '_output')
+
+    def write_weights_Bidirectional(self, layer):
+        try:
+            foo = layer.forward_layer.input_shape
+            foo = layer.backward_layer.input_shape
+        except:
+            temp_input = np.ones((layer.input_shape[1:]))[np.newaxis, :]
+            foo = layer.forward_layer.__call__(K.constant(
+                temp_input, name=layer.name + '_subinput'))
+            foo = layer.backward_layer.__call__(K.constant(
+                temp_input, name=layer.name + '_subinput'))
+        self.write_weights_layer(layer.backward_layer)
+        self.write_weights_layer(layer.forward_layer)
+        if layer.merge_mode:
+
+            self.write_outputs(layer)
+            self.stack_vars += 'size_t ' + layer.name + '_num_tensors' + str(0) + \
+                ' = ' + str(2) + '; \n'
+            if layer.merge_mode == 'concat':
+                if layer.return_sequences:
+                    ax = 1
+                else:
+                    ax = 0
+                self.stack_vars += 'size_t ' + layer.name + '_axis = ' +\
+                    str(ax) + '; \n'
+
+        else:
+            output_names = get_layer_io_names(layer)[1][0]
+            subname = layer.layer.name
+            self.stack_vars += 'k2c_tensor * ' + \
+                output_names[0] + ' = forward_' + subname + '_output; \n'
+            self.stack_vars += 'k2c_tensor * ' + \
+                output_names[1] + ' = backward_' + subname + '_output; \n'
+
+    def write_weights_TimeDistributed(self, layer):
+        self.write_outputs(layer)
+        try:
+            foo = layer.layer.input_shape
+        except:
+            temp_input = np.ones((layer.input_shape[2:]))[np.newaxis, :]
+            foo = layer.layer.__call__(K.constant(
+                temp_input, name=layer.name + '_timeslice_input'))
+        self.write_weights_layer(layer.layer)
+        timeslice_input = np.squeeze(np.zeros(layer.layer.input_shape))
+        timeslice_output = np.squeeze(np.zeros(layer.layer.output_shape))
+        self.write_weights_array2c(
+            timeslice_input, layer.layer.name + '_timeslice_input')
+        self.write_weights_array2c(
+            timeslice_output, layer.layer.name + '_timeslice_output')
+        self.stack_vars += 'const size_t ' + layer.name +\
+                           '_timesteps = ' + str(layer.input_shape[1]) + '; \n'
+        self.stack_vars += 'const size_t ' + layer.name +\
+                           '_in_offset = ' + \
+            str(np.prod(layer.input_shape[2:])) + '; \n'
+        self.stack_vars += 'const size_t ' + layer.name +\
+                           '_out_offset = ' + \
+            str(np.prod(layer.output_shape[2:])) + '; \n'
 
     def write_weights_Input(self, layer):
         self.stack_vars += ''
@@ -504,15 +568,12 @@ class Weights2C():
         return self.write_weights_Merge(layer)
 
     def write_weights_Merge(self, layer):
+        self.write_outputs(layer)
         inputs, outputs = get_layer_io_names(layer)
         for i, (inp, outp) in enumerate(zip(inputs, outputs)):
-            outshp = layer.get_output_at(i).shape[1:]
             num_tensors = len(inp)
             self.stack_vars += 'size_t ' + layer.name + '_num_tensors' + str(i) + \
                 ' = ' + str(num_tensors) + '; \n'
-        if outp not in self.model_io[1]:
-            self.write_weights_array2c(np.zeros(outshp),
-                                       outp + '_output')
         self.stack_vars += '\n\n'
 
     def write_weights_Concatenate(self, layer):

@@ -79,6 +79,7 @@ void k2c_idx2sub(const size_t idx, size_t sub[], const size_t shape[], const siz
 void k2c_dot(k2c_tensor* C, const k2c_tensor* A, const k2c_tensor* B, const size_t axesA[],
 	     const size_t axesB[], const size_t naxes, const int normalize, float fwork[]);
 void k2c_bias_add(k2c_tensor* A, const k2c_tensor* b);
+void k2c_flip(k2c_tensor *A, const size_t axis);
 float* k2c_read_array(const char* filename, const size_t array_size);
 
 // Merge layers

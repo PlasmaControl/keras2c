@@ -19,7 +19,7 @@ __maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
 __email__ = "wconlin@princeton.edu"
 
 
-def build_and_run(name):
+def build_and_run(name, return_output=False):
     if os.environ.get('CI'):
         ccflags = '-g -Og -std=c99 -fprofile-arcs -ftest-coverage -I./include/'
     else:
@@ -37,10 +37,14 @@ def build_and_run(name):
         name + '.c ' + name + '_test_suite.c -lm'
     buildcode = subprocess.run(cc.split()).returncode
     if not buildcode:
-        rcode = subprocess.run(['./' + name]).returncode
+        proc_output = subprocess.run(['./' + name])
+        rcode = proc_output.returncode
         if not rcode and not os.environ.get('CI'):
             subprocess.run('rm ' + name + '*', shell=True)
-        return rcode
+        if return_output:
+            return rcode, proc_output.stdout
+        else:
+            return rcode
     else:
         return buildcode
 

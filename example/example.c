@@ -1,14 +1,12 @@
-#ifndef PROFILE_PREDICTOR_H 
-#define PROFILE_PREDICTOR_H 
-#include <stdio.h> 
-#include <stddef.h> 
 #include <math.h> 
-#include <string.h> 
-#include <stdarg.h> 
-#include "k2c_include.h" 
+ #include <string.h> 
+#include "./include/k2c_include.h" 
+#include "./include/k2c_tensor_include.h" 
 
  
-void profile_predictor(k2c_tensor* input_1_input, k2c_tensor* dense_3_output) { 
+
+
+void example(k2c_tensor* input_1_input, k2c_tensor* dense_3_output) { 
 
 float dense_1_output_array[160] = {0}; 
 k2c_tensor dense_1_output = {&dense_1_output_array[0],2,160,{ 8,20, 1, 1, 1}}; 
@@ -1069,12 +1067,11 @@ k2c_dense(dense_3_output,&lstm_1_output,&dense_3_kernel,
 
  } 
 
-void profile_predictor_initialize() { 
+void example_initialize() { 
 
 } 
 
-void profile_predictor_terminate() { 
+void example_terminate() { 
 
 } 
 
-#endif /* PROFILE_PREDICTOR_H */

@@ -21,7 +21,24 @@ __maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
 __email__ = "wconlin@princeton.edu"
 
 
-def model2c(model, file, function_name, malloc=False):
+def model2c(model, file, function_name, malloc=False, verbose=True):
+    """Generates C code for model
+
+    Writes main function definition to "function_name.c" and a public header 
+    with declarations to "function_name.h"
+
+    Args:
+        model (keras Model): model to convert
+        file (open file instance): where to write main function
+        function_name (str): name of C function
+        malloc (bool): whether to allocate variables on the stack or heap
+        verbose (bool): whether to print info to stdout
+
+    Returns:
+        malloc_vars (list): names of variables loaded at runtime and stored on the heap
+        stateful (bool): whether the model must maintain state between calls
+    """
+
     model_inputs, model_outputs = get_model_io_names(model)
     s = '#include <math.h> \n '
     s += '#include <string.h> \n'
@@ -30,10 +47,11 @@ def model2c(model, file, function_name, malloc=False):
     s += '\n \n'
     file.write(s)
 
-    print('Gathering Weights')
+    if verbose:
+        print('Gathering Weights')
     stack_vars, malloc_vars, static_vars = Weights2C(
-        model, function_name, malloc).write_weights()
-    layers = Layers2C(model, malloc).write_layers()
+        model, function_name, malloc).write_weights(verbose)
+    layers = Layers2C(model, malloc).write_layers(verbose)
 
     function_signature = 'void ' + function_name + '('
     function_signature += ', '.join(['k2c_tensor* ' +
@@ -70,6 +88,18 @@ def model2c(model, file, function_name, malloc=False):
 
 
 def write_function_reset(file, function_name):
+    """Writes a reset function for stateful models
+
+    Reset function is used to clear internal state of the model
+
+    Args:
+        file (open file instance): file to write to
+        function_name (str): name of main function
+
+    Returns:
+       signature (str): delcaration of the reset function
+    """
+
     function_reset_signature = 'void ' + function_name + '_reset_states()'
     file.write(function_reset_signature)
     s = ' { \n\n'
@@ -81,6 +111,18 @@ def write_function_reset(file, function_name):
 
 
 def write_function_initialize(file, function_name, malloc_vars):
+    """Writes an initialize function
+
+    Initialize function is used to load variables into memory and do other start up tasks
+
+    Args:
+        file (open file instance): file to write to
+        function_name (str): name of main function
+
+    Returns:
+       signature (str): delcaration of the initialization function
+    """
+
     function_init_signature = 'void ' + function_name + '_initialize('
     function_init_signature += ','.join(['float** ' +
                                          key + ' \n' for key in malloc_vars.keys()])
@@ -98,6 +140,18 @@ def write_function_initialize(file, function_name, malloc_vars):
 
 
 def write_function_terminate(file, function_name, malloc_vars):
+    """Writes a terminate function
+
+    Terminate function is used to deallocate memory after completion
+
+    Args:
+        file (open file instance): file to write to
+        function_name (str): name of main function
+
+    Returns:
+       signature (str): delcaration of the terminate function
+    """
+
     function_term_signature = 'void ' + function_name + '_terminate('
     function_term_signature += ','.join(['float* ' +
                                          key for key in malloc_vars.keys()])
@@ -111,7 +165,22 @@ def write_function_terminate(file, function_name, malloc_vars):
     return function_term_signature
 
 
-def k2c(model, function_name, malloc=False, num_tests=10):
+def k2c(model, function_name, malloc=False, num_tests=10,verbose=True):
+    """Converts keras model to C code and generates test suite
+
+    Args:
+        model (keras Model or str): model to convert or path to saved .h5 file
+        function_name (str): name of main function
+        malloc (bool): whether to allocate variables on the stack or heap
+        num_tests (int): how many tests to generate in the test suite
+
+    Raises:
+        ValueError: if model is not instance of keras.models.Model 
+            or keras.engine.training.Model
+
+    Returns:
+        None
+    """
 
     function_name = str(function_name)
     filename = function_name + '.c'
@@ -126,17 +195,19 @@ def k2c(model, function_name, malloc=False, num_tests=10):
 
     # check that the model can be converted
     check_model(model, function_name)
-    print('All checks passed')
+    if verbose:
+        print('All checks passed')
 
     file = open(filename, "x+")
-    malloc_vars, stateful = model2c(model, file, function_name, malloc)
+    malloc_vars, stateful = model2c(model, file, function_name, malloc,verbose)
     file.close()
     s = 'Done \n'
-    s += "C code is in '" + function_name + ".h' \n"
+    s += "C code is in '" + function_name + ".c' with header file '" + function_name + ".h' \n"
     if num_tests > 0:
-        make_test_suite(model, function_name, malloc_vars, num_tests, stateful)
+        make_test_suite(model, function_name, malloc_vars, num_tests, stateful,verbose)
         s += "Tests are in '" + function_name + "_test_suite.c' \n"
     if malloc:
         s += "Weight arrays are in .csv files of the form 'model_name_layer_name_array_type.csv' \n"
         s += "They should be placed in the directory from which the main program is run."
-    print(s)
+    if verbose:
+        print(s)
