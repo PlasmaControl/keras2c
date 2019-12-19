@@ -17,9 +17,9 @@ script:
   - python -m pytest --cov=keras2c/
 
 after_success:
-  - mv include/gc* ./
+  - mv include/*.gc* ./
   - gcov *.gcda
-  - rm test_*{.gcov,.gcda,.gcno}
+  - rm test__*{.gcov,.gcda,.gcno}
   - bash <(curl -s https://codecov.io/bash)
 
 notifications:
