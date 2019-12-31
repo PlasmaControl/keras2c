@@ -2,9 +2,9 @@
 CC=gcc
 
 ifeq ($(CC), gcc)
-	OPTFLAGS = -O3 -march=native -fwhole-program -fopt-info-vec -fopt-info-vec-missed
+	OPTFLAGS = -O3 -march=native 
 else ifeq ($(CC), icc)
-	OPTFLAGS = -O3 -xHost -ipo -qopt-report=5 -qopt-report-phase=vec
+	OPTFLAGS = -O3 -xHost 
 else
 	OPTFLAGS = -O3
 endif

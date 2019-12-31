@@ -59,7 +59,7 @@ class Weights2C():
                     elif temp[i] == -np.inf:
                         s += "-HUGE_VALF,"
                     else:
-                        s += "{:.8e}".format(temp[i]) + ','
+                        s += "{:+.8e}".format(temp[i]) + ','
                     count += 1
                     if (count) % 5 is 0:
                         s += '\n'

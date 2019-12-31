@@ -11,6 +11,7 @@ from keras2c.io_parsing import layer_type, get_all_io_names, get_layer_io_names,
 from keras2c.check_model import check_model
 from keras2c.make_test_suite import make_test_suite
 import numpy as np
+import subprocess
 import keras
 import tensorflow as tf
 tf.compat.v1.disable_eager_execution()
@@ -23,7 +24,7 @@ __maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
 __email__ = "wconlin@princeton.edu"
 
 
-def model2c(model, file, function_name, malloc=False, verbose=True):
+def model2c(model, function_name, malloc=False, verbose=True):
     """Generates C code for model
 
     Writes main function definition to "function_name.c" and a public header 
@@ -31,7 +32,6 @@ def model2c(model, file, function_name, malloc=False, verbose=True):
 
     Args:
         model (keras Model): model to convert
-        file (open file instance): where to write main function
         function_name (str): name of C function
         malloc (bool): whether to allocate variables on the stack or heap
         verbose (bool): whether to print info to stdout
@@ -42,17 +42,17 @@ def model2c(model, file, function_name, malloc=False, verbose=True):
     """
 
     model_inputs, model_outputs = get_model_io_names(model)
-    s = '#include <math.h> \n '
-    s += '#include <string.h> \n'
-    s += '#include "./include/k2c_include.h" \n'
-    s += '#include "./include/k2c_tensor_include.h" \n'
-    s += '\n \n'
-    file.write(s)
+    includes = '#include <math.h> \n '
+    includes += '#include <string.h> \n'
+    includes += '#include "./include/k2c_include.h" \n'
+    includes += '#include "./include/k2c_tensor_include.h" \n'
+    includes += '\n \n'
 
     if verbose:
         print('Gathering Weights')
     stack_vars, malloc_vars, static_vars = Weights2C(
         model, function_name, malloc).write_weights(verbose)
+    stateful = len(static_vars) > 0
     layers = Layers2C(model, malloc).write_layers(verbose)
 
     function_signature = 'void ' + function_name + '('
@@ -64,107 +64,119 @@ def model2c(model, file, function_name, malloc=False, verbose=True):
         function_signature += ',' + ','.join(['float* ' +
                                               key for key in malloc_vars.keys()])
     function_signature += ')'
-    file.write(static_vars + '\n\n')
-    file.write(function_signature)
-    file.write(' { \n\n')
-    file.write(stack_vars)
-    file.write(layers)
-    file.write('\n } \n\n')
-    stateful = len(static_vars) > 0
 
-    init_sig = write_function_initialize(file, function_name, malloc_vars)
-    term_sig = write_function_terminate(file, function_name, malloc_vars)
-    if stateful:
-        reset_sig = write_function_reset(file, function_name)
+    init_sig, init_fun = gen_function_initialize(function_name, malloc_vars)
+    term_sig, term_fun = gen_function_terminate(function_name, malloc_vars)
+    reset_sig, reset_fun = gen_function_reset(function_name)
+
+    with open(function_name + '.c', 'x+') as source:
+        source.write(includes)
+        source.write(static_vars + '\n\n')
+        source.write(function_signature)
+        source.write(' { \n\n')
+        source.write(stack_vars)
+        source.write(layers)
+        source.write('\n } \n\n')
+        source.write(init_fun)
+        source.write(term_fun)
+        if stateful:
+            source.write(reset_fun)
+
     with open(function_name + '.h', 'x+') as header:
         header.write('#pragma once \n')
         header.write('#include "./include/k2c_tensor_include.h" \n')
         header.write(function_signature + '; \n')
         header.write(init_sig + '; \n')
         header.write(term_sig + '; \n')
-
         if stateful:
             header.write(reset_sig + '; \n')
+    if not subprocess.run(['astyle', '--version']).returncode:
+        subprocess.run(['astyle', '-n', function_name + '.h'])
+        subprocess.run(['astyle', '-n', function_name + '.c'])
 
     return malloc_vars.keys(), stateful
 
 
-def write_function_reset(file, function_name):
+def gen_function_reset(function_name):
     """Writes a reset function for stateful models
 
     Reset function is used to clear internal state of the model
 
     Args:
-        file (open file instance): file to write to
         function_name (str): name of main function
 
     Returns:
        signature (str): delcaration of the reset function
+       function (str): definition of the reset function
     """
 
-    function_reset_signature = 'void ' + function_name + '_reset_states()'
-    file.write(function_reset_signature)
-    s = ' { \n\n'
-    s += 'memset(&' + function_name + \
-         '_states,0,sizeof(' + function_name + '_states)); \n'
-    s += "} \n\n"
-    file.write(s)
-    return function_reset_signature
+    reset_sig = 'void ' + function_name + '_reset_states()'
+
+    reset_fun = reset_sig
+    reset_fun += ' { \n\n'
+    reset_fun += 'memset(&' + function_name + \
+                 '_states,0,sizeof(' + function_name + '_states)); \n'
+    reset_fun += "} \n\n"
+    return reset_sig, reset_fun
 
 
-def write_function_initialize(file, function_name, malloc_vars):
+def gen_function_initialize(function_name, malloc_vars):
     """Writes an initialize function
 
     Initialize function is used to load variables into memory and do other start up tasks
 
     Args:
-        file (open file instance): file to write to
         function_name (str): name of main function
+        malloc_vars (dict): variables to read in
 
     Returns:
        signature (str): delcaration of the initialization function
+       function (str): definition of the initialization function
     """
 
-    function_init_signature = 'void ' + function_name + '_initialize('
-    function_init_signature += ','.join(['float** ' +
-                                         key + ' \n' for key in malloc_vars.keys()])
-    function_init_signature += ')'
-    file.write(function_init_signature)
-    s = ' { \n\n'
+    init_sig = 'void ' + function_name + '_initialize('
+    init_sig += ','.join(['float** ' +
+                          key + ' \n' for key in malloc_vars.keys()])
+    init_sig += ')'
+
+    init_fun = init_sig
+    init_fun += ' { \n\n'
     for key in malloc_vars.keys():
         fname = function_name + key + ".csv"
         np.savetxt(fname, malloc_vars[key], fmt="%.8e", delimiter=',')
-        s += '*' + key + " = k2c_read_array(\"" + \
+        init_fun += '*' + key + " = k2c_read_array(\"" + \
             fname + "\"," + str(malloc_vars[key].size) + "); \n"
-    s += "} \n\n"
-    file.write(s)
-    return function_init_signature
+    init_fun += "} \n\n"
+
+    return init_sig, init_fun
 
 
-def write_function_terminate(file, function_name, malloc_vars):
+def gen_function_terminate(function_name, malloc_vars):
     """Writes a terminate function
 
     Terminate function is used to deallocate memory after completion
 
     Args:
-        file (open file instance): file to write to
         function_name (str): name of main function
+        malloc_vars (dict): variables to deallocate
 
     Returns:
        signature (str): delcaration of the terminate function
+       function (str): definition of the terminate function
     """
 
-    function_term_signature = 'void ' + function_name + '_terminate('
-    function_term_signature += ','.join(['float* ' +
-                                         key for key in malloc_vars.keys()])
-    function_term_signature += ')'
-    file.write(function_term_signature)
-    s = ' { \n\n'
+    term_sig = 'void ' + function_name + '_terminate('
+    term_sig += ','.join(['float* ' +
+                          key for key in malloc_vars.keys()])
+    term_sig += ')'
+
+    term_fun = term_sig
+    term_fun += ' { \n\n'
     for key in malloc_vars.keys():
-        s += "free(" + key + "); \n"
-    s += "} \n\n"
-    file.write(s)
-    return function_term_signature
+        term_fun += "free(" + key + "); \n"
+    term_fun += "} \n\n"
+
+    return term_sig, term_fun
 
 
 def k2c(model, function_name, malloc=False, num_tests=10, verbose=True):
@@ -200,10 +212,9 @@ def k2c(model, function_name, malloc=False, num_tests=10, verbose=True):
     if verbose:
         print('All checks passed')
 
-    file = open(filename, "x+")
     malloc_vars, stateful = model2c(
-        model, file, function_name, malloc, verbose)
-    file.close()
+        model, function_name, malloc, verbose)
+
     s = 'Done \n'
     s += "C code is in '" + function_name + \
         ".c' with header file '" + function_name + ".h' \n"

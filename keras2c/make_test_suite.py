@@ -8,6 +8,7 @@ import numpy as np
 from keras2c.io_parsing import get_model_io_names
 from keras2c.weights2c import Weights2C
 import tensorflow as tf
+import subprocess
 tf.compat.v1.disable_eager_execution()
 
 __author__ = "Rory Conlin"
@@ -105,7 +106,7 @@ def make_test_suite(model, function_name, malloc_vars, num_tests=10, stateful=Fa
     file.write('\n')
     s = 'clock_t t1 = clock(); \n'
     s += 'printf("Average time over ' + str(num_tests) + \
-        ' tests: %e s \\n\",(double)(t1-t0)/(double)CLOCKS_PER_SEC/(double)' + \
+        ' tests: %e s \\n\", \n (double)(t1-t0)/(double)CLOCKS_PER_SEC/(double)' + \
         str(num_tests) + '); \n'
     file.write(s)
 
@@ -141,3 +142,5 @@ def make_test_suite(model, function_name, malloc_vars, num_tests=10, stateful=Fa
     return x;}\n\n"""
     file.write(s)
     file.close()
+    if not subprocess.run(['astyle', '--version']).returncode:
+        subprocess.run(['astyle', '-n', function_name + '_test_suite.c'])
