@@ -43,7 +43,7 @@ def build_and_run(name, return_output=False):
     if rcode == 0:
         if not os.environ.get('CI'):
             subprocess.run('rm ' + name + '*', shell=True)
-            return (rcode, prod_output.stdout) if return_output else rcode
+            return (rcode, proc_output.stdout) if return_output else rcode
     return rcode
 
 
