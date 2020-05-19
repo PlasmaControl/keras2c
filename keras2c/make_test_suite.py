@@ -36,7 +36,7 @@ def make_test_suite(model, function_name, malloc_vars, num_tests=10, stateful=Fa
     s = '#include <stdio.h> \n'
     s += '#include <math.h> \n'
     s += '#include <time.h> \n'
-    s += '#include "./include/k2c_include.h" \n'
+    s += '#include "k2c_include.h" \n'
     s += '#include "' + function_name + '.h" \n\n'
     s += 'float maxabs(k2c_tensor *tensor1, k2c_tensor *tensor2);\n'
     s += 'struct timeval GetTimeStamp(); \n \n'

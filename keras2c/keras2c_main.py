@@ -44,8 +44,8 @@ def model2c(model, function_name, malloc=False, verbose=True):
     model_inputs, model_outputs = get_model_io_names(model)
     includes = '#include <math.h> \n '
     includes += '#include <string.h> \n'
-    includes += '#include "./include/k2c_include.h" \n'
-    includes += '#include "./include/k2c_tensor_include.h" \n'
+    includes += '#include "k2c_include.h" \n'
+    includes += '#include "k2c_tensor_include.h" \n'
     includes += '\n \n'
 
     if verbose:
@@ -84,7 +84,7 @@ def model2c(model, function_name, malloc=False, verbose=True):
 
     with open(function_name + '.h', 'x+') as header:
         header.write('#pragma once \n')
-        header.write('#include "./include/k2c_tensor_include.h" \n')
+        header.write('#include "k2c_tensor_include.h" \n')
         header.write(function_signature + '; \n')
         header.write(init_sig + '; \n')
         header.write(term_sig + '; \n')
