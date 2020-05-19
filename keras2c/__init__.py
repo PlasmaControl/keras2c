@@ -3,6 +3,7 @@ This file is a part of keras2c
 """
 
 from . import keras2c_main
+from . import k2c_tensor
 
 __author__ = "Rory Conlin"
 __copyright__ = "Copyright 2019, Rory Conlin"

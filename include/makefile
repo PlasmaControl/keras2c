@@ -36,7 +36,7 @@ libkeras2c.a: $(OBJ)
 	ar rcs libkeras2c.a $(OBJ)
 
 %.o: %.c $(DEPS)
-	$(CC) -c -o $@ $< $(CCFLAGS)
+	$(CC) -c -fPIC -o $@ $< $(CCFLAGS)
 
 clean:
 	rm *.o *.a
