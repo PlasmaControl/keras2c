@@ -9,13 +9,12 @@ else
 	OPTFLAGS = -O3
 endif
 
+
 ifeq ($(origin CI),undefined)
 	CCFLAGS = $(OPTFLAGS) -std=c99 -I./include/
 else
 	CCFLAGS = -g -Og -std=c99 --coverage -I./include/
 endif
-
-# -march=skylake-avx512
 
 OBJ = \
 	k2c_activations.o \
