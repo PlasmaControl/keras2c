@@ -45,7 +45,7 @@ Contribute
 License
 *******
 
-The project is licensed under the GNU GPLv3 license.
+The project is licensed under the MIT license.
 
 
 .. |Build-Status| image:: https://travis-ci.org/f0uriest/keras2c.svg?branch=master
