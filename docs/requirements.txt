@@ -1,0 +1,3 @@
+sphinx
+hawkmoth
+sphinx-rtd-theme
