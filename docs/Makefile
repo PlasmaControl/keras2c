@@ -5,7 +5,7 @@
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 SOURCEDIR     = source
-BUILDDIR      = ./
+BUILDDIR      = _build/
 PDFBUILDDIR   = /tmp
 PDF           = ./manual.pdf
 
@@ -20,4 +20,5 @@ help:
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
 %: Makefile
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
-	mv html/* .
+	rm -rf _modules/ _sources/ _static/
+	mv build/html/* ./

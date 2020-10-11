@@ -92,9 +92,9 @@
 <li class="toctree-l2"><a class="reference internal" href="#main">Main</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#writing-layers">Writing Layers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#writing-weights">Writing Weights</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#check-model">Check Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#io-parsing">IO Parsing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#test-suite">Test Suite</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#checking-model">Checking Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#graph-parsing">Graph Parsing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#test-generation">Test Generation</a></li>
 </ul>
 </li>
 </ul>
@@ -363,8 +363,8 @@ function (str): definition of the terminate function</p>
 </dd></dl>
 
 </div>
-<div class="section" id="check-model">
-<h2>Check Model<a class="headerlink" href="#check-model" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="checking-model">
+<h2>Checking Model<a class="headerlink" href="#checking-model" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt id="keras2c.check_model.is_valid_c_name">
 <code class="sig-prename descclassname">keras2c.check_model.</code><code class="sig-name descname">is_valid_c_name</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#keras2c.check_model.is_valid_c_name" title="Permalink to this definition">¶</a></dt>
@@ -457,8 +457,8 @@ log (str): log of unsupported features</p>
 </dd></dl>
 
 </div>
-<div class="section" id="io-parsing">
-<h2>IO Parsing<a class="headerlink" href="#io-parsing" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="graph-parsing">
+<h2>Graph Parsing<a class="headerlink" href="#graph-parsing" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt id="keras2c.io_parsing.layer_type">
 <code class="sig-prename descclassname">keras2c.io_parsing.</code><code class="sig-name descname">layer_type</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">layer</span></em><span class="sig-paren">)</span><a class="headerlink" href="#keras2c.io_parsing.layer_type" title="Permalink to this definition">¶</a></dt>
@@ -547,8 +547,8 @@ outputs (list): names of all the output nodes</p>
 </dd></dl>
 
 </div>
-<div class="section" id="test-suite">
-<h2>Test Suite<a class="headerlink" href="#test-suite" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="test-generation">
+<h2>Test Generation<a class="headerlink" href="#test-generation" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt id="keras2c.make_test_suite.make_test_suite">
 <code class="sig-prename descclassname">keras2c.make_test_suite.</code><code class="sig-name descname">make_test_suite</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">function_name</span></em>, <em class="sig-param"><span class="n">malloc_vars</span></em>, <em class="sig-param"><span class="n">num_tests</span><span class="o">=</span><span class="default_value">10</span></em>, <em class="sig-param"><span class="n">stateful</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-05</span></em><span class="sig-paren">)</span><a class="headerlink" href="#keras2c.make_test_suite.make_test_suite" title="Permalink to this definition">¶</a></dt>

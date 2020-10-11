@@ -42,7 +42,7 @@ It can also be used with a python environment in the following manner:
     from keras2c import k2c
     k2c(model, function_name, malloc=False, num_tests=10, verbose=True)
 
-For more information, see `Installation<https://keras2c.readthedocs.io/docs/_build/html/installation.html>`_ and  `Usage<https://keras2c.readthedocs.io/docs/_build/html/usage.html>`_
+For more information, see `Installation <https://f0uriest.github.io/keras2c/installation.html>`_ and  `Usage <https://f0uriest.github.io/keras2c/usage.html>`_
 
 
 Supported Layers
@@ -73,7 +73,7 @@ ToDo
 Contribute
 **********
 
-- Documentation: `<https://keras2c.readthedocs.io>`_
+- Documentation: `<https://f0uriest.github.io/keras2c/>`_
 - Issue Tracker: `<https://github.com/f0uriest/keras2c/issues>`_
 - Source Code: `<https://github.com/f0uriest/keras2c/>`_
   

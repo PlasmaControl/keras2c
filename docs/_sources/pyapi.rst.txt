@@ -25,8 +25,8 @@ Writing Weights
     :members:
     :undoc-members:
 
-Check Model
-***********
+Checking Model
+**************
 .. autofunction:: keras2c.check_model.is_valid_c_name
 .. autofunction:: keras2c.check_model.name_check
 .. autofunction:: keras2c.check_model.layers_supported_check
@@ -34,8 +34,8 @@ Check Model
 .. autofunction:: keras2c.check_model.config_supported_check
 .. autofunction:: keras2c.check_model.check_model
 
-IO Parsing
-**********
+Graph Parsing
+*************
 .. autofunction:: keras2c.io_parsing.layer_type
 .. autofunction:: keras2c.io_parsing.get_all_io_names
 .. autofunction:: keras2c.io_parsing.get_layer_num_io
@@ -43,7 +43,7 @@ IO Parsing
 .. autofunction:: keras2c.io_parsing.get_model_io_names
 .. autofunction:: keras2c.io_parsing.flatten
 
-Test Suite
-**********
+Test Generation
+***************
 .. autofunction:: keras2c.make_test_suite.make_test_suite
 
