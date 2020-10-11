@@ -12,10 +12,13 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
+
+
 import os
 import sys
 sys.path.insert(0, os.path.abspath('.'))
-sys.path.append('../../keras2c')
+sys.path.append('../../')
+
 
 # -- Project information -----------------------------------------------------
 
@@ -23,10 +26,10 @@ project = 'keras2c'
 copyright = '2020, Rory Conlin'
 author = 'Rory Conlin'
 
-# The short X.Y version
-version = '1.0'
-# The full version, including alpha/beta/rc tags
-release = 'v1.0'
+if True:
+    import keras2c
+    version = keras2c.__version__
+    release = version
 
 
 # -- General configuration ---------------------------------------------------

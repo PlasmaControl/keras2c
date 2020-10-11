@@ -1,0 +1,263 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Usage &mdash; keras2c 1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="C API Documentation" href="capi.html" />
+    <link rel="prev" title="Installation" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> keras2c
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="capi.html">C API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyapi.html">Python API Documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">keras2c</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Usage</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/usage.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="usage">
+<h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h1>
+<p>keras2c can be used from the command line with the following syntax:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python -m keras2c <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-m<span class="o">]</span> <span class="o">[</span>-t<span class="o">]</span> model_path function_name
+
+A library <span class="k">for</span> converting the forward pass <span class="o">(</span>inference<span class="o">)</span> part of a keras model to
+    a C <span class="k">function</span>
+
+positional arguments:
+  model_path         File path to saved keras .h5 model file
+  function_name      What to name the resulting C <span class="k">function</span>
+
+optional arguments:
+  -h, --help         show this <span class="nb">help</span> message and <span class="nb">exit</span>
+  -m, --malloc       Use dynamic memory <span class="k">for</span> large arrays. Weights will be
+                     saved to .csv files that will be loaded at runtime
+  -t , --num_tests   Number of tests to generate. Default is <span class="m">10</span>
+</pre></div>
+</div>
+<p>It can also be used with a python environment in the following manner:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">keras2c</span> <span class="kn">import</span> <span class="n">k2c</span>
+<span class="n">k2c</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">function_name</span><span class="p">,</span> <span class="n">malloc</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">num_tests</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In this case, <code class="docutils literal notranslate"><span class="pre">model</span></code> can be either the path to a saved <code class="docutils literal notranslate"><span class="pre">.h5</span></code> model on disk, or an instance of <code class="docutils literal notranslate"><span class="pre">keras.models.Model</span></code></p>
+<p>Using either of these methods will produce 3 files: <code class="docutils literal notranslate"><span class="pre">&lt;function_name&gt;.c</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;function_name&gt;.h</span></code>, and <code class="docutils literal notranslate"><span class="pre">&lt;function_name&gt;_test_suite.c</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">&lt;function_name&gt;.c</span></code> will contain a function named <code class="docutils literal notranslate"><span class="pre">&lt;function_name&gt;</span></code> that when called replicates the forward pass (inference) through the neural network.
+The file will also include <code class="docutils literal notranslate"><span class="pre">initialize</span></code> and <code class="docutils literal notranslate"><span class="pre">terminate</span></code> functions for allocating and deallocating memory (other functionality can be added by the user). Additionally,
+if the model contains “stateful” elements such as RNN layers that maintain state between calls, a <code class="docutils literal notranslate"><span class="pre">reset</span></code> function will be generated to reset these states to zero.</p>
+<p>By default, all of the weights and other parameters from the model are allocated as stack variables in the generated C code and the variables are declared directly in the generated function.
+For very large models or on machines with limited stack size this may lead to errors. In such cases, the <code class="docutils literal notranslate"><span class="pre">malloc</span></code> option can be set to true, in which case array variables will be allocated on the heap via calls to <code class="docutils literal notranslate"><span class="pre">malloc</span></code> in the <code class="docutils literal notranslate"><span class="pre">initialize</span></code> routine, and the values will be written to <code class="docutils literal notranslate"><span class="pre">.csv</span></code> files that are read in as part of the <code class="docutils literal notranslate"><span class="pre">initialize</span></code> routine.</p>
+<p>Tensor inputs and outputs to the generated function should use the type <code class="docutils literal notranslate"><span class="pre">k2c_tensor</span></code> defined in <code class="docutils literal notranslate"><span class="pre">include/k2c_tensor_include.h</span></code>:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">k2c_tensor</span>
+<span class="p">{</span>
+    <span class="cm">/** Pointer to array of tensor values flattened in row major order. */</span>
+    <span class="kt">float</span> <span class="o">*</span><span class="n">array</span><span class="p">;</span>
+
+    <span class="cm">/** Rank of the tensor (number of dimensions). */</span>
+    <span class="kt">size_t</span> <span class="n">ndim</span><span class="p">;</span>
+
+    <span class="cm">/** Number of elements in the tensor. */</span>
+    <span class="kt">size_t</span> <span class="n">numel</span><span class="p">;</span>
+
+    <span class="cm">/** Array, size of the tensor in each dimension. */</span>
+    <span class="kt">size_t</span> <span class="n">shape</span><span class="p">[</span><span class="n">K2C_MAX_NDIM</span><span class="p">];</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">&lt;function_name&gt;.h</span></code> is the header file associated with the generated source file, containing function declarations.
+<code class="docutils literal notranslate"><span class="pre">&lt;function_name&gt;_test_suite.c</span></code> contains a <code class="docutils literal notranslate"><span class="pre">main</span></code> program to run sample inputs through the generated code to ensure that it produces the same outputs as the original python model.</p>
+<p>To compile and run the tests, the C backend must be built first. This can be done by running <code class="docutils literal notranslate"><span class="pre">make</span></code> from within the <code class="docutils literal notranslate"><span class="pre">include</span></code> folder, to generate <code class="docutils literal notranslate"><span class="pre">libkeras2c.a</span></code>.
+The test suite (or other main program) can then be compiled with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gcc -std<span class="o">=</span>c99 -I./include/ -o &lt;executable_name&gt; &lt;function_name&gt;.c &lt;function_name&gt;_test_suite.c -L./include/ -l:libkeras2c.a -lm
+</pre></div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="capi.html" class="btn btn-neutral float-right" title="C API Documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Rory Conlin
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,1365 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>C API Documentation &mdash; keras2c 1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Python API Documentation" href="pyapi.html" />
+    <link rel="prev" title="Usage" href="usage.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> keras2c
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">C API Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#core-layers">Core Layers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#convolutional-layers">Convolutional Layers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pooling-layers">Pooling Layers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#recurrent-layers">Recurrent Layers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#embedding-layers">Embedding Layers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#merge-layers">Merge Layers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#normalization-layers">Normalization Layers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#activations">Activations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data-types">Data Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#helper-functions">Helper Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pyapi.html">Python API Documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">keras2c</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>C API Documentation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/capi.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="c-api-documentation">
+<h1>C API Documentation<a class="headerlink" href="#c-api-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="core-layers">
+<h2>Core Layers<a class="headerlink" href="#core-layers" title="Permalink to this headline">¶</a></h2>
+<p>warning: unhandled cursor CursorKind.INCLUSION_DIRECTIVE math.h</p>
+<dl class="c function">
+<dt id="c.k2c_dense">
+void <code class="sig-name descname">k2c_dense</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>output</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>input</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>kernel</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>bias</em>, k2c_activationType *<em>activation</em>, float *<em>fwork</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_dense" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Dense (fully connected) Layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – output tensor.</p></li>
+<li><p><strong>input</strong> – input tensor.</p></li>
+<li><p><strong>kernel</strong> – kernel tensor.</p></li>
+<li><p><strong>bias</strong> – bias tensor.</p></li>
+<li><p><strong>activation</strong> – activation function to apply to output.</p></li>
+<li><p><strong>fwork</strong> – array of working space, size(fwork) = size(input) + size(kernel)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_flatten">
+void <code class="sig-name descname">k2c_flatten</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>output</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>input</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_flatten" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Flatten Layer.
+flattens inputs to ndim=1</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – output tensor.</p></li>
+<li><p><strong>input</strong> – input tensor.</p></li>
+<li><p><strong>kernel</strong> – kernel tensor.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_reshape">
+void <code class="sig-name descname">k2c_reshape</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>output</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>input</em>, <em class="property">const</em> int *<em>newshp</em>, <em class="property">const</em> int <em>newndim</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_reshape" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Reshape Layer.
+reshapes input to arbitrary output shape, while preserving total number of elements.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – output tensor.</p></li>
+<li><p><strong>input</strong> – input tensor.</p></li>
+<li><p><strong>newshp</strong> – array[newndim] of the desired new shape.</p></li>
+<li><p><strong>newndim</strong> – number of dimensions after reshaping.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_permute_dims">
+void <code class="sig-name descname">k2c_permute_dims</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>output</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>input</em>, <em class="property">const</em> int *<em>permute</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_permute_dims" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Permute Layer.
+permutes the dimensions of the input according to a given pattern.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – output tensor.</p></li>
+<li><p><strong>input</strong> – input tensor.</p></li>
+<li><p><strong>permute</strong> – array[ndim] Permutation pattern. Indexing starts at 0. For instance, (1, 0) permutes the first and second dimension of the input.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_repeat_vector">
+void <code class="sig-name descname">k2c_repeat_vector</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>output</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>input</em>, <em class="property">const</em> int <em>n</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_repeat_vector" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Repeat Vector Layer.
+repeats the input n times.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – output tensor.</p></li>
+<li><p><strong>input</strong> – input tensor.</p></li>
+<li><p><strong>n</strong> – repetition factor.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="convolutional-layers">
+<h2>Convolutional Layers<a class="headerlink" href="#convolutional-layers" title="Permalink to this headline">¶</a></h2>
+<p>warning: unhandled cursor CursorKind.INCLUSION_DIRECTIVE math.h</p>
+<dl class="c function">
+<dt id="c.k2c_pad1d">
+void <code class="sig-name descname">k2c_pad1d</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>output</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>input</em>, <em class="property">const</em> float <em>fill</em>, <em class="property">const</em> int *<em>pad</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_pad1d" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>1D (temporal) Padding.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – tensor to store padded output data.</p></li>
+<li><p><strong>input</strong> – tensor to pad.</p></li>
+<li><p><strong>fill</strong> – value to fill in padded areas.</p></li>
+<li><p><strong>pad</strong> – array[2] of how many rows to pad. Order is {before dim 1, after dim 1}.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_pad2d">
+void <code class="sig-name descname">k2c_pad2d</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>output</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>input</em>, <em class="property">const</em> float <em>fill</em>, <em class="property">const</em> int *<em>pad</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_pad2d" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>2D (spatial) Padding.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – tensor to store padded output data.</p></li>
+<li><p><strong>input</strong> – tensor to pad.</p></li>
+<li><p><strong>fill</strong> – value to fill in padded areas.</p></li>
+<li><p><strong>pad</strong> – array[4] of how many rows/cols to pad. Order is {before dim 1, after dim 1, before dim 2, after dim 2}.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_pad3d">
+void <code class="sig-name descname">k2c_pad3d</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>output</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>input</em>, <em class="property">const</em> float <em>fill</em>, <em class="property">const</em> int *<em>pad</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_pad3d" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>3D (spatial or spatio-temporal) Padding.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – tensor to store padded output data.</p></li>
+<li><p><strong>input</strong> – tensor to pad.</p></li>
+<li><p><strong>fill</strong> – value to fill in padded areas.</p></li>
+<li><p><strong>pad</strong> – array[6] of how many rows/cols to pad. Order is {before dim 1, after dim 1, before dim 2, after dim 2, before dim 3, after dim 3}.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_conv1d">
+void <code class="sig-name descname">k2c_conv1d</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>output</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>input</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>kernel</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>bias</em>, <em class="property">const</em> int <em>stride</em>, <em class="property">const</em> int <em>dilation</em>, k2c_activationType *<em>activation</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_conv1d" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>1D (temporal) Convolution.
+Assumes a “channels last” structure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – output tensor.</p></li>
+<li><p><strong>input</strong> – input tensor.</p></li>
+<li><p><strong>kernel</strong> – kernel tensor.</p></li>
+<li><p><strong>bias</strong> – bias tensor.</p></li>
+<li><p><strong>stride</strong> – stride length of the convolution.</p></li>
+<li><p><strong>dilation</strong> – dilation rate to use for dilated convolution.</p></li>
+<li><p><strong>activation</strong> – activation function to apply to output.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_conv2d">
+void <code class="sig-name descname">k2c_conv2d</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>output</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>input</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>kernel</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>bias</em>, <em class="property">const</em> int *<em>stride</em>, <em class="property">const</em> int *<em>dilation</em>, k2c_activationType *<em>activation</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_conv2d" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>2D (spatial) Convolution.
+Assumes a “channels last” structure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – output tensor.</p></li>
+<li><p><strong>input</strong> – input tensor.</p></li>
+<li><p><strong>kernel</strong> – kernel tensor.</p></li>
+<li><p><strong>bias</strong> – bias tensor.</p></li>
+<li><p><strong>stride</strong> – array[2] of stride length of the convolution. Order is {stride dim 1, stride dim 2}.</p></li>
+<li><p><strong>dilation</strong> – array[2] dilation rate to use for dilated convolution. Order is {dilation dim 1, dilation dim 2}.</p></li>
+<li><p><strong>activation</strong> – activation function to apply to output.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_conv3d">
+void <code class="sig-name descname">k2c_conv3d</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>output</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>input</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>kernel</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>bias</em>, <em class="property">const</em> int *<em>stride</em>, <em class="property">const</em> int *<em>dilation</em>, k2c_activationType *<em>activation</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_conv3d" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>3D (spatial or spatio-temporal) Convolution.
+Assumes a “channels last” structure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – output tensor.</p></li>
+<li><p><strong>input</strong> – input tensor.</p></li>
+<li><p><strong>kernel</strong> – kernel tensor.</p></li>
+<li><p><strong>bias</strong> – bias tensor.</p></li>
+<li><p><strong>stride</strong> – array[3] of stride length of the convolution. Order is {stride dim 1, stride dim 2, stride dim 3}.</p></li>
+<li><p><strong>dilation</strong> – array[3] dilation rate to use for dilated convolution. Order is {dilation dim 1, dilation dim 2, dilation dim 3}.</p></li>
+<li><p><strong>activation</strong> – activation function to apply to output.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_crop1d">
+void <code class="sig-name descname">k2c_crop1d</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>output</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>input</em>, <em class="property">const</em> int *<em>crop</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_crop1d" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>1D (temporal) Cropping.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – tensor to store cropped output data.</p></li>
+<li><p><strong>input</strong> – tensor to crop.</p></li>
+<li><p><strong>pad</strong> – array[2] of how many rows to crop. Order is {before dim 1, after dim 1}.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_crop2d">
+void <code class="sig-name descname">k2c_crop2d</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>output</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>input</em>, <em class="property">const</em> int *<em>crop</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_crop2d" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>2D (spatial) Cropping.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – tensor to store cropped output data.</p></li>
+<li><p><strong>input</strong> – tensor to crop.</p></li>
+<li><p><strong>pad</strong> – array[4] of how many rows/cols to crop. Order is {before dim 1, after dim 1, before dim 2, after dim 2}.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_crop3d">
+void <code class="sig-name descname">k2c_crop3d</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>output</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>input</em>, <em class="property">const</em> int *<em>crop</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_crop3d" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>3D (spatial or spatio-temporal) Cropping.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – tensor to store cropped output data.</p></li>
+<li><p><strong>input</strong> – tensor to crop.</p></li>
+<li><p><strong>pad</strong> – array[6] of how many rows/cols to crop. Order is {before dim 1, after dim 1, before dim 2, after dim 2, before dim 3, after dim 3}.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_upsampling1d">
+void <code class="sig-name descname">k2c_upsampling1d</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>output</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>input</em>, <em class="property">const</em> int <em>size</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_upsampling1d" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>1D (temporal) Upsampling.
+Repeats each temporal step size times along the time axis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – output tensor.</p></li>
+<li><p><strong>input</strong> – input tensor.</p></li>
+<li><p><strong>size</strong> – Upsampling factor.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_upsampling2d">
+void <code class="sig-name descname">k2c_upsampling2d</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>output</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>input</em>, <em class="property">const</em> int *<em>size</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_upsampling2d" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>2D (spatial) Upsampling.
+Repeats the rows and columns of the data by size[0] and size[1] respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – output tensor.</p></li>
+<li><p><strong>input</strong> – input tensor.</p></li>
+<li><p><strong>size</strong> – array[2] of upsampling factors. Order is {upsampling dim 1, upsampling dim 2}.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_upsampling3d">
+void <code class="sig-name descname">k2c_upsampling3d</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>output</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>input</em>, <em class="property">const</em> int *<em>size</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_upsampling3d" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>2D (spatial) Upsampling.
+Repeats the 1st, 2nd and 3rd dimensions of the data by size[0], size[1] and size[2] respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – output tensor.</p></li>
+<li><p><strong>input</strong> – input tensor.</p></li>
+<li><p><strong>size</strong> – array[3] of upsampling factors. Order is {upsampling dim 1, upsampling dim 2, upsampling dim 3}.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="pooling-layers">
+<h2>Pooling Layers<a class="headerlink" href="#pooling-layers" title="Permalink to this headline">¶</a></h2>
+<p>warning: unhandled cursor CursorKind.INCLUSION_DIRECTIVE math.h</p>
+<dl class="c function">
+<dt id="c.k2c_global_max_pooling">
+void <code class="sig-name descname">k2c_global_max_pooling</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>output</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>input</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_global_max_pooling" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Global max pooling.
+works for 1D, 2D, or 3D inputs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – output tensor.</p></li>
+<li><p><strong>input</strong> – input tensor.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_global_avg_pooling">
+void <code class="sig-name descname">k2c_global_avg_pooling</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>output</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>input</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_global_avg_pooling" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Global average pooling.
+works for 1D, 2D, or 3D inputs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – output tensor.</p></li>
+<li><p><strong>input</strong> – input tensor.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_maxpool1d">
+void <code class="sig-name descname">k2c_maxpool1d</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>output</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>input</em>, <em class="property">const</em> int <em>pool_size</em>, <em class="property">const</em> int <em>stride</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_maxpool1d" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Max pooling for 1D (temporal) data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – output tensor.</p></li>
+<li><p><strong>input</strong> – input tensor.</p></li>
+<li><p><strong>pool_size</strong> – size of the max pooling window.</p></li>
+<li><p><strong>stride</strong> – factor by which to downscale.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_maxpool2d">
+void <code class="sig-name descname">k2c_maxpool2d</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>output</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>input</em>, <em class="property">const</em> int *<em>pool_size</em>, <em class="property">const</em> int *<em>stride</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_maxpool2d" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Max pooling for 2D (spatial) data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – output tensor.</p></li>
+<li><p><strong>input</strong> – input tensor.</p></li>
+<li><p><strong>pool_size</strong> – array[2] size of the max pooling window. Order is {pool size dim 1, pool size dim 2}.</p></li>
+<li><p><strong>stride</strong> – array[2] factor by which to downscale. Order is {stride dim 1, stride dim 2}.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_avgpool1d">
+void <code class="sig-name descname">k2c_avgpool1d</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>output</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>input</em>, <em class="property">const</em> int <em>pool_size</em>, <em class="property">const</em> int <em>stride</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_avgpool1d" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Average pooling for 1D (temporal) data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – output tensor.</p></li>
+<li><p><strong>input</strong> – input tensor.</p></li>
+<li><p><strong>pool_size</strong> – size of the average pooling window.</p></li>
+<li><p><strong>stride</strong> – factor by which to downscale.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_avgpool2d">
+void <code class="sig-name descname">k2c_avgpool2d</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>output</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>input</em>, <em class="property">const</em> int *<em>pool_size</em>, <em class="property">const</em> int *<em>stride</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_avgpool2d" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Average pooling for 2D (spatial) data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – output tensor.</p></li>
+<li><p><strong>input</strong> – input tensor.</p></li>
+<li><p><strong>pool_size</strong> – array[2] size of the average pooling window. Order is {pool size dim 1, pool size dim 2}.</p></li>
+<li><p><strong>stride</strong> – array[2] factor by which to downscale. Order is {stride dim 1, stride dim 2}.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="recurrent-layers">
+<h2>Recurrent Layers<a class="headerlink" href="#recurrent-layers" title="Permalink to this headline">¶</a></h2>
+<p>warning: unhandled cursor CursorKind.INCLUSION_DIRECTIVE math.h</p>
+<dl class="c function">
+<dt id="c.k2c_lstmcell">
+void <code class="sig-name descname">k2c_lstmcell</code><span class="sig-paren">(</span>float *<em>state</em>, <em class="property">const</em> float *<em>input</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>kernel</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>recurrent_kernel</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>bias</em>, float *<em>fwork</em>, k2c_activationType *<em>recurrent_activation</em>, k2c_activationType *<em>output_activation</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_lstmcell" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Cell for the LSTM layer.
+“units” is the dimension of the output space</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – array[2*units] recurrent state.</p></li>
+<li><p><strong>input</strong> – array of input data.</p></li>
+<li><p><strong>kernel</strong> – kernel tensor.</p></li>
+<li><p><strong>recurrent_kernel</strong> – recurrent kernel tensor</p></li>
+<li><p><strong>bias</strong> – bias tensor.</p></li>
+<li><p><strong>fwork</strong> – array[8*units] working storage.</p></li>
+<li><p><strong>recurrent_activation</strong> – activation function to apply to internal state.</p></li>
+<li><p><strong>output_activation</strong> – activation function to apply to output.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_lstm">
+void <code class="sig-name descname">k2c_lstm</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>output</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>input</em>, float *<em>state</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>kernel</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>recurrent_kernel</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>bias</em>, float *<em>fwork</em>, <em class="property">const</em> int <em>go_backwards</em>, <em class="property">const</em> int <em>return_sequences</em>, k2c_activationType *<em>recurrent_activation</em>, k2c_activationType *<em>output_activation</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_lstm" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Long Short-Term Memory (LSTM) layer.
+“units” is the dimension of the output space</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – output tensor.</p></li>
+<li><p><strong>input</strong> – input tensor.</p></li>
+<li><p><strong>state</strong> – array[2*units] recurrent state.</p></li>
+<li><p><strong>kernel</strong> – kernel tensor.</p></li>
+<li><p><strong>recurrent_kernel</strong> – recurrent kernel tensor</p></li>
+<li><p><strong>bias</strong> – bias tensor.</p></li>
+<li><p><strong>fwork</strong> – array[8*units] working storage.</p></li>
+<li><p><strong>go_backwards</strong> – whether to process input sequences forwards (1) or backwards (0).</p></li>
+<li><p><strong>return_sequences</strong> – whether to return the last output in the output sequence (0), or the full sequence (1).</p></li>
+<li><p><strong>recurrent_activation</strong> – activation function to apply to internal state.</p></li>
+<li><p><strong>output_activation</strong> – activation function to apply to output.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_simpleRNNcell">
+void <code class="sig-name descname">k2c_simpleRNNcell</code><span class="sig-paren">(</span>float *<em>state</em>, <em class="property">const</em> float *<em>input</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>kernel</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>recurrent_kernel</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>bias</em>, float *<em>fwork</em>, k2c_activationType *<em>output_activation</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_simpleRNNcell" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Cell for the RNN layer.
+“units” is the dimension of the output space</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – array[units] recurrent state.</p></li>
+<li><p><strong>input</strong> – array of input data.</p></li>
+<li><p><strong>kernel</strong> – kernel tensor.</p></li>
+<li><p><strong>recurrent_kernel</strong> – recurrent kernel tensor</p></li>
+<li><p><strong>bias</strong> – bias tensor.</p></li>
+<li><p><strong>fwork</strong> – array[2*units] working storage.</p></li>
+<li><p><strong>output_activation</strong> – activation function to apply to output.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_simpleRNN">
+void <code class="sig-name descname">k2c_simpleRNN</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>output</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>input</em>, float *<em>state</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>kernel</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>recurrent_kernel</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>bias</em>, float *<em>fwork</em>, <em class="property">const</em> int <em>go_backwards</em>, <em class="property">const</em> int <em>return_sequences</em>, k2c_activationType *<em>output_activation</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_simpleRNN" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Fully-connected RNN where the output is to be fed back to input.
+“units” is the dimension of the output space</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – output tensor.</p></li>
+<li><p><strong>input</strong> – input tensor.</p></li>
+<li><p><strong>state</strong> – array[units] recurrent state.</p></li>
+<li><p><strong>kernel</strong> – kernel tensor.</p></li>
+<li><p><strong>recurrent_kernel</strong> – recurrent kernel tensor</p></li>
+<li><p><strong>bias</strong> – bias tensor.</p></li>
+<li><p><strong>fwork</strong> – array[2*units] working storage.</p></li>
+<li><p><strong>go_backwards</strong> – whether to process input sequences forwards (1) or backwards (0).</p></li>
+<li><p><strong>return_sequences</strong> – whether to return the last output in the output sequence (0), or the full sequence (1).</p></li>
+<li><p><strong>output_activation</strong> – activation function to apply to output.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_grucell">
+void <code class="sig-name descname">k2c_grucell</code><span class="sig-paren">(</span>float *<em>state</em>, <em class="property">const</em> float *<em>input</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>kernel</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>recurrent_kernel</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>bias</em>, float *<em>fwork</em>, <em class="property">const</em> int <em>reset_after</em>, k2c_activationType *<em>recurrent_activation</em>, k2c_activationType *<em>output_activation</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_grucell" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Cell for the GRU layer.
+“units” is the dimension of the output space</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – array[units] recurrent state.</p></li>
+<li><p><strong>input</strong> – array of input data.</p></li>
+<li><p><strong>kernel</strong> – kernel tensor.</p></li>
+<li><p><strong>recurrent_kernel</strong> – recurrent kernel tensor</p></li>
+<li><p><strong>bias</strong> – bias tensor.</p></li>
+<li><p><strong>fwork</strong> – array[6*units] working storage.</p></li>
+<li><p><strong>reset_after</strong> – whether to apply the reset gate before (0) or after (1) the matrix multiplication.</p></li>
+<li><p><strong>recurrent_activation</strong> – activation function to apply to internal state.</p></li>
+<li><p><strong>output_activation</strong> – activation function to apply to output.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_gru">
+void <code class="sig-name descname">k2c_gru</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>output</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>input</em>, float *<em>state</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>kernel</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>recurrent_kernel</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>bias</em>, float *<em>fwork</em>, <em class="property">const</em> int <em>reset_after</em>, <em class="property">const</em> int <em>go_backwards</em>, <em class="property">const</em> int <em>return_sequences</em>, k2c_activationType *<em>recurrent_activation</em>, k2c_activationType *<em>output_activation</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_gru" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Gated Recurrent Unit.
+“units” is the dimension of the output space</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – output tensor.</p></li>
+<li><p><strong>input</strong> – input tensor.</p></li>
+<li><p><strong>state</strong> – array[units] recurrent state.</p></li>
+<li><p><strong>kernel</strong> – kernel tensor.</p></li>
+<li><p><strong>recurrent_kernel</strong> – recurrent kernel tensor</p></li>
+<li><p><strong>bias</strong> – bias tensor.</p></li>
+<li><p><strong>fwork</strong> – array[6*units] working storage.</p></li>
+<li><p><strong>reset_after</strong> – whether to apply the reset gate before (0) or after (1) the matrix multiplication.</p></li>
+<li><p><strong>go_backwards</strong> – whether to process input sequences forwards (1) or backwards (0).</p></li>
+<li><p><strong>return_sequences</strong> – whether to return the last output in the output sequence (0), or the full sequence (1).</p></li>
+<li><p><strong>recurrent_activation</strong> – activation function to apply to internal state.</p></li>
+<li><p><strong>output_activation</strong> – activation function to apply to output.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="embedding-layers">
+<h2>Embedding Layers<a class="headerlink" href="#embedding-layers" title="Permalink to this headline">¶</a></h2>
+<p>warning: unhandled cursor CursorKind.INCLUSION_DIRECTIVE math.h</p>
+<dl class="c function">
+<dt id="c.k2c_embedding">
+void <code class="sig-name descname">k2c_embedding</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>outputs</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>inputs</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>kernel</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_embedding" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Embedding Layer.
+turns positive integers (indexes) into dense vectors of fixed size. eg. [[4], [20]] -&gt; [[0.25, 0.1], [0.6, -0.2]]</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – output tensor.</p></li>
+<li><p><strong>input</strong> – input tensor.</p></li>
+<li><p><strong>kernel</strong> – kernel mapping integers to vectors.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="merge-layers">
+<h2>Merge Layers<a class="headerlink" href="#merge-layers" title="Permalink to this headline">¶</a></h2>
+<p>warning: unhandled cursor CursorKind.INCLUSION_DIRECTIVE string.h</p>
+<dl class="c function">
+<dt id="c.k2c_add">
+void <code class="sig-name descname">k2c_add</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>output</em>, <em class="property">const</em> int <em>num_tensors</em>, ...<span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_add" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Element-wise sum of several tensors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – output tensor.</p></li>
+<li><p><strong>num_tensors</strong> – number of tensors being summed.</p></li>
+<li><p><strong>...</strong> – variadic. Tensors to be summed.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_subtract">
+void <code class="sig-name descname">k2c_subtract</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>output</em>, <em class="property">const</em> int <em>num_tensors</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>tensor1</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>tensor2</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_subtract" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Element-wise difference of two tensors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – output tensor.</p></li>
+<li><p><strong>num_tensors</strong> – number of tensors being summed. Not used but kept for a consistent API with other merge layers.</p></li>
+<li><p><strong>tensor1</strong> – first input tensor.</p></li>
+<li><p><strong>tensor2</strong> – second input tensor.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_multiply">
+void <code class="sig-name descname">k2c_multiply</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>output</em>, <em class="property">const</em> int <em>num_tensors</em>, ...<span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_multiply" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Element-wise product of several tensors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – output tensor.</p></li>
+<li><p><strong>num_tensors</strong> – number of tensors being multiplied.</p></li>
+<li><p><strong>...</strong> – variadic. Tensors to be multiplied.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_average">
+void <code class="sig-name descname">k2c_average</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>output</em>, <em class="property">const</em> int <em>num_tensors</em>, ...<span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_average" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Element-wise average of several tensors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – output tensor.</p></li>
+<li><p><strong>num_tensors</strong> – number of tensors being averaged.</p></li>
+<li><p><strong>...</strong> – variadic. Tensors to be averaged.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_max">
+void <code class="sig-name descname">k2c_max</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>output</em>, <em class="property">const</em> int <em>num_tensors</em>, ...<span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_max" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Element-wise maximum of several tensors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – output tensor.</p></li>
+<li><p><strong>num_tensors</strong> – number of tensors over which to take max.</p></li>
+<li><p><strong>...</strong> – variadic. Tensors to take the max of.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_min">
+void <code class="sig-name descname">k2c_min</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>output</em>, <em class="property">const</em> int <em>num_tensors</em>, ...<span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_min" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Element-wise minimum of several tensors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – output tensor.</p></li>
+<li><p><strong>num_tensors</strong> – number of tensors over which to take min.</p></li>
+<li><p><strong>...</strong> – variadic. Tensors to take the min of.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_concatenate">
+void <code class="sig-name descname">k2c_concatenate</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>output</em>, <em class="property">const</em> int <em>axis</em>, <em class="property">const</em> int <em>num_tensors</em>, ...<span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_concatenate" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Concatenation of several tensors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – output tensor.</p></li>
+<li><p><strong>axis</strong> – axis along which to concatenate.</p></li>
+<li><p><strong>num_tensors</strong> – number of tensors being concatenated.</p></li>
+<li><p><strong>...</strong> – variadic. Tensors to concatenate.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="normalization-layers">
+<h2>Normalization Layers<a class="headerlink" href="#normalization-layers" title="Permalink to this headline">¶</a></h2>
+<p>warning: unhandled cursor CursorKind.INCLUSION_DIRECTIVE math.h</p>
+<dl class="c function">
+<dt id="c.k2c_batch_norm">
+void <code class="sig-name descname">k2c_batch_norm</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>outputs</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>inputs</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>mean</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>stdev</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>gamma</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>beta</em>, <em class="property">const</em> int <em>axis</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_batch_norm" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Batch normalization layer.
+applies a transformation that maintains the mean activation close to 0 and the activation standard deviation close to 1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>outputs</strong> – output tensor.</p></li>
+<li><p><strong>inputs</strong> – input tensor.</p></li>
+<li><p><strong>mean</strong> – tensor of mean values.</p></li>
+<li><p><strong>stdev</strong> – tensor of standard deviation values.</p></li>
+<li><p><strong>gamma</strong> – tensor of gamma (scale) values.</p></li>
+<li><p><strong>beta</strong> – tensor of beta (offset) values.</p></li>
+<li><p><strong>axis</strong> – axis to be normalized.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="activations">
+<h2>Activations<a class="headerlink" href="#activations" title="Permalink to this headline">¶</a></h2>
+<p>warning: unhandled cursor CursorKind.INCLUSION_DIRECTIVE math.h</p>
+<dl class="c function">
+<dt id="c.k2c_linear_func">
+void <code class="sig-name descname">k2c_linear_func</code><span class="sig-paren">(</span>float *<em>x</em>, <em class="property">const</em> int <em>size</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_linear_func" title="Permalink to this definition">¶</a><br /></dt>
+<dd><dl class="simple">
+<dt>Linear activation function.</dt><dd><p>y=x</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – array of input values. Gets overwritten by output.</p></li>
+<li><p><strong>size</strong> – length of input array.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_exponential_func">
+void <code class="sig-name descname">k2c_exponential_func</code><span class="sig-paren">(</span>float *<em>x</em>, <em class="property">const</em> int <em>size</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_exponential_func" title="Permalink to this definition">¶</a><br /></dt>
+<dd><dl class="simple">
+<dt>Exponential activation function.</dt><dd><p>y = exp(x)</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – array of input values. Gets overwritten by output.</p></li>
+<li><p><strong>size</strong> – length of input array.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_relu_func">
+void <code class="sig-name descname">k2c_relu_func</code><span class="sig-paren">(</span>float *<em>x</em>, <em class="property">const</em> int <em>size</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_relu_func" title="Permalink to this definition">¶</a><br /></dt>
+<dd><dl class="simple">
+<dt>ReLU activation function.</dt><dd><p>y = max(x,0)</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – array of input values. Gets overwritten by output.</p></li>
+<li><p><strong>size</strong> – length of input array.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_hard_sigmoid_func">
+void <code class="sig-name descname">k2c_hard_sigmoid_func</code><span class="sig-paren">(</span>float *<em>x</em>, <em class="property">const</em> int <em>size</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_hard_sigmoid_func" title="Permalink to this definition">¶</a><br /></dt>
+<dd><dl class="simple">
+<dt>ReLU activation function.</dt><dd><dl class="simple">
+<dt>y = {1          if      x&gt; 2.5}</dt><dd><p>{0.2*x+0.5  if -2.5&lt;x&lt; 2.5}
+{0          if      x&lt;-2.5}</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – array of input values. Gets overwritten by output.</p></li>
+<li><p><strong>size</strong> – length of input array.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_tanh_func">
+void <code class="sig-name descname">k2c_tanh_func</code><span class="sig-paren">(</span>float *<em>x</em>, <em class="property">const</em> int <em>size</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_tanh_func" title="Permalink to this definition">¶</a><br /></dt>
+<dd><dl class="simple">
+<dt>Tanh activation function.</dt><dd><p>y = tanh(x)</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – array of input values. Gets overwritten by output.</p></li>
+<li><p><strong>size</strong> – length of input array.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_sigmoid_func">
+void <code class="sig-name descname">k2c_sigmoid_func</code><span class="sig-paren">(</span>float *<em>x</em>, <em class="property">const</em> int <em>size</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_sigmoid_func" title="Permalink to this definition">¶</a><br /></dt>
+<dd><dl class="simple">
+<dt>Sigmoid activation function.</dt><dd><p>y = 1/(1+exp(-x))</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – array of input values. Gets overwritten by output.</p></li>
+<li><p><strong>size</strong> – length of input array.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_softmax_func">
+void <code class="sig-name descname">k2c_softmax_func</code><span class="sig-paren">(</span>float *<em>x</em>, <em class="property">const</em> int <em>size</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_softmax_func" title="Permalink to this definition">¶</a><br /></dt>
+<dd><dl class="simple">
+<dt>Soft max activation function.</dt><dd><p>z[i] = exp(x[i]-max(x))
+y = z/sum(z)</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – array of input values. Gets overwritten by output.</p></li>
+<li><p><strong>size</strong> – length of input array.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_softplus_func">
+void <code class="sig-name descname">k2c_softplus_func</code><span class="sig-paren">(</span>float *<em>x</em>, <em class="property">const</em> int <em>size</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_softplus_func" title="Permalink to this definition">¶</a><br /></dt>
+<dd><dl class="simple">
+<dt>Soft plus activation function.</dt><dd><p>y = ln(1+exp(x))</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – array of input values. Gets overwritten by output.</p></li>
+<li><p><strong>size</strong> – length of input array.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_softsign_func">
+void <code class="sig-name descname">k2c_softsign_func</code><span class="sig-paren">(</span>float *<em>x</em>, <em class="property">const</em> int <em>size</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_softsign_func" title="Permalink to this definition">¶</a><br /></dt>
+<dd><dl class="simple">
+<dt>Soft sign activation function.</dt><dd><p>y = x/(1+|x|)</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – array of input values. Gets overwritten by output.</p></li>
+<li><p><strong>size</strong> – length of input array.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_LeakyReLU">
+void <code class="sig-name descname">k2c_LeakyReLU</code><span class="sig-paren">(</span>float *<em>x</em>, <em class="property">const</em> int <em>size</em>, <em class="property">const</em> float <em>alpha</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_LeakyReLU" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Leaky version of a Rectified Linear Unit.
+It allows a small gradient when the unit is not active:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>y = {alpha*x    if x &lt; 0}</dt><dd><p>{x          if x &gt;= 0}</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – array of input values. Gets overwritten by output.</p></li>
+<li><p><strong>size</strong> – length of input array.</p></li>
+<li><p><strong>alpha</strong> – slope of negative portion of activation curve.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_PReLU">
+void <code class="sig-name descname">k2c_PReLU</code><span class="sig-paren">(</span>float *<em>x</em>, <em class="property">const</em> int <em>size</em>, <em class="property">const</em> float *<em>alpha</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_PReLU" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Parametric Rectified Linear Unit.
+It allows a small gradient when the unit is not active:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>y = {alpha*x    if x &lt; 0}</dt><dd><p>{x          if x &gt;= 0}</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>Where alpha is a learned array with the same shape as x.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – array of input values. Gets overwritten by output.</p></li>
+<li><p><strong>size</strong> – length of input array.</p></li>
+<li><p><strong>alpha</strong> – slope of negative portion of activation curve for each unit.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_ELU">
+void <code class="sig-name descname">k2c_ELU</code><span class="sig-paren">(</span>float *<em>x</em>, <em class="property">const</em> int <em>size</em>, <em class="property">const</em> float <em>alpha</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_ELU" title="Permalink to this definition">¶</a><br /></dt>
+<dd><dl class="simple">
+<dt>Exponential Linear Unit activation (ELU).</dt><dd><dl class="simple">
+<dt>y = {alpha*(exp(x) - 1)  if x &lt;  0}</dt><dd><p>{x                   if x &gt;= 0}</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – array of input values. Gets overwritten by output.</p></li>
+<li><p><strong>size</strong> – length of input array.</p></li>
+<li><p><strong>alpha</strong> – slope of negative portion of activation curve.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_ThresholdedReLU">
+void <code class="sig-name descname">k2c_ThresholdedReLU</code><span class="sig-paren">(</span>float *<em>x</em>, <em class="property">const</em> int <em>size</em>, <em class="property">const</em> float <em>theta</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_ThresholdedReLU" title="Permalink to this definition">¶</a><br /></dt>
+<dd><dl class="simple">
+<dt>Thresholded Rectified Linear Unit.</dt><dd><p>y = {x    if x &gt;  theta}</p>
+</dd>
+</dl>
+<p>{0    if x &lt;= theta}</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – array of input values. Gets overwritten by output.</p></li>
+<li><p><strong>size</strong> – length of input array.</p></li>
+<li><p><strong>theta</strong> – threshold for activation.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_ReLU">
+void <code class="sig-name descname">k2c_ReLU</code><span class="sig-paren">(</span>float *<em>x</em>, <em class="property">const</em> int <em>size</em>, <em class="property">const</em> float <em>max_value</em>, <em class="property">const</em> float <em>alpha</em>, <em class="property">const</em> float <em>theta</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_ReLU" title="Permalink to this definition">¶</a><br /></dt>
+<dd><dl class="simple">
+<dt>Rectified Linear Unit activation function.</dt><dd><dl class="simple">
+<dt>y = {max_value       if          x &gt;= max_value}</dt><dd><p>{x               if theta &lt;= x &lt;  max_value}
+{alpha*(x-theta) if          x &lt; theta}</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – array of input values. Gets overwritten by output.</p></li>
+<li><p><strong>size</strong> – length of input array.</p></li>
+<li><p><strong>max_value</strong> – maximum value for activated x.</p></li>
+<li><p><strong>alpha</strong> – slope of negative portion of activation curve.</p></li>
+<li><p><strong>theta</strong> – threshold for activation.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="data-types">
+<h2>Data Types<a class="headerlink" href="#data-types" title="Permalink to this headline">¶</a></h2>
+<p>warning: unhandled cursor CursorKind.INCLUSION_DIRECTIVE stdlib.h</p>
+<dl class="c macro">
+<dt id="c.K2C_MAX_NDIM">
+<code class="sig-name descname">K2C_MAX_NDIM</code><a class="headerlink" href="#c.K2C_MAX_NDIM" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Rank of largest keras2c tensors.
+mostly used to ensure a standard size for the tensor.shape array.</p>
+</dd></dl>
+
+<dl class="c type">
+<dt>
+<code class="sig-name descname">struct k2c_tensor</code></dt>
+<dd><p>tensor type for keras2c.</p>
+<dl class="c member">
+<dt id="c.PhonyNameDueToError.array">
+float *<code class="sig-name descname">array</code><a class="headerlink" href="#c.PhonyNameDueToError.array" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Pointer to array of tensor values flattened in row major order.</p>
+</dd></dl>
+
+<dl class="c member">
+<dt id="c.PhonyNameDueToError.ndim">
+int <code class="sig-name descname">ndim</code><a class="headerlink" href="#c.PhonyNameDueToError.ndim" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Rank of the tensor (number of dimensions).</p>
+</dd></dl>
+
+<dl class="c member">
+<dt id="c.PhonyNameDueToError.numel">
+int <code class="sig-name descname">numel</code><a class="headerlink" href="#c.PhonyNameDueToError.numel" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Number of elements in the tensor.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="c type">
+<dt id="c.k2c_tensor">
+<em class="property">type </em><code class="sig-name descname">k2c_tensor</code><a class="headerlink" href="#c.k2c_tensor" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Array, size of the tensor in each dimension.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="helper-functions">
+<h2>Helper Functions<a class="headerlink" href="#helper-functions" title="Permalink to this headline">¶</a></h2>
+<p>warning: unhandled cursor CursorKind.INCLUSION_DIRECTIVE math.h</p>
+<dl class="c function">
+<dt id="c.k2c_matmul">
+void <code class="sig-name descname">k2c_matmul</code><span class="sig-paren">(</span>float *<em>C</em>, <em class="property">const</em> float *<em>A</em>, <em class="property">const</em> float *<em>B</em>, <em class="property">const</em> int <em>outrows</em>, <em class="property">const</em> int <em>outcols</em>, <em class="property">const</em> int <em>innerdim</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_matmul" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Just your basic 1d matrix multipication.
+computes C = A*B
+assumes A,B,C are all 1d arrays of matrices stored in row major order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>C</strong> – output array.</p></li>
+<li><p><strong>A</strong> – input array 1.</p></li>
+<li><p><strong>B</strong> – input array 2.</p></li>
+<li><p><strong>outrows</strong> – number of rows of C and A.</p></li>
+<li><p><strong>outcols</strong> – number of cols of C and B.</p></li>
+<li><p><strong>innderdim</strong> – number of cols of A and rows of B</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_affine_matmul">
+void <code class="sig-name descname">k2c_affine_matmul</code><span class="sig-paren">(</span>float *<em>C</em>, <em class="property">const</em> float *<em>A</em>, <em class="property">const</em> float *<em>B</em>, <em class="property">const</em> float *<em>d</em>, <em class="property">const</em> int <em>outrows</em>, <em class="property">const</em> int <em>outcols</em>, <em class="property">const</em> int <em>innerdim</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_affine_matmul" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Affine matrix multiplication.
+computes C = A*B + d, where d is a vector that is added to each
+row of A*B
+assumes A,B,C are all 1d arrays of matrices stored in row major order</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>C</strong> – output array.</p></li>
+<li><p><strong>A</strong> – input array 1.</p></li>
+<li><p><strong>B</strong> – input array 2.</p></li>
+<li><p><strong>d</strong> – input array 3.</p></li>
+<li><p><strong>outrows</strong> – number of rows of C and A.</p></li>
+<li><p><strong>outcols</strong> – number of cols of C, B and d.</p></li>
+<li><p><strong>innderdim</strong> – number of cols of A and rows of B</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_sub2idx">
+int <code class="sig-name descname">k2c_sub2idx</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_sub2idx" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Converts subscripts to linear indices in row major order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sub</strong> – array[ndim] subscript to convert.</p></li>
+<li><p><strong>shape</strong> – array[ndim] shape of array being indexed.</p></li>
+<li><p><strong>ndim</strong> – number of dimensions of array being indexed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>linear index in row major order.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_idx2sub">
+void <code class="sig-name descname">k2c_idx2sub</code><span class="sig-paren">(</span><em class="property">const</em> int <em>idx</em>, int *<em>sub</em>, <em class="property">const</em> int *<em>shape</em>, <em class="property">const</em> int <em>ndim</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_idx2sub" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Converts linear indices to subscripts in row major order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>idx</strong> – linear index in row major order.</p></li>
+<li><p><strong>sub</strong> – array[ndim] output subscript.</p></li>
+<li><p><strong>shape</strong> – array[ndim] shape of array being indexed.</p></li>
+<li><p><strong>ndim</strong> – number of dimensions of array being indexed.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_dot">
+void <code class="sig-name descname">k2c_dot</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>C</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>A</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>B</em>, <em class="property">const</em> int *<em>axesA</em>, <em class="property">const</em> int *<em>axesB</em>, <em class="property">const</em> int <em>naxes</em>, <em class="property">const</em> int <em>normalize</em>, float *<em>fwork</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_dot" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Dot product (tensor contraction) between 2 tensors. C=A*B</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>C</strong> – output tensor.</p></li>
+<li><p><strong>A</strong> – input tensor 1.</p></li>
+<li><p><strong>B</strong> – input tensor 2.</p></li>
+<li><p><strong>axesA</strong> – array[naxes] of axes of A being contracted.</p></li>
+<li><p><strong>axesB</strong> – array[naxes] of axes of B being contracted.</p></li>
+<li><p><strong>naxes</strong> – number of axes being contracted from each input.</p></li>
+<li><p><strong>normalize</strong> – (0,1) whether to L2-normalize samples along the dot product axis before taking the dot product. If set to 1, then the output of the dot product is the cosine proximity between the two samples.</p></li>
+<li><p><strong>fwork</strong> – array of working space, size(fwork) = size(A) + size(B)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_bias_add">
+void <code class="sig-name descname">k2c_bias_add</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>A</em>, <em class="property">const</em> <a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>b</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_bias_add" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Adds bias vector b to tensor A.
+assumes b is a rank 1 tensor that is added to the last dimension of A.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>A</strong> – input tensor. Overwritten with outputs.</p></li>
+<li><p><strong>b</strong> – bias tensor.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_flip">
+void <code class="sig-name descname">k2c_flip</code><span class="sig-paren">(</span><a class="reference internal" href="#c.k2c_tensor" title="k2c_tensor">k2c_tensor</a> *<em>A</em>, <em class="property">const</em> int <em>axis</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_flip" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Flips a tensor along specified axis.
+overwrites input with flipped output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>A</strong> – input tensor. Overwritten with outputs.</p></li>
+<li><p><strong>axis</strong> – axis along which to flip</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="c function">
+<dt id="c.k2c_read_array">
+float *<code class="sig-name descname">k2c_read_array</code><span class="sig-paren">(</span><em class="property">const</em> char *<em>filename</em>, <em class="property">const</em> int <em>array_size</em><span class="sig-paren">)</span><a class="headerlink" href="#c.k2c_read_array" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Reads array from csv file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> – file to read from. Assumed comma separated ascii text.</p></li>
+<li><p><strong>array_size</strong> – how many values to read from the file.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>pointer to allocated array.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="pyapi.html" class="btn btn-neutral float-right" title="Python API Documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="usage.html" class="btn btn-neutral float-left" title="Usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Rory Conlin
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

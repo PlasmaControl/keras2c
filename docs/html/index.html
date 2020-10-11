@@ -1,0 +1,306 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>keras2c &mdash; keras2c 1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="#" class="icon icon-home"> keras2c
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="capi.html">C API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyapi.html">Python API Documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">keras2c</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="#">Docs</a> &raquo;</li>
+        
+      <li>keras2c</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="keras2c">
+<h1>keras2c<a class="headerlink" href="#keras2c" title="Permalink to this headline">¶</a></h1>
+<p><a class="reference external" href="https://travis-ci.org/f0uriest/keras2c"><img alt="Build Status" src="https://travis-ci.org/f0uriest/keras2c.svg?branch=master" /></a> <a class="reference external" href="https://codecov.io/gh/f0uriest/keras2c"><img alt="Code Coverage" src="https://codecov.io/gh/f0uriest/keras2c/branch/master/graph/badge.svg" /></a> <a class="reference external" href="https://www.codacy.com/app/f0uriest/keras2c?utm_source=github.com&amp;amp;utm_medium=referral&amp;amp;utm_content=f0uriest/keras2c&amp;amp;utm_campaign=Badge_Grade"><img alt="Code Quality" src="https://api.codacy.com/project/badge/Grade/ac0b3f7d65a64a1f987463a81d2e1596" /></a></p>
+<p><a class="reference external" href="https://github.com/f0uriest/keras2c/blob/master/LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a></p>
+<p>keras2c is a library for deploying keras neural networks in C99, using only standard libraries.
+It is designed to be as simple as possible for real time applications.</p>
+<div class="section" id="quickstart">
+<h2>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h2>
+<p>After cloning the repo, install the necessary packages with <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-r</span> <span class="pre">requirements.txt</span></code>.</p>
+<p>keras2c can be used from the command line:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python -m keras2c <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-m<span class="o">]</span> <span class="o">[</span>-t<span class="o">]</span> model_path function_name
+
+A library <span class="k">for</span> converting the forward pass <span class="o">(</span>inference<span class="o">)</span> part of a keras model to
+    a C <span class="k">function</span>
+
+positional arguments:
+  model_path         File path to saved keras .h5 model file
+  function_name      What to name the resulting C <span class="k">function</span>
+
+optional arguments:
+  -h, --help         show this <span class="nb">help</span> message and <span class="nb">exit</span>
+  -m, --malloc       Use dynamic memory <span class="k">for</span> large arrays. Weights will be
+                     saved to .csv files that will be loaded at runtime
+  -t , --num_tests   Number of tests to generate. Default is <span class="m">10</span>
+</pre></div>
+</div>
+<p>It can also be used with a python environment in the following manner:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">keras2c</span> <span class="kn">import</span> <span class="n">k2c</span>
+<span class="n">k2c</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">function_name</span><span class="p">,</span> <span class="n">malloc</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">num_tests</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For more information, see <a href="#id1"><span class="problematic" id="id2">`Installation&lt;https://keras2c.readthedocs.io/docs/_build/html/installation.html&gt;`_</span></a> and  <a href="#id3"><span class="problematic" id="id4">`Usage&lt;https://keras2c.readthedocs.io/docs/_build/html/usage.html&gt;`_</span></a></p>
+</div>
+<div class="section" id="supported-layers">
+<h2>Supported Layers<a class="headerlink" href="#supported-layers" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><strong>Core Layers</strong>: Dense, Activation, Dropout, Flatten, Input, Reshape, Permute, RepeatVector,  ActivityRegularization, SpatialDropout1D, SpatialDropout2D, SpatialDropout3D</p></li>
+<li><p><strong>Convolution Layers</strong>: Conv1D, Conv2D, Conv3D, Cropping1D, Cropping2D, Cropping3D, UpSampling1D, UpSampling2D, UpSampling3D, ZeroPadding1D, ZeroPadding2D, ZeroPadding3D</p></li>
+<li><p><strong>Pooling Layers</strong>: MaxPooling1D, MaxPooling2D, AveragePooling1D, AveragePooling2D, GlobalMaxPooling1D, GlobalAveragePooling1D, GlobalMaxPooling2D, GlobalAveragePooling2D, GlobalMaxPooling3D,GlobalAveragePooling3D</p></li>
+<li><p><strong>Recurrent Layers</strong>: SimpleRNN, GRU, LSTM, SimpleRNNCell, GRUCell, LSTMCell</p></li>
+<li><p><strong>Embedding Layers</strong>: Embedding</p></li>
+<li><p><strong>Merge Layers</strong>: Add, Subtract, Multiply, Average, Maximum, Minimum, Concatenate, Dot</p></li>
+<li><p><strong>Advanced Activation Layers</strong>: LeakyReLU, PReLU, ELU, ThresholdedReLU, Softmax, ReLU</p></li>
+<li><p><strong>Normalization Layers</strong>: BatchNormalization</p></li>
+<li><p><strong>Noise Layers</strong>: GaussianNoise, GaussianDropout, AlphaDropout</p></li>
+<li><p><strong>Layer Wrappers</strong>: TimeDistributed, Bidirectional</p></li>
+</ul>
+</div>
+<div class="section" id="todo">
+<h2>ToDo<a class="headerlink" href="#todo" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><strong>Core Layers</strong>: Lambda, Masking</p></li>
+<li><p><strong>Convolution Layers</strong>: SeparableConv1D, SeparableConv2D, DepthwiseConv2D, Conv2DTranspose, Conv3DTranspose</p></li>
+<li><p><strong>Pooling Layers</strong>: MaxPooling3D, AveragePooling3D</p></li>
+<li><p><strong>Locally Connected Layers</strong>: LocallyConnected1D, LocallyConnected2D</p></li>
+<li><p><strong>Recurrent Layers</strong>: ConvLSTM2D, ConvLSTM2DCell</p></li>
+<li><p><strong>Merge Layers</strong>: Broadcasting merge between different sizes</p></li>
+<li><p><strong>Misc</strong>: models made from submodels</p></li>
+</ul>
+</div>
+<div class="section" id="contribute">
+<h2>Contribute<a class="headerlink" href="#contribute" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Documentation: <a class="reference external" href="https://keras2c.readthedocs.io">https://keras2c.readthedocs.io</a></p></li>
+<li><p>Issue Tracker: <a class="reference external" href="https://github.com/f0uriest/keras2c/issues">https://github.com/f0uriest/keras2c/issues</a></p></li>
+<li><p>Source Code: <a class="reference external" href="https://github.com/f0uriest/keras2c/">https://github.com/f0uriest/keras2c/</a></p></li>
+</ul>
+</div>
+<div class="section" id="license">
+<h2>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
+<p>The project is licensed under the MIT license.</p>
+<div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="capi.html">C API Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="capi.html#core-layers">Core Layers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="capi.html#convolutional-layers">Convolutional Layers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="capi.html#pooling-layers">Pooling Layers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="capi.html#recurrent-layers">Recurrent Layers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="capi.html#embedding-layers">Embedding Layers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="capi.html#merge-layers">Merge Layers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="capi.html#normalization-layers">Normalization Layers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="capi.html#activations">Activations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="capi.html#data-types">Data Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="capi.html#helper-functions">Helper Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pyapi.html">Python API Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pyapi.html#main">Main</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyapi.html#writing-layers">Writing Layers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyapi.html#writing-weights">Writing Weights</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyapi.html#check-model">Check Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyapi.html#io-parsing">IO Parsing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyapi.html#test-suite">Test Suite</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Rory Conlin
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

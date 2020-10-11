@@ -1,0 +1,629 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Python API Documentation &mdash; keras2c 1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="C API Documentation" href="capi.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> keras2c
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="capi.html">C API Documentation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Python API Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#main">Main</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#writing-layers">Writing Layers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#writing-weights">Writing Weights</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#check-model">Check Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#io-parsing">IO Parsing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#test-suite">Test Suite</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">keras2c</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Python API Documentation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/pyapi.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="python-api-documentation">
+<h1>Python API Documentation<a class="headerlink" href="#python-api-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="main">
+<h2>Main<a class="headerlink" href="#main" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="keras2c.keras2c_main.k2c">
+<code class="sig-prename descclassname">keras2c.keras2c_main.</code><code class="sig-name descname">k2c</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">function_name</span></em>, <em class="sig-param"><span class="n">malloc</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">num_tests</span><span class="o">=</span><span class="default_value">10</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#keras2c.keras2c_main.k2c" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts keras model to C code and generates test suite</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>keras Model</em><em> or </em><em>str</em>) – model to convert or path to saved .h5 file</p></li>
+<li><p><strong>function_name</strong> (<em>str</em>) – name of main function</p></li>
+<li><p><strong>malloc</strong> (<em>bool</em>) – whether to allocate variables on the stack or heap</p></li>
+<li><p><strong>num_tests</strong> (<em>int</em>) – how many tests to generate in the test suite</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>) – whether to print progress</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – if model is not instance of keras.models.Model</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="keras2c.keras2c_main.model2c">
+<code class="sig-prename descclassname">keras2c.keras2c_main.</code><code class="sig-name descname">model2c</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">function_name</span></em>, <em class="sig-param"><span class="n">malloc</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#keras2c.keras2c_main.model2c" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates C code for model</p>
+<p>Writes main function definition to “function_name.c” and a public header
+with declarations to “function_name.h”</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>keras Model</em>) – model to convert</p></li>
+<li><p><strong>function_name</strong> (<em>str</em>) – name of C function</p></li>
+<li><p><strong>malloc</strong> (<em>bool</em>) – whether to allocate variables on the stack or heap</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>) – whether to print info to stdout</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>malloc_vars (list)</em> – names of variables loaded at runtime and stored on the heap
+stateful (bool): whether the model must maintain state between calls</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="keras2c.keras2c_main.gen_function_reset">
+<code class="sig-prename descclassname">keras2c.keras2c_main.</code><code class="sig-name descname">gen_function_reset</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">function_name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#keras2c.keras2c_main.gen_function_reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a reset function for stateful models</p>
+<p>Reset function is used to clear internal state of the model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>function_name</strong> (<em>str</em>) – name of main function</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>signature (str)</em> – delcaration of the reset function
+function (str): definition of the reset function</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="keras2c.keras2c_main.gen_function_initialize">
+<code class="sig-prename descclassname">keras2c.keras2c_main.</code><code class="sig-name descname">gen_function_initialize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">function_name</span></em>, <em class="sig-param"><span class="n">malloc_vars</span></em><span class="sig-paren">)</span><a class="headerlink" href="#keras2c.keras2c_main.gen_function_initialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes an initialize function</p>
+<p>Initialize function is used to load variables into memory and do other start up tasks</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>function_name</strong> (<em>str</em>) – name of main function</p></li>
+<li><p><strong>malloc_vars</strong> (<em>dict</em>) – variables to read in</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>signature (str)</em> – delcaration of the initialization function
+function (str): definition of the initialization function</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="keras2c.keras2c_main.gen_function_terminate">
+<code class="sig-prename descclassname">keras2c.keras2c_main.</code><code class="sig-name descname">gen_function_terminate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">function_name</span></em>, <em class="sig-param"><span class="n">malloc_vars</span></em><span class="sig-paren">)</span><a class="headerlink" href="#keras2c.keras2c_main.gen_function_terminate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a terminate function</p>
+<p>Terminate function is used to deallocate memory after completion</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>function_name</strong> (<em>str</em>) – name of main function</p></li>
+<li><p><strong>malloc_vars</strong> (<em>dict</em>) – variables to deallocate</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>signature (str)</em> – delcaration of the terminate function
+function (str): definition of the terminate function</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="writing-layers">
+<h2>Writing Layers<a class="headerlink" href="#writing-layers" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="keras2c.layer2c.Layers2C">
+<em class="property">class </em><code class="sig-prename descclassname">keras2c.layer2c.</code><code class="sig-name descname">Layers2C</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">malloc</span></em><span class="sig-paren">)</span><a class="headerlink" href="#keras2c.layer2c.Layers2C" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an object to parse and write layer functions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>keras Model</em>) – model to parse</p></li>
+<li><p><strong>malloc</strong> (<em>bool</em>) – Whether to allocate variables on the heap using malloc.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="keras2c.layer2c.Layers2C.write_layers">
+<code class="sig-name descname">write_layers</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#keras2c.layer2c.Layers2C.write_layers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes layers in the correct graph order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>verbose</strong> (<em>bool</em>) – whether to print progress</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>layers (str)</em> – C code for calling layer functions in correct order</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="writing-weights">
+<h2>Writing Weights<a class="headerlink" href="#writing-weights" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="keras2c.weights2c.Weights2C">
+<em class="property">class </em><code class="sig-prename descclassname">keras2c.weights2c.</code><code class="sig-name descname">Weights2C</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">function_name</span></em>, <em class="sig-param"><span class="n">malloc</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#keras2c.weights2c.Weights2C" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an object to extract and write weights and other model parameters</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>keras Model</em>) – model to parse</p></li>
+<li><p><strong>function_name</strong> (<em>str</em>) – name of the function being generated</p></li>
+<li><p><strong>malloc</strong> (<em>bool</em>) – Whether to allocate variables on the heap using malloc.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="keras2c.weights2c.Weights2C.array2c">
+<em class="property">static </em><code class="sig-name descname">array2c</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">array</span></em>, <em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">malloc</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#keras2c.weights2c.Weights2C.array2c" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates C code for a k2c_tensor array type</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>array</strong> (<em>array-like</em>) – Python array to write</p></li>
+<li><p><strong>name</strong> (<em>str</em>) – name for the C variable</p></li>
+<li><p><strong>malloc</strong> (<em>bool</em>) – whether to allocate on the heap</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>arr (str)</em> – generated code for the array as a k2c_tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="keras2c.weights2c.Weights2C.write_weights">
+<code class="sig-name descname">write_weights</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#keras2c.weights2c.Weights2C.write_weights" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses and generates code for model weights and other parameters</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>verbose</strong> (<em>bool</em>) – whether to print progress</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p><em>(tuple)</em> –</p>
+<p>tuple containing</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><strong>stack_vars</strong> (<em>str</em>): code for variables allocated on the stack</p></li>
+<li><dl class="simple">
+<dt><strong>malloc_vars</strong> (<em>dict</em>): dictionary of name,value pairs for arrays to be</dt><dd><p>allocated on the heap</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>static_vars</strong> (<em>str</em>): code fora C struct containing static variables</dt><dd><p>(eg, states of a stateful RNN)</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="check-model">
+<h2>Check Model<a class="headerlink" href="#check-model" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="keras2c.check_model.is_valid_c_name">
+<code class="sig-prename descclassname">keras2c.check_model.</code><code class="sig-name descname">is_valid_c_name</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#keras2c.check_model.is_valid_c_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if a name is a valid name for a C variable or function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – name to check</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>valid (bool)</em> – ‘True’ if the name is valid, ‘False’ otherwise</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="keras2c.check_model.name_check">
+<code class="sig-prename descclassname">keras2c.check_model.</code><code class="sig-name descname">name_check</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em><span class="sig-paren">)</span><a class="headerlink" href="#keras2c.check_model.name_check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if all layer names in a model are valid C names.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>keras Model</em>) – model to check</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>valid (bool)</em> – ‘True’ if all names are valid, ‘False’ otherwise
+log (str): log of invalid names</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="keras2c.check_model.layers_supported_check">
+<code class="sig-prename descclassname">keras2c.check_model.</code><code class="sig-name descname">layers_supported_check</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em><span class="sig-paren">)</span><a class="headerlink" href="#keras2c.check_model.layers_supported_check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if all layers in the model are supported</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>keras Model</em>) – model to check</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>valid (bool)</em> – ‘True’ if all layers are supported, ‘False’ otherwise
+log (str): log of unsupported layers</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="keras2c.check_model.activation_supported_check">
+<code class="sig-prename descclassname">keras2c.check_model.</code><code class="sig-name descname">activation_supported_check</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em><span class="sig-paren">)</span><a class="headerlink" href="#keras2c.check_model.activation_supported_check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if all activation functions in the model are supported</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>keras Model</em>) – model to check</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>valid (bool)</em> – ‘True’ if all activations are supported, ‘False’ otherwise
+log (str): log of unsupported activation functions</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="keras2c.check_model.config_supported_check">
+<code class="sig-prename descclassname">keras2c.check_model.</code><code class="sig-name descname">config_supported_check</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em><span class="sig-paren">)</span><a class="headerlink" href="#keras2c.check_model.config_supported_check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if all layer features in the model are supported</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>keras Model</em>) – model to check</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>valid (bool)</em> – ‘True’ if all features are supported, ‘False’ otherwise
+log (str): log of unsupported features</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="keras2c.check_model.check_model">
+<code class="sig-prename descclassname">keras2c.check_model.</code><code class="sig-name descname">check_model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">function_name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#keras2c.check_model.check_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if all names are valid and all features are supported</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>keras Model</em>) – model to check</p></li>
+<li><p><strong>function_name</strong> (<em>str</em>) – name of the function being created</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>AssertionError</strong> – If model contains invalid names or unsupported features</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="io-parsing">
+<h2>IO Parsing<a class="headerlink" href="#io-parsing" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="keras2c.io_parsing.layer_type">
+<code class="sig-prename descclassname">keras2c.io_parsing.</code><code class="sig-name descname">layer_type</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">layer</span></em><span class="sig-paren">)</span><a class="headerlink" href="#keras2c.io_parsing.layer_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the type of a layer</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>layer</strong> (<em>keras Layer</em>) – layer you want the type of</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>type (str)</em> – what kind of layer it is. Eg “Dense”, “Conv2D”, “SimpleRNN”</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="keras2c.io_parsing.get_all_io_names">
+<code class="sig-prename descclassname">keras2c.io_parsing.</code><code class="sig-name descname">get_all_io_names</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em><span class="sig-paren">)</span><a class="headerlink" href="#keras2c.io_parsing.get_all_io_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets names of all  node names in the model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>keras Model</em>) – model to parse</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>io (list)</em> – names of all the nodes in the model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="keras2c.io_parsing.get_layer_num_io">
+<code class="sig-prename descclassname">keras2c.io_parsing.</code><code class="sig-name descname">get_layer_num_io</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">layer</span></em><span class="sig-paren">)</span><a class="headerlink" href="#keras2c.io_parsing.get_layer_num_io" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the number of inputs and outputs for a layer</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>layer</strong> (<em>keras Layer</em>) – layer you want to parse</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>num_inputs (int)</em> – number of input nodes to the layer
+num_outputs (int): number of output nodes from the layer</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="keras2c.io_parsing.get_layer_io_names">
+<code class="sig-prename descclassname">keras2c.io_parsing.</code><code class="sig-name descname">get_layer_io_names</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">layer</span></em><span class="sig-paren">)</span><a class="headerlink" href="#keras2c.io_parsing.get_layer_io_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the names of the inputs and outputs of a layer</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>layer</strong> (<em>keras Layer</em>) – layer you want to parse</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>inputs (list)</em> – names of all the input nodes to the layer
+outputs (list): names of all the output nodes from the layer</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="keras2c.io_parsing.get_model_io_names">
+<code class="sig-prename descclassname">keras2c.io_parsing.</code><code class="sig-name descname">get_model_io_names</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em><span class="sig-paren">)</span><a class="headerlink" href="#keras2c.io_parsing.get_model_io_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets names of the input and output nodes of the model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>keras Model</em>) – model to parse</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>inputs (list)</em> – names of all the input nodes
+outputs (list): names of all the output nodes</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="keras2c.io_parsing.flatten">
+<code class="sig-prename descclassname">keras2c.io_parsing.</code><code class="sig-name descname">flatten</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#keras2c.io_parsing.flatten" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flattens a nested list or tuple</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>list</em><em> or </em><em>tuple</em>) – nested list or tuple of lists or tuples to flatten</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>x (list)</em> – flattened input</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="test-suite">
+<h2>Test Suite<a class="headerlink" href="#test-suite" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="keras2c.make_test_suite.make_test_suite">
+<code class="sig-prename descclassname">keras2c.make_test_suite.</code><code class="sig-name descname">make_test_suite</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">function_name</span></em>, <em class="sig-param"><span class="n">malloc_vars</span></em>, <em class="sig-param"><span class="n">num_tests</span><span class="o">=</span><span class="default_value">10</span></em>, <em class="sig-param"><span class="n">stateful</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-05</span></em><span class="sig-paren">)</span><a class="headerlink" href="#keras2c.make_test_suite.make_test_suite" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates code to test the generated C function.</p>
+<p>Generates random inputs to the model, and gets the corresponding predictions for them.
+Writes input/output pairs to a C file, along with code to call the generated C function
+and compare the true outputs with the outputs from the generated code.</p>
+<p>Writes the test function to a file <cite>&lt;function_name&gt;_test_suite.c</cite></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>keras Model</em>) – model being converted to C</p></li>
+<li><p><strong>function_name</strong> (<em>str</em>) – name of the neural net function being generated</p></li>
+<li><p><strong>malloc_vars</strong> (<em>dict</em>) – dictionary of names and values of variables allocated on the heap</p></li>
+<li><p><strong>num_tests</strong> (<em>int</em>) – number of tests to generate</p></li>
+<li><p><strong>stateful</strong> (<em>bool</em>) – whether the model contains layers that maintain state between calls.</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>) – whether to print output</p></li>
+<li><p><strong>tol</strong> (<em>float</em>) – tolerance for passing tests. Tests pass if the maximum error over
+all elements between the true output and generated code output is less than tol.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="capi.html" class="btn btn-neutral float-left" title="C API Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Rory Conlin
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
