@@ -6,15 +6,17 @@ Implements tests for the checks run on the model before conversion
 #!/usr/bin/env python3
 
 import unittest
-import keras
+import tensorflow.keras as keras
 from keras2c import keras2c_main
 import subprocess
 import time
 import numpy as np
+import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
 
 __author__ = "Rory Conlin"
-__copyright__ = "Copyright 2019, Rory Conlin"
-__license__ = "GNU GPLv3"
+__copyright__ = "Copyright 2020, Rory Conlin"
+__license__ = "MIT"
 __maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
 __email__ = "wconlin@princeton.edu"
 

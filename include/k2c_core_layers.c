@@ -1,8 +1,15 @@
+/**
+k2c_core_layers.c
+This file is part of keras2c
+Copyright 2020 Rory Conlin
+Licensed under MIT License
+https://github.com/f0uriest/keras2c
+ */
+
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include "k2c_include.h"
-
 
 /**
  * Dense (fully connected) Layer.
@@ -15,7 +22,7 @@
  * :param fwork: array of working space, size(fwork) = size(input) + size(kernel)
  */
 void k2c_dense(k2c_tensor* output, const k2c_tensor* input, const k2c_tensor* kernel,
-               const k2c_tensor* bias, k2c_activationType *activation, float fwork[]) {
+               const k2c_tensor* bias, k2c_activationType *activation, float * fwork) {
 
     if (input->ndim <=2) {
         size_t outrows;
@@ -74,7 +81,7 @@ void k2c_flatten(k2c_tensor *output, const k2c_tensor* input) {
  * :param newshp: array[newndim] of the desired new shape.
  * :param newndim: number of dimensions after reshaping.
  */
-void k2c_reshape(k2c_tensor *output, const k2c_tensor* input, const size_t newshp[],
+void k2c_reshape(k2c_tensor *output, const k2c_tensor* input, const size_t * newshp,
                  const size_t newndim) {
 
     memcpy(output->array, input->array, input->numel*sizeof(input->array[0]));
@@ -95,7 +102,7 @@ void k2c_reshape(k2c_tensor *output, const k2c_tensor* input, const size_t newsh
  * :param permute: array[ndim] Permutation pattern. Indexing starts at 0. For instance, (1, 0) permutes the first and second dimension of the input.
  */
 void k2c_permute_dims(k2c_tensor* output, const k2c_tensor* input,
-                      const size_t permute[]) {
+                      const size_t * permute) {
 
     size_t Asub[K2C_MAX_NDIM];
     size_t Bsub[K2C_MAX_NDIM];

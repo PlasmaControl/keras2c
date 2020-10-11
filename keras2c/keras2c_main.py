@@ -1,5 +1,9 @@
 """keras2c_main.py
 This file is part of keras2c
+Copyright 2020 Rory Conlin
+Licensed under MIT License
+https://github.com/f0uriest/keras2c
+
 Converts keras model to C code
 """
 
@@ -12,14 +16,14 @@ from keras2c.check_model import check_model
 from keras2c.make_test_suite import make_test_suite
 import numpy as np
 import subprocess
-import keras
+import tensorflow.keras as keras
 import tensorflow as tf
 tf.compat.v1.disable_eager_execution()
 
 
 __author__ = "Rory Conlin"
-__copyright__ = "Copyright 2019, Rory Conlin"
-__license__ = "GNU GPLv3"
+__copyright__ = "Copyright 2020, Rory Conlin"
+__license__ = "MIT"
 __maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
 __email__ = "wconlin@princeton.edu"
 
@@ -187,10 +191,10 @@ def k2c(model, function_name, malloc=False, num_tests=10, verbose=True):
         function_name (str): name of main function
         malloc (bool): whether to allocate variables on the stack or heap
         num_tests (int): how many tests to generate in the test suite
+        verbose (bool): whether to print progress
 
     Raises:
         ValueError: if model is not instance of keras.models.Model 
-            or keras.engine.training.Model
 
     Returns:
         None
@@ -200,8 +204,7 @@ def k2c(model, function_name, malloc=False, num_tests=10, verbose=True):
     filename = function_name + '.c'
     if isinstance(model, str):
         model = keras.models.load_model(model, compile=False)
-    elif not isinstance(model, (keras.models.Model,
-                                keras.engine.training.Model)):
+    elif not isinstance(model, keras.models.Model):
 
         raise ValueError('Unknown model type. Model should ' +
                          'either be an instance of keras.models.Model, ' +

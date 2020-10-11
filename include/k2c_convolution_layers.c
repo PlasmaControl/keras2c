@@ -1,7 +1,17 @@
+/**
+k2c_convolution_layers.c
+This file is part of keras2c
+Copyright 2020 Rory Conlin
+Licensed under MIT License
+https://github.com/f0uriest/keras2c
+ */
+
+
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include "k2c_include.h"
+
 
 /**
  * 1D (temporal) Padding.
@@ -12,7 +22,7 @@
  * :param pad: array[2] of how many rows to pad. Order is {before dim 1, after dim 1}.
  */
 void k2c_pad1d(k2c_tensor* output, const k2c_tensor* input, const float fill,
-               const size_t pad[]) {
+               const size_t * pad) {
 
     const size_t in_width = input->shape[1];
     const size_t pad_top = pad[0];
@@ -44,7 +54,7 @@ void k2c_pad1d(k2c_tensor* output, const k2c_tensor* input, const float fill,
  * :param pad: array[4] of how many rows/cols to pad. Order is {before dim 1, after dim 1, before dim 2, after dim 2}.
  */
 void k2c_pad2d(k2c_tensor* output, const k2c_tensor* input, const float fill,
-               const size_t pad[]) {
+               const size_t * pad) {
 
     const size_t in_height = input->shape[0];
     const size_t in_width = input->shape[1];
@@ -86,7 +96,7 @@ void k2c_pad2d(k2c_tensor* output, const k2c_tensor* input, const float fill,
  * :param pad: array[6] of how many rows/cols to pad. Order is {before dim 1, after dim 1, before dim 2, after dim 2, before dim 3, after dim 3}.
  */
 void k2c_pad3d(k2c_tensor* output, const k2c_tensor* input, const float fill,
-               const size_t pad[]) {
+               const size_t * pad) {
 
     const size_t dim1 = input->shape[0];
     const size_t dim2 = input->shape[1];
@@ -176,7 +186,7 @@ void k2c_conv1d(k2c_tensor* output, const k2c_tensor* input, const k2c_tensor* k
  * :param activation: activation function to apply to output.
  */
 void k2c_conv2d(k2c_tensor* output, const k2c_tensor* input, const k2c_tensor* kernel,
-                const k2c_tensor* bias, const size_t stride[], const size_t dilation[],
+                const k2c_tensor* bias, const size_t * stride, const size_t * dilation,
                 k2c_activationType *activation) {
 
     memset(output->array,0,output->numel*sizeof(output->array[0]));
@@ -224,7 +234,7 @@ void k2c_conv2d(k2c_tensor* output, const k2c_tensor* input, const k2c_tensor* k
  * :param activation: activation function to apply to output.
  */
 void k2c_conv3d(k2c_tensor* output, const k2c_tensor* input, const k2c_tensor* kernel,
-                const k2c_tensor* bias, const size_t stride[], const size_t dilation[],
+                const k2c_tensor* bias, const size_t * stride, const size_t * dilation,
                 k2c_activationType *activation) {
 
     memset(output->array,0,output->numel*sizeof(output->array[0]));
@@ -278,7 +288,7 @@ void k2c_conv3d(k2c_tensor* output, const k2c_tensor* input, const k2c_tensor* k
  * :param input: tensor to crop.
  * :param pad: array[2] of how many rows to crop. Order is {before dim 1, after dim 1}.
  */
-void k2c_crop1d(k2c_tensor* output, const k2c_tensor* input, const size_t crop[]) {
+void k2c_crop1d(k2c_tensor* output, const k2c_tensor* input, const size_t * crop) {
 
     const size_t offset = crop[0]*input->shape[1];
     memcpy(&output->array[0],&input->array[offset],
@@ -293,7 +303,7 @@ void k2c_crop1d(k2c_tensor* output, const k2c_tensor* input, const size_t crop[]
  * :param input: tensor to crop.
  * :param pad: array[4] of how many rows/cols to crop. Order is {before dim 1, after dim 1, before dim 2, after dim 2}.
  */
-void k2c_crop2d(k2c_tensor* output, const k2c_tensor* input, const size_t crop[]) {
+void k2c_crop2d(k2c_tensor* output, const k2c_tensor* input, const size_t * crop) {
 
     const size_t out_height = output->shape[0];
     const size_t in_width = input->shape[1];
@@ -318,7 +328,7 @@ void k2c_crop2d(k2c_tensor* output, const k2c_tensor* input, const size_t crop[]
  * :param input: tensor to crop.
  * :param pad: array[6] of how many rows/cols to crop. Order is {before dim 1, after dim 1, before dim 2, after dim 2, before dim 3, after dim 3}.
  */
-void k2c_crop3d(k2c_tensor* output, const k2c_tensor* input, const size_t crop[]) {
+void k2c_crop3d(k2c_tensor* output, const k2c_tensor* input, const size_t * crop) {
 
     const size_t dim1 = input->shape[0];
     const size_t dim2 = input->shape[1];
@@ -377,7 +387,7 @@ void k2c_upsampling1d(k2c_tensor* output, const k2c_tensor* input, const size_t 
  * :param input: input tensor.
  * :param size: array[2] of upsampling factors. Order is {upsampling dim 1, upsampling dim 2}.
  */
-void k2c_upsampling2d(k2c_tensor* output, const k2c_tensor* input, const size_t size[]) {
+void k2c_upsampling2d(k2c_tensor* output, const k2c_tensor* input, const size_t * size) {
 
     const size_t out_height = output->shape[0];
     const size_t out_width = output->shape[1];
@@ -403,7 +413,7 @@ void k2c_upsampling2d(k2c_tensor* output, const k2c_tensor* input, const size_t 
  * :param input: input tensor.
  * :param size: array[3] of upsampling factors. Order is {upsampling dim 1, upsampling dim 2, upsampling dim 3}.
  */
-void k2c_upsampling3d(k2c_tensor* output, const k2c_tensor* input, const size_t size[]) {
+void k2c_upsampling3d(k2c_tensor* output, const k2c_tensor* input, const size_t * size) {
 
     const size_t dim1 = output->shape[0];
     const size_t dim2 = output->shape[1];

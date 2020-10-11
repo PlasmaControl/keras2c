@@ -1,5 +1,9 @@
 """__main__.py
 This file is part of keras2c
+Copyright 2020 Rory Conlin
+Licensed under MIT License
+https://github.com/f0uriest/keras2c
+
 Runs keras2c
 """
 import argparse
@@ -8,8 +12,8 @@ from keras2c.keras2c_main import k2c
 
 
 __author__ = "Rory Conlin"
-__copyright__ = "Copyright 2019, Rory Conlin"
-__license__ = "GNU GPLv3"
+__copyright__ = "Copyright 2020, Rory Conlin"
+__license__ = "MIT"
 __maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
 __email__ = "wconlin@princeton.edu"
 

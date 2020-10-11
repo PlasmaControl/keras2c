@@ -1,3 +1,11 @@
+/**
+k2c_helper_functions.c
+This file is part of keras2c
+Copyright 2020 Rory Conlin
+Licensed under MIT License
+https://github.com/f0uriest/keras2c
+ */
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,7 +25,7 @@
  * :param outcols: number of cols of C and B.
  * :param innderdim: number of cols of A and rows of B
  */
-void k2c_matmul(float C[], const float A[], const float B[], const size_t outrows,
+void k2c_matmul(float * C, const float * A, const float * B, const size_t outrows,
                 const size_t outcols, const size_t innerdim) {
 
     // make sure output is empty
@@ -45,11 +53,11 @@ void k2c_matmul(float C[], const float A[], const float B[], const size_t outrow
  * :param A: input array 1.
  * :param B: input array 2.
  * :param d: input array 3.
- * :param outrows: number of rows of C, A and d.
- * :param outcols: number of cols of C and B.
+ * :param outrows: number of rows of C and A.
+ * :param outcols: number of cols of C, B and d.
  * :param innderdim: number of cols of A and rows of B
  */
-void k2c_affine_matmul(float C[], const float A[], const float B[], const float d[],
+void k2c_affine_matmul(float * C, const float * A, const float * B, const float * d,
                        const size_t outrows,const size_t outcols, const size_t innerdim) {
 
     // make sure output is empty
@@ -76,7 +84,7 @@ void k2c_affine_matmul(float C[], const float A[], const float B[], const float 
  * :param ndim: number of dimensions of array being indexed.
  * :return: linear index in row major order.
  */
-size_t k2c_sub2idx(const size_t sub[], const size_t shape[], const size_t ndim) {
+size_t k2c_sub2idx(const size_t * sub, const size_t * shape, const size_t ndim) {
 
     size_t idx = 0;
     size_t temp = 0;
@@ -99,7 +107,7 @@ size_t k2c_sub2idx(const size_t sub[], const size_t shape[], const size_t ndim) 
  * :param shape: array[ndim] shape of array being indexed.
  * :param ndim: number of dimensions of array being indexed.
  */
-void k2c_idx2sub(const size_t idx, size_t sub[], const size_t shape[], const size_t ndim) {
+void k2c_idx2sub(const size_t idx, size_t * sub, const size_t * shape, const size_t ndim) {
 
     size_t idx2 = idx;
     for (int i=ndim-1; i>=0; --i) {
@@ -121,8 +129,8 @@ void k2c_idx2sub(const size_t idx, size_t sub[], const size_t shape[], const siz
  * :param normalize: (0,1) whether to L2-normalize samples along the dot product axis before taking the dot product. If set to 1, then the output of the dot product is the cosine proximity between the two samples.
  * :param fwork: array of working space, size(fwork) = size(A) + size(B)
  */
-void k2c_dot(k2c_tensor* C, const k2c_tensor* A, const k2c_tensor* B, const size_t axesA[],
-             const size_t axesB[], const size_t naxes, const int normalize, float fwork[]) {
+void k2c_dot(k2c_tensor* C, const k2c_tensor* A, const k2c_tensor* B, const size_t * axesA,
+             const size_t * axesB, const size_t naxes, const int normalize, float * fwork) {
 
     size_t permA[K2C_MAX_NDIM];
     size_t permB[K2C_MAX_NDIM];

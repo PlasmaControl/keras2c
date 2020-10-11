@@ -1,11 +1,15 @@
 """io_parsing.py
 This file is part of keras2c
+Copyright 2020 Rory Conlin
+Licensed under MIT License
+https://github.com/f0uriest/keras2c
+
 Helper functions to get input and output names for each layer etc.
 """
 
 __author__ = "Rory Conlin"
-__copyright__ = "Copyright 2019, Rory Conlin"
-__license__ = "GNU GPLv3"
+__copyright__ = "Copyright 2020, Rory Conlin"
+__license__ = "MIT"
 __maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
 __email__ = "wconlin@princeton.edu"
 
@@ -108,7 +112,11 @@ def get_layer_io_names(layer):
                 temp_list.append(name)
             outputs.insert(i, temp_list)
         else:
-            name = layer.get_output_at(i).name.split(':')[0].split('/')[0]
+            name = layer.get_output_at(i).name
+            if 'bidirectional' in name.lower():
+                name = name.split('/')[-2]
+            else:
+                name = name.split('/')[0]
             outputs.insert(i, name)
 
     return inputs, outputs

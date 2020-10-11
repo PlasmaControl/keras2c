@@ -5,18 +5,20 @@ Implements tests for layer wrappers
 
 #!/usr/bin/env python3
 
-import unittest
-import keras
-from keras2c import keras2c_main
-import subprocess
-import time
-import os
-import numpy as np
 from test_core_layers import build_and_run
+import numpy as np
+import os
+import time
+import subprocess
+from keras2c import keras2c_main
+import unittest
+import tensorflow.keras as keras
+from tensorflow.python.framework.ops import disable_eager_execution
+disable_eager_execution()
 
 __author__ = "Rory Conlin"
-__copyright__ = "Copyright 2019, Rory Conlin"
-__license__ = "GNU GPLv3"
+__copyright__ = "Copyright 2020, Rory Conlin"
+__license__ = "MIT"
 __maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
 __email__ = "wconlin@princeton.edu"
 
@@ -52,10 +54,12 @@ class TestWrappers(unittest.TestCase):
         self.assertEqual(rcode, 0)
 
     def test_TimeDistributed1(self):
-        model = keras.models.Sequential()
-        model.add(keras.layers.TimeDistributed(
-            keras.layers.Dense(7, use_bias=True), input_shape=(8, 5)))
-        model.build()
+
+        inputs = keras.layers.Input(shape=(8, 5))
+        outputs = keras.layers.TimeDistributed(
+            keras.layers.Dense(7, use_bias=True,))(inputs)
+        model = keras.models.Model(inputs, outputs)
+        model.build((None, 8, 5))
         name = 'test___TimeDistributed1' + str(int(time.time()))
         keras2c_main.k2c(model, name)
         rcode = build_and_run(name)

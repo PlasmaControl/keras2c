@@ -1,5 +1,9 @@
 """check_model.py
 This file is part of keras2c
+Copyright 2020 Rory Conlin
+Licensed under MIT License
+https://github.com/f0uriest/keras2c
+
 Checks a model before conversion to flag unsupported features
 """
 
@@ -12,8 +16,8 @@ import tensorflow as tf
 tf.compat.v1.disable_eager_execution()
 
 __author__ = "Rory Conlin"
-__copyright__ = "Copyright 2019, Rory Conlin"
-__license__ = "GNU GPLv3"
+__copyright__ = "Copyright 2020, Rory Conlin"
+__license__ = "MIT"
 __maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
 __email__ = "wconlin@princeton.edu"
 
@@ -74,8 +78,8 @@ def layers_supported_check(model):
             flag, templog = check_layer(layer.layer)
             valid = valid and flag
             log += templog
-        if not hasattr(Weights2C, 'write_weights_' + layer_type(layer)) \
-           or not hasattr(Layers2C, 'write_layer_' + layer_type(layer)):
+        if not hasattr(Weights2C, '_write_weights_' + layer_type(layer)) \
+           or not hasattr(Layers2C, '_write_layer_' + layer_type(layer)):
             valid = False
             log += layer_type(layer) + "' is not supported at this time. \n"
         return valid, log

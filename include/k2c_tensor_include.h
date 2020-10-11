@@ -1,3 +1,11 @@
+/**
+k2c_tensor_include.c
+This file is part of keras2c
+Copyright 2020 Rory Conlin
+Licensed under MIT License
+https://github.com/f0uriest/keras2c
+ */
+
 #pragma once
 #include <stdlib.h>
 
@@ -14,8 +22,8 @@
  */
 struct k2c_tensor
 {
-    /** Pointer to array of tensor values. */
-    float *array;
+    /** Pointer to array of tensor values flattened in row major order. */
+    float * array;
 
     /** Rank of the tensor (number of dimensions). */
     size_t ndim;

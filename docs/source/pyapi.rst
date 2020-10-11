@@ -6,9 +6,9 @@ Main
 ****
 .. autofunction:: keras2c.keras2c_main.k2c
 .. autofunction:: keras2c.keras2c_main.model2c
-.. autofunction:: keras2c.keras2c_main.write_function_reset
-.. autofunction:: keras2c.keras2c_main.write_function_initialize
-.. autofunction:: keras2c.keras2c_main.write_function_terminate
+.. autofunction:: keras2c.keras2c_main.gen_function_reset
+.. autofunction:: keras2c.keras2c_main.gen_function_initialize
+.. autofunction:: keras2c.keras2c_main.gen_function_terminate
 
 
 Writing Layers

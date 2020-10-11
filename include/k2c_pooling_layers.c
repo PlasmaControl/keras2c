@@ -1,3 +1,12 @@
+/**
+k2c_pooling_layers.c
+This file is part of keras2c
+Copyright 2020 Rory Conlin
+Licensed under MIT License
+https://github.com/f0uriest/keras2c
+ */
+
+
 #include <math.h>
 #include <string.h>
 #include "k2c_include.h"
@@ -81,8 +90,8 @@ void k2c_maxpool1d(k2c_tensor* output, const k2c_tensor* input, const size_t poo
  * :param pool_size: array[2] size of the max pooling window. Order is {pool size dim 1, pool size dim 2}.
  * :param stride: array[2] factor by which to downscale. Order is {stride dim 1, stride dim 2}.
  */
-void k2c_maxpool2d(k2c_tensor* output, const k2c_tensor* input, const size_t pool_size[],
-                   const size_t stride[]) {
+void k2c_maxpool2d(k2c_tensor* output, const k2c_tensor* input, const size_t * pool_size,
+                   const size_t * stride) {
 
 
     const size_t channels = input->shape[2];
@@ -144,8 +153,8 @@ void k2c_avgpool1d(k2c_tensor* output, const k2c_tensor* input, const size_t poo
  * :param pool_size: array[2] size of the average pooling window. Order is {pool size dim 1, pool size dim 2}.
  * :param stride: array[2] factor by which to downscale. Order is {stride dim 1, stride dim 2}.
  */
-void k2c_avgpool2d(k2c_tensor* output, const k2c_tensor* input, const size_t pool_size[],
-                   const size_t stride[]) {
+void k2c_avgpool2d(k2c_tensor* output, const k2c_tensor* input, const size_t * pool_size,
+                   const size_t * stride) {
     memset(output->array,0,output->numel*sizeof(output->array[0]));
     const size_t channels = input->shape[2];
     // i,j,l output indices

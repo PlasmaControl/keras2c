@@ -1,3 +1,11 @@
+/**
+k2c_normalization_layers.c
+This file is part of keras2c
+Copyright 2020 Rory Conlin
+Licensed under MIT License
+https://github.com/f0uriest/keras2c
+ */
+
 #include <math.h>
 #include <stdio.h>
 #include <string.h>

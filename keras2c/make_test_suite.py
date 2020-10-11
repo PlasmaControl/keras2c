@@ -1,6 +1,10 @@
 """make_test_suite.py
 This file is part of keras2c
-Converts keras model to C code
+Copyright 2020 Rory Conlin
+Licensed under MIT License
+https://github.com/f0uriest/keras2c
+
+Generates automatic test suite for converted code
 """
 
 # imports
@@ -12,13 +16,35 @@ import subprocess
 tf.compat.v1.disable_eager_execution()
 
 __author__ = "Rory Conlin"
-__copyright__ = "Copyright 2019, Rory Conlin"
-__license__ = "GNU GPLv3"
+__copyright__ = "Copyright 2020, Rory Conlin"
+__license__ = "MIT"
 __maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
 __email__ = "wconlin@princeton.edu"
 
 
 def make_test_suite(model, function_name, malloc_vars, num_tests=10, stateful=False, verbose=True, tol=1e-5):
+    """Generates code to test the generated C function.
+
+    Generates random inputs to the model, and gets the corresponding predictions for them.
+    Writes input/output pairs to a C file, along with code to call the generated C function
+    and compare the true outputs with the outputs from the generated code.
+
+    Writes the test function to a file `<function_name>_test_suite.c`
+
+    Args:
+        model (keras Model): model being converted to C
+        function_name (str): name of the neural net function being generated
+        malloc_vars (dict): dictionary of names and values of variables allocated on the heap
+        num_tests (int): number of tests to generate
+        stateful (bool): whether the model contains layers that maintain state between calls.
+        verbose (bool): whether to print output
+        tol (float): tolerance for passing tests. Tests pass if the maximum error over
+            all elements between the true output and generated code output is less than tol.
+
+    Returns:
+        None
+    """
+
     if verbose:
         print('Writing tests')
     input_shape = []
@@ -27,8 +53,14 @@ def make_test_suite(model, function_name, malloc_vars, num_tests=10, stateful=Fa
     num_inputs = len(model_inputs)
     num_outputs = len(model_outputs)
     for i in range(num_inputs):
-        input_shape.insert(
-            i, model.inputs[i].shape[:] if stateful else model.inputs[i].shape[1:])
+        temp_input_shape = np.array(model.inputs[i].shape)
+        temp_input_shape = np.where(
+            temp_input_shape == None, 1, temp_input_shape)
+        if stateful:
+            temp_input_shape = temp_input_shape[:]
+        else:
+            temp_input_shape = temp_input_shape[1:]
+        input_shape.insert(i, temp_input_shape)
   #  for i in range(num_outputs):
   #      output_shape.insert(i, model.outputs[i].shape[1:])
 

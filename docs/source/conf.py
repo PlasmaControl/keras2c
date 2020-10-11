@@ -20,13 +20,13 @@ sys.path.append('../../keras2c')
 # -- Project information -----------------------------------------------------
 
 project = 'keras2c'
-copyright = '2019, Rory Conlin'
+copyright = '2020, Rory Conlin'
 author = 'Rory Conlin'
 
 # The short X.Y version
-version = ''
+version = '1.0'
 # The full version, including alpha/beta/rc tags
-release = 'v0.5'
+release = 'v1.0'
 
 
 # -- General configuration ---------------------------------------------------

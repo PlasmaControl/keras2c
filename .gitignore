@@ -13,5 +13,5 @@ __pycache__/
 *.gcda
 *.gcno
 test___*
-docs/build/*
+docs/_build/*
 local/*
