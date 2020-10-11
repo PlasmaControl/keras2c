@@ -57,7 +57,7 @@ The project is licensed under the MIT license.
 .. |Codacy|  image:: https://api.codacy.com/project/badge/Grade/ac0b3f7d65a64a1f987463a81d2e1596
     :target: https://www.codacy.com/app/f0uriest/keras2c?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=f0uriest/keras2c&amp;utm_campaign=Badge_Grade  
     :alt: Code Quality
-.. |License| image:: https://img.shields.io/badge/License-GPLv3-blue.svg
+.. |License| image:: https://img.shields.io/badge/License-MIT-blue.svg
     :target: https://github.com/f0uriest/keras2c/blob/master/LICENSE
-    :alt: License: GNU GPLv3
+    :alt: License: MIT
 
