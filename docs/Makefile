@@ -21,4 +21,4 @@ help:
 %: Makefile
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 	rm -rf _modules/ _sources/ _static/
-	mv build/html/* ./
+	mv _build/html/* ./
