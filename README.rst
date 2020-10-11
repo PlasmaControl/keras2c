@@ -10,6 +10,40 @@ keras2c
 keras2c is a library for deploying keras neural networks in C99, using only standard libraries.
 It is designed to be as simple as possible for real time applications.
 
+Quickstart
+**********
+
+After cloning the repo, install the necessary packages with ``pip install -r requirements.txt``.
+
+keras2c can be used from the command line:
+
+.. code-block:: bash
+
+    python -m keras2c [-h] [-m] [-t] model_path function_name
+
+    A library for converting the forward pass (inference) part of a keras model to
+        a C function
+
+    positional arguments:
+      model_path         File path to saved keras .h5 model file
+      function_name      What to name the resulting C function
+     
+    optional arguments:
+      -h, --help         show this help message and exit
+      -m, --malloc       Use dynamic memory for large arrays. Weights will be
+                         saved to .csv files that will be loaded at runtime
+      -t , --num_tests   Number of tests to generate. Default is 10
+
+
+It can also be used with a python environment in the following manner:
+
+.. code-block:: python
+
+    from keras2c import k2c
+    k2c(model, function_name, malloc=False, num_tests=10, verbose=True)
+
+For more information, see `Installation<https://keras2c.readthedocs.io/docs/_build/html/installation.html>`_ and  `Usage<https://keras2c.readthedocs.io/docs/_build/html/usage.html>`_
+
 
 Supported Layers
 ****************
@@ -39,6 +73,7 @@ ToDo
 Contribute
 **********
 
+- Documentation: `<https://keras2c.readthedocs.io>`_
 - Issue Tracker: `<https://github.com/f0uriest/keras2c/issues>`_
 - Source Code: `<https://github.com/f0uriest/keras2c/>`_
   
