@@ -4,7 +4,7 @@ keras2c
 
 |Build-Status| |Codecov| |Codacy|
 
-|License|
+|License| |DOI|
 
 
 keras2c is a library for deploying keras neural networks in C99, using only standard libraries.
@@ -95,4 +95,7 @@ The project is licensed under the MIT license.
 .. |License| image:: https://img.shields.io/badge/License-MIT-blue.svg
     :target: https://github.com/f0uriest/keras2c/blob/master/LICENSE
     :alt: License: MIT
+ .. |DOI| .. image:: https://zenodo.org/badge/193152058.svg
+    :target: https://zenodo.org/badge/latestdoi/193152058
+    :alt: Please Cite Keras2c!
 
