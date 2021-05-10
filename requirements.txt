@@ -2,5 +2,5 @@
 --index-url https://pypi.python.org/simple/
 
 numpy >= 1.13.0
-tensorflow >= 1.13
+tensorflow >= 2.0
 
