@@ -94,9 +94,11 @@ def model2c(model, function_name, malloc=False, verbose=True):
         header.write(term_sig + '; \n')
         if stateful:
             header.write(reset_sig + '; \n')
-    if not subprocess.run(['astyle', '--version']).returncode:
+    try:
         subprocess.run(['astyle', '-n', function_name + '.h'])
         subprocess.run(['astyle', '-n', function_name + '.c'])
+    except FileNotFoundError:
+        print("astyle not found, {} and {} will not be auto-formatted".format(function_name + ".h", function_name + ".c"))
 
     return malloc_vars.keys(), stateful
 

@@ -2,7 +2,7 @@
 keras2c
 #######
 
-|Build-Status| |Codecov| |Codacy|
+|Build-Status| |Codecov|
 
 |License| |DOI|
 
@@ -89,9 +89,6 @@ The project is licensed under the MIT license.
 .. |Codecov| image:: https://codecov.io/gh/f0uriest/keras2c/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/f0uriest/keras2c
     :alt: Code Coverage
-.. |Codacy|  image:: https://api.codacy.com/project/badge/Grade/ac0b3f7d65a64a1f987463a81d2e1596
-    :target: https://www.codacy.com/app/f0uriest/keras2c?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=f0uriest/keras2c&amp;utm_campaign=Badge_Grade  
-    :alt: Code Quality
 .. |License| image:: https://img.shields.io/badge/License-MIT-blue.svg
     :target: https://github.com/f0uriest/keras2c/blob/master/LICENSE
     :alt: License: MIT
