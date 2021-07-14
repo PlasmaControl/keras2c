@@ -174,5 +174,7 @@ def make_test_suite(model, function_name, malloc_vars, num_tests=10, stateful=Fa
     return x;}\n\n"""
     file.write(s)
     file.close()
-    if not subprocess.run(['astyle', '--version']).returncode:
+    try:
         subprocess.run(['astyle', '-n', function_name + '_test_suite.c'])
+    except FileNotFoundError:
+        print("astyle not found, {} will not be auto-formatted".format(function_name + "_test_suite.c"))
