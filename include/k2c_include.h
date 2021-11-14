@@ -23,15 +23,15 @@ void k2c_softmax_func(float * x, const size_t size);
 void k2c_softplus_func(float * x, const size_t size);
 void k2c_softsign_func(float * x, const size_t size);
 typedef void k2c_activationType(float * x, const size_t size);
-k2c_activationType * k2c_linear;
-k2c_activationType * k2c_exponential;
-k2c_activationType * k2c_relu;
-k2c_activationType * k2c_hard_sigmoid;
-k2c_activationType * k2c_tanh;
-k2c_activationType * k2c_sigmoid;
-k2c_activationType * k2c_softmax;
-k2c_activationType * k2c_softplus;
-k2c_activationType * k2c_softsign;
+extern k2c_activationType * k2c_linear;
+extern k2c_activationType * k2c_exponential;
+extern k2c_activationType * k2c_relu;
+extern k2c_activationType * k2c_hard_sigmoid;
+extern k2c_activationType * k2c_tanh;
+extern k2c_activationType * k2c_sigmoid;
+extern k2c_activationType * k2c_softmax;
+extern k2c_activationType * k2c_softplus;
+extern k2c_activationType * k2c_softsign;
 
 // Advanced Activations
 void k2c_LeakyReLU(float * x, const size_t size, const float alpha);
