@@ -383,7 +383,7 @@ void k2c_gru(k2c_tensor* output, const k2c_tensor* input, float * state,
         }
     }
     else {
-        for (int i=0; i<in_height; ++i) {
+        for (size_t i=0; i<in_height; ++i) {
             k2c_grucell(state, &input->array[i*in_width], kernel, recurrent_kernel, bias,
                         fwork, reset_after, recurrent_activation, output_activation);
             if (return_sequences) {

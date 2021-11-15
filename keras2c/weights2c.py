@@ -80,9 +80,9 @@ class Weights2C():
                     elif temp[i] == -np.inf:
                         s += "-HUGE_VALF,"
                     else:
-                        s += "{:+.8e}".format(temp[i]) + ','
+                        s += "{:+.8e}f".format(temp[i]) + ','
                     count += 1
-                    if (count) % 5 is 0:
+                    if (count) % 5 == 0:
                         s += '\n'
                 s += '}; \n'
             s += 'k2c_tensor ' + name + ' = {&' + name + \

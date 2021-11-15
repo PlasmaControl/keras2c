@@ -138,7 +138,7 @@ def make_test_suite(model, function_name, malloc_vars, num_tests=10, stateful=Fa
     file.write('\n')
     s = 'clock_t t1 = clock(); \n'
     s += 'printf("Average time over ' + str(num_tests) + \
-        ' tests: %e s \\n\", \n (double)(t1-t0)/(double)CLOCKS_PER_SEC/(double)' + \
+        ' tests: %e s \\n\", \n ((double)t1-t0)/(double)CLOCKS_PER_SEC/(double)' + \
         str(num_tests) + '); \n'
     file.write(s)
 

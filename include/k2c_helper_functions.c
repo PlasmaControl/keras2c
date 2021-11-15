@@ -330,6 +330,10 @@ void k2c_flip(k2c_tensor *A, const size_t axis) {
  */
 float* k2c_read_array(const char* filename, const size_t array_size) {
     float* ptr = (float*) malloc(array_size * sizeof(float));
+    if (!ptr) {
+        printf("cannot allocate memory %s \n", filename);
+        exit(-1);
+    }
     size_t ctr = 0;
     FILE *finp;
     int foo;
