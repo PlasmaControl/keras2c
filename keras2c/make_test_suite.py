@@ -73,8 +73,6 @@ def make_test_suite(model, function_name, malloc_vars, num_tests=10, stateful=Fa
     s += 'float maxabs(k2c_tensor *tensor1, k2c_tensor *tensor2);\n'
     s += 'struct timeval GetTimeStamp(); \n \n'
     file.write(s)
-    s = 'int main(){\n'
-    file.write(s)
     for i in range(num_tests):
         if i == num_tests//2 and stateful:
             model.reset_states()
@@ -109,6 +107,9 @@ def make_test_suite(model, function_name, malloc_vars, num_tests=10, stateful=Fa
                                          model_outputs[j] + '_test' + str(i+1)))
             file.write(Weights2C.array2c(np.zeros(output.shape), 'c_' +
                                          model_outputs[j] + '_test' + str(i+1)))
+    s = 'int main(){\n'
+    file.write(s)
+    
     s = ' float errors[' + str(num_tests*num_outputs) + '];\n'
     s += ' size_t num_tests = ' + str(num_tests) + '; \n'
     s += 'size_t num_outputs = ' + str(num_outputs) + '; \n'
@@ -138,7 +139,7 @@ def make_test_suite(model, function_name, malloc_vars, num_tests=10, stateful=Fa
     file.write('\n')
     s = 'clock_t t1 = clock(); \n'
     s += 'printf("Average time over ' + str(num_tests) + \
-        ' tests: %e s \\n\", \n (double)(t1-t0)/(double)CLOCKS_PER_SEC/(double)' + \
+        ' tests: %e s \\n\", \n ((double)t1-t0)/(double)CLOCKS_PER_SEC/(double)' + \
         str(num_tests) + '); \n'
     file.write(s)
 
@@ -169,7 +170,7 @@ def make_test_suite(model, function_name, malloc_vars, num_tests=10, stateful=Fa
     float x = 0; \n
     float y = 0; \n
     for(size_t i=0; i<tensor1->numel; i++){\n
-    y = fabs(tensor1->array[i]-tensor2->array[i]);
+    y = fabsf(tensor1->array[i]-tensor2->array[i]);
     if (y>x) {x=y;}}
     return x;}\n\n"""
     file.write(s)

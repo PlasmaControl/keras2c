@@ -35,7 +35,7 @@ k2c_activationType * k2c_linear = k2c_linear_func;
 void k2c_exponential_func(float * x, const size_t size) {
 
     for (size_t i=0; i<size; ++i) {
-        x[i] = exp(x[i]);
+        x[i] = expf(x[i]);
     }
 }
 k2c_activationType * k2c_exponential = k2c_exponential_func;
@@ -95,7 +95,7 @@ k2c_activationType * k2c_hard_sigmoid = k2c_hard_sigmoid_func;
 void k2c_tanh_func(float * x, const size_t size) {
 
     for (size_t i=0; i<size; ++i) {
-        x[i] = tanh(x[i]);
+        x[i] = tanhf(x[i]);
     }
 }
 k2c_activationType * k2c_tanh = k2c_tanh_func;
@@ -111,7 +111,7 @@ k2c_activationType * k2c_tanh = k2c_tanh_func;
 void k2c_sigmoid_func(float * x, const size_t size) {
 
     for (size_t i=0; i < size; ++i) {
-        x[i] = 1/(1+exp(-x[i]));
+        x[i] = 1/(1+expf(-x[i]));
     }
 }
 k2c_activationType * k2c_sigmoid = k2c_sigmoid_func;
@@ -136,7 +136,7 @@ void k2c_softmax_func(float * x, const size_t size) {
     }
 
     for (size_t i=0; i < size; ++i) {
-        x[i] = exp(x[i]-xmax);
+        x[i] = expf(x[i]-xmax);
     }
 
     for (size_t i=0; i < size; ++i) {
@@ -161,7 +161,7 @@ k2c_activationType * k2c_softmax = k2c_softmax_func;
 void k2c_softplus_func(float * x, const size_t size) {
 
     for (size_t i=0; i < size; ++i) {
-        x[i] = log1p(exp(x[i]));
+        x[i] = log1pf(expf(x[i]));
     }
 }
 k2c_activationType * k2c_softplus = k2c_softplus_func;
@@ -177,7 +177,7 @@ k2c_activationType * k2c_softplus = k2c_softplus_func;
 void k2c_softsign_func(float * x, const size_t size) {
 
     for (size_t i=0; i < size; ++i) {
-        x[i] = x[i]/(1.0f + fabs(x[i]));
+        x[i] = x[i]/(1.0f + fabsf(x[i]));
     }
 }
 k2c_activationType * k2c_softsign = k2c_softsign_func;
@@ -237,7 +237,7 @@ void k2c_ELU(float * x, const size_t size, const float alpha) {
 
     for (size_t i=0; i < size; ++i) {
         if (x[i] <= 0.0f) {
-            x[i] = alpha*expm1(x[i]);
+            x[i] = alpha*expm1f(x[i]);
         }
     }
 }
