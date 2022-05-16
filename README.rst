@@ -80,7 +80,7 @@ Contribute
 License
 *******
 
-The project is licensed under the GPL license.
+The project is licensed under the LGPLv3 license.
 
 
 .. |Build-Status| image:: https://travis-ci.org/f0uriest/keras2c.svg?branch=master
@@ -91,7 +91,7 @@ The project is licensed under the GPL license.
     :alt: Code Coverage
 .. |License| image:: https://img.shields.io/github/license/f0uriest/keras2c
     :target: https://github.com/f0uriest/keras2c/blob/master/LICENSE
-    :alt: License: GPLv3
+    :alt: License: LGPLv3
 .. |DOI| image:: https://zenodo.org/badge/193152058.svg
     :target: https://zenodo.org/badge/latestdoi/193152058
     :alt: Please Cite Keras2c!
