@@ -80,7 +80,7 @@ Contribute
 License
 *******
 
-The project is licensed under the MIT license.
+The project is licensed under the GPL license.
 
 
 .. |Build-Status| image:: https://travis-ci.org/f0uriest/keras2c.svg?branch=master
@@ -89,9 +89,9 @@ The project is licensed under the MIT license.
 .. |Codecov| image:: https://codecov.io/gh/f0uriest/keras2c/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/f0uriest/keras2c
     :alt: Code Coverage
-.. |License| image:: https://img.shields.io/badge/License-MIT-blue.svg
+.. |License| image:: https://img.shields.io/github/license/f0uriest/keras2c
     :target: https://github.com/f0uriest/keras2c/blob/master/LICENSE
-    :alt: License: MIT
+    :alt: License: GPLv3
 .. |DOI| image:: https://zenodo.org/badge/193152058.svg
     :target: https://zenodo.org/badge/latestdoi/193152058
     :alt: Please Cite Keras2c!
