@@ -355,7 +355,7 @@ class Layers2C():
         if is_model_input:
             inp = inputs + '->'
         else:
-            inp = inputs + '.'
+            inp = inputs[1:] + '.' #remove & prefix that is added to output_layers to pass tensor by reference
 
         if layer_type(layer) == 'LeakyReLU':
             self.layers += 'k2c_LeakyReLU(' + inp + 'array,' + \

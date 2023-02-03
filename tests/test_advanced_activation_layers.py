@@ -82,3 +82,25 @@ class TestAdvancedActivation(unittest.TestCase):
         keras2c_main.k2c(model, name)
         rcode = build_and_run(name)
         self.assertEqual(rcode, 0)
+
+    def test_AdvancedActivationLayers_NonInputLayer(self):
+        inshp = (9, 7, 6, 3)
+        alpha = 0.5
+        theta = 0.3
+        max_value = 1.0
+        negative_slope = 1.0
+        threshold = 0.3
+        input_layer = keras.layers.Input(inshp)
+        first = keras.layers.LeakyReLU(alpha=0.3)(input_layer)
+        middle1 = keras.layers.LeakyReLU(alpha=alpha)(first)
+        middle2 = keras.layers.PReLU(alpha_initializer='glorot_uniform')(middle1)
+        middle3 = keras.layers.ELU(alpha=alpha)(middle2)
+        middle4 = keras.layers.ThresholdedReLU(theta=theta)(middle3)
+        output_layer  = keras.layers.ReLU(max_value=max_value,
+                              negative_slope=negative_slope,
+                              threshold=threshold)(middle4)
+        model = keras.models.Model(inputs=input_layer, outputs=output_layer)
+        name = 'test___AdvancedActivationLayers_NonInputLayers' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)

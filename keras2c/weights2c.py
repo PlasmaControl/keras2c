@@ -118,9 +118,17 @@ class Weights2C():
                 - **static_vars** (*str*): code fora C struct containing static variables
                     (eg, states of a stateful RNN)
         """
+        if verbose:
+            print(__class__.__name__+"."+__name__)
+
         for layer in self.model.layers:
             method = getattr(self, '_write_weights_' + layer_type(layer))
             method(layer)
+            if(verbose):
+                print("")
+                print(__class__.__name__+"."+__name__+" : layer : "+layer.name+" : "+method.__name__)
+                print("Stack: " + str(self.stack_vars))
+                print("Malloc: " + str(self.malloc_vars))
         return self.stack_vars, self.malloc_vars, self._write_static_vars()
 
     def _write_static_vars(self):
@@ -647,7 +655,7 @@ class Weights2C():
 
     def _write_weights_ThresholdedReLU(self, layer):
         theta = layer.get_config()['theta']
-        self.stack_vars = 'float ' + layer.name + \
+        self.stack_vars += 'float ' + layer.name + \
             '_theta = ' + str(theta) + '; \n'
         self.stack_vars += '\n\n'
 
