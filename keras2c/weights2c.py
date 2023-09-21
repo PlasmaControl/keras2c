@@ -12,7 +12,7 @@ import numpy as np
 from keras2c.io_parsing import layer_type, get_layer_io_names, get_model_io_names
 from tensorflow.keras import backend as K
 import tensorflow as tf
-tf.compat.v1.disable_eager_execution()
+
 maxndim = 5
 
 
@@ -113,7 +113,7 @@ class Weights2C():
             (tuple): tuple containing
 
                 - **stack_vars** (*str*): code for variables allocated on the stack
-                - **malloc_vars** (*dict*): dictionary of name,value pairs for arrays to be 
+                - **malloc_vars** (*dict*): dictionary of name,value pairs for arrays to be
                     allocated on the heap
                 - **static_vars** (*str*): code fora C struct containing static variables
                     (eg, states of a stateful RNN)

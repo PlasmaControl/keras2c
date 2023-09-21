@@ -12,7 +12,6 @@ import subprocess
 import time
 import numpy as np
 import tensorflow as tf
-tf.compat.v1.disable_eager_execution()
 
 __author__ = "Rory Conlin"
 __copyright__ = "Copyright 2020, Rory Conlin"

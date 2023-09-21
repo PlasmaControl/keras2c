@@ -13,7 +13,6 @@ from keras2c.io_parsing import get_model_io_names
 from keras2c.weights2c import Weights2C
 import tensorflow as tf
 import subprocess
-tf.compat.v1.disable_eager_execution()
 
 __author__ = "Rory Conlin"
 __copyright__ = "Copyright 2020, Rory Conlin"
@@ -109,7 +108,7 @@ def make_test_suite(model, function_name, malloc_vars, num_tests=10, stateful=Fa
                                          model_outputs[j] + '_test' + str(i+1)))
     s = 'int main(){\n'
     file.write(s)
-    
+
     s = ' float errors[' + str(num_tests*num_outputs) + '];\n'
     s += ' size_t num_tests = ' + str(num_tests) + '; \n'
     s += 'size_t num_outputs = ' + str(num_outputs) + '; \n'

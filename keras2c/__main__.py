@@ -9,6 +9,7 @@ Runs keras2c
 import argparse
 import sys
 from keras2c.keras2c_main import k2c
+import tensorflow as tf
 
 
 __author__ = "Rory Conlin"
@@ -37,7 +38,7 @@ def parse_args(args):
 
 
 def main(args=sys.argv[1:]):
-
+    tf.compat.v1.disable_eager_execution()
     args = parse_args(args)
     if args.malloc:
         malloc = True

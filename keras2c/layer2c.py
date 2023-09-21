@@ -10,7 +10,6 @@ Writes individual layers to C code
 # imports
 from keras2c.io_parsing import layer_type, get_model_io_names, get_all_io_names, get_layer_io_names, flatten
 import tensorflow as tf
-tf.compat.v1.disable_eager_execution()
 
 
 __author__ = "Rory Conlin"

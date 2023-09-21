@@ -18,7 +18,6 @@ import numpy as np
 import subprocess
 import tensorflow.keras as keras
 import tensorflow as tf
-tf.compat.v1.disable_eager_execution()
 
 
 __author__ = "Rory Conlin"
@@ -31,7 +30,7 @@ __email__ = "wconlin@princeton.edu"
 def model2c(model, function_name, malloc=False, verbose=True):
     """Generates C code for model
 
-    Writes main function definition to "function_name.c" and a public header 
+    Writes main function definition to "function_name.c" and a public header
     with declarations to "function_name.h"
 
     Args:
@@ -196,7 +195,7 @@ def k2c(model, function_name, malloc=False, num_tests=10, verbose=True):
         verbose (bool): whether to print progress
 
     Raises:
-        ValueError: if model is not instance of keras.models.Model 
+        ValueError: if model is not instance of keras.models.Model
 
     Returns:
         None
