@@ -34,7 +34,7 @@ extern k2c_activationType * k2c_softplus;
 extern k2c_activationType * k2c_softsign;
 
 // Advanced Activations
-void k2c_LeakyReLU(float * x, const size_t size, const float alpha);
+void k2c_LeakyReLU(float * x, const size_t size, const float negative_slope);
 void k2c_PReLU(float * x, const size_t size, const float * alpha);
 void k2c_ELU(float * x, const size_t size, const float alpha);
 void k2c_ThresholdedReLU(float * x, const size_t size, const float theta);

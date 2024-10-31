@@ -7,14 +7,13 @@ https://github.com/f0uriest/keras2c
 Gets weights and other parameters from each layer and writes to C file
 """
 
-# imports
+# Imports
 import numpy as np
 from keras2c.io_parsing import layer_type, get_layer_io_names, get_model_io_names
-from tensorflow.keras import backend as K
-import tensorflow as tf
-tf.compat.v1.disable_eager_execution()
-maxndim = 5
+from keras import backend as K
+import keras
 
+maxndim = 5
 
 __author__ = "Rory Conlin"
 __copyright__ = "Copyright 2020, Rory Conlin"
@@ -23,17 +22,16 @@ __maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
 __email__ = "wconlin@princeton.edu"
 
 
-class Weights2C():
+class Weights2C:
     """Creates an object to extract and write weights and other model parameters
 
     Args:
-        model (keras Model): model to parse
+        model (keras.Model): model to parse
         function_name (str): name of the function being generated
         malloc (bool): Whether to allocate variables on the heap using malloc.
     """
 
     def __init__(self, model, function_name, malloc=False):
-
         self.model = model
         self.function_name = function_name
         self.model_io = get_model_io_names(self.model)
@@ -58,20 +56,17 @@ class Weights2C():
         size = array.size
         shp = array.shape
         ndim = len(shp)
-        shp = np.concatenate((shp, np.ones(maxndim-ndim)))
+        shp = np.concatenate((shp, np.ones(maxndim - ndim)))
         if malloc:
             to_malloc = {}
-            s = 'k2c_tensor ' + name + ' = {' + name + \
-                '_array,' + str(int(ndim)) + ',' + str(int(size)) + ',{' + \
-                np.array2string(shp.astype(int), separator=',')[
-                    1:-1] + '}}; \n'
-            to_malloc.update({name + '_array': temp})
+            s = f'k2c_tensor {name} = {{ {name}_array, {ndim}, {size}, {{ {np.array2string(shp.astype(int), separator=",")[1:-1]} }} }}; \n'
+            to_malloc.update({f'{name}_array': temp})
             return s, to_malloc
         else:
             count = 0
-            s = 'float ' + name + '_array[' + str(size) + '] = '
+            s = f'float {name}_array[{size}] = '
             if np.max(np.abs(temp)) < 1e-16:
-                s += '{' + str(0) + '}; \n'
+                s += '{0}; \n'
             else:
                 s += '{\n'
                 for i in range(size):
@@ -80,15 +75,12 @@ class Weights2C():
                     elif temp[i] == -np.inf:
                         s += "-HUGE_VALF,"
                     else:
-                        s += "{:+.8e}f".format(temp[i]) + ','
+                        s += f"{temp[i]:+.8e}f,"
                     count += 1
-                    if (count) % 5 == 0:
+                    if count % 5 == 0:
                         s += '\n'
                 s += '}; \n'
-            s += 'k2c_tensor ' + name + ' = {&' + name + \
-                '_array[0],' + str(int(ndim)) + ',' + str(int(size)) + ',{' + \
-                np.array2string(shp.astype(int), separator=',')[
-                    1:-1] + '}}; \n'
+            s += f'k2c_tensor {name} = {{ &{name}_array[0], {ndim}, {size}, {{ {np.array2string(shp.astype(int), separator=",")[1:-1]} }} }}; \n'
             return s
 
     def _write_weights_array2c(self, array, name):
@@ -113,10 +105,10 @@ class Weights2C():
             (tuple): tuple containing
 
                 - **stack_vars** (*str*): code for variables allocated on the stack
-                - **malloc_vars** (*dict*): dictionary of name,value pairs for arrays to be 
+                - **malloc_vars** (*dict*): dictionary of name,value pairs for arrays to be
                     allocated on the heap
-                - **static_vars** (*str*): code fora C struct containing static variables
-                    (eg, states of a stateful RNN)
+                - **static_vars** (*str*): code for a C struct containing static variables
+                    (e.g., states of a stateful RNN)
         """
         for layer in self.model.layers:
             method = getattr(self, '_write_weights_' + layer_type(layer))
@@ -125,11 +117,11 @@ class Weights2C():
 
     def _write_static_vars(self):
         if len(self.static_vars) > 0:
-            s = 'static struct ' + self.function_name + '_static_vars \n'
+            s = f'static struct {self.function_name}_static_vars \n'
             s += '{ \n'
             for k, v in self.static_vars.items():
-                s += 'float ' + k + '[' + str(v) + ']; \n'
-            s += '} ' + self.function_name + '_states; \n'
+                s += f'float {k}[{v}]; \n'
+            s += f'}} {self.function_name}_states; \n'
         else:
             s = ''
         return s
@@ -138,74 +130,59 @@ class Weights2C():
         _, outputs = get_layer_io_names(layer)
         if len(outputs) > 1:
             for i, outp in enumerate(outputs):
-                outshp = layer.get_output_at(i).shape[1:]
+                outshp = layer.output_shape[i][1:]
                 if outp not in self.model_io[1]:
                     self._write_weights_array2c(
-                        np.zeros(outshp), outp + '_output')
+                        np.zeros(outshp), f'{outp}_output')
         else:
-            outshp = layer.output_shape[1:]
+            outshp = layer.output.shape[1:]
             if outputs[0] not in self.model_io[1]:
-                # self._write_weights_array2c(
-                #     np.zeros(outshp), outputs[0] + '_output')
                 self._write_weights_array2c(
-                    np.zeros(outshp), layer.name + '_output')
+                    np.zeros(outshp), f'{layer.name}_output')
 
     def _write_weights_Bidirectional(self, layer):
         try:
             foo = layer.forward_layer.input_shape
             foo = layer.backward_layer.input_shape
         except:
-            temp_input = tf.keras.layers.Input(
-                layer.input_shape[2:])
-            foo = layer.layer.__call__(temp_input)
-            foo = layer.forward_layer.__call__(temp_input)
-            foo = layer.backward_layer.__call__(temp_input)
+            temp_input = keras.layers.Input(shape=layer.input_shape[2:])
+            foo = layer.layer(temp_input)
+            foo = layer.forward_layer(temp_input)
+            foo = layer.backward_layer(temp_input)
         self._write_weights_layer(layer.backward_layer)
         self._write_weights_layer(layer.forward_layer)
         if layer.merge_mode:
-
             self._write_outputs(layer)
-            self.stack_vars += 'size_t ' + layer.name + '_num_tensors' + str(0) + \
-                ' = ' + str(2) + '; \n'
+            self.stack_vars += f'size_t {layer.name}_num_tensors0 = 2; \n'
             if layer.merge_mode == 'concat':
                 if layer.return_sequences:
                     ax = 1
                 else:
                     ax = 0
-                self.stack_vars += 'size_t ' + layer.name + '_axis = ' +\
-                    str(ax) + '; \n'
-
+                self.stack_vars += f'size_t {layer.name}_axis = {ax}; \n'
         else:
             output_names = get_layer_io_names(layer)[1][0]
             subname = layer.layer.name
-            self.stack_vars += 'k2c_tensor * ' + \
-                output_names[0] + ' = forward_' + subname + '_output; \n'
-            self.stack_vars += 'k2c_tensor * ' + \
-                output_names[1] + ' = backward_' + subname + '_output; \n'
+            self.stack_vars += f'k2c_tensor * {output_names[0]} = forward_{subname}_output; \n'
+            self.stack_vars += f'k2c_tensor * {output_names[1]} = backward_{subname}_output; \n'
 
     def _write_weights_TimeDistributed(self, layer):
         self._write_outputs(layer)
         try:
             foo = layer.layer.input_shape
         except:
-            temp_input = tf.keras.layers.Input(
-                layer.input_shape[2:], batch_size=1)
-            foo = layer.layer.__call__(temp_input)
+            temp_input = keras.layers.Input(shape=layer.input_shape[2:], batch_size=1)
+            foo = layer.layer(temp_input)
         self._write_weights_layer(layer.layer)
         timeslice_input = np.squeeze(np.zeros(layer.layer.input_shape[1:]))
         timeslice_output = np.squeeze(np.zeros(layer.layer.output_shape[1:]))
         self._write_weights_array2c(
-            timeslice_input, layer.layer.name + '_timeslice_input')
+            timeslice_input, f'{layer.layer.name}_timeslice_input')
         self._write_weights_array2c(
-            timeslice_output, layer.layer.name + '_timeslice_output')
-        self.stack_vars += 'const size_t ' + layer.name +\
-                           '_timesteps = ' + str(layer.input_shape[1]) + '; \n'
-        self.stack_vars += 'const size_t ' + layer.name +\
-                           '_in_offset = ' + \
-            str(np.prod(layer.input_shape[2:])) + '; \n'
-        self.stack_vars += 'const size_t ' + layer.name +\
-                           '_out_offset = ' + \
-            str(np.prod(layer.output_shape[2:])) + '; \n'
+            timeslice_output, f'{layer.layer.name}_timeslice_output')
+        self.stack_vars += f'const size_t {layer.name}_timesteps = {layer.input_shape[1]}; \n'
+        self.stack_vars += f'const size_t {layer.name}_in_offset = {np.prod(layer.input_shape[2:])}; \n'
+        self.stack_vars += f'const size_t {layer.name}_out_offset = {np.prod(layer.output_shape[2:])}; \n'
 
     def _write_weights_Input(self, layer):
         self.stack_vars += ''
@@ -640,9 +617,9 @@ class Weights2C():
         self.stack_vars += '\n\n'
 
     def _write_weights_LeakyReLU(self, layer):
-        alpha = layer.get_config()['alpha']
+        alpha = layer.get_config()['negative_slope']
         self.stack_vars += 'float ' + layer.name + \
-            '_alpha = ' + str(alpha) + '; \n'
+            '_negative_slope = ' + str(alpha) + '; \n'
         self.stack_vars += '\n\n'
 
     def _write_weights_ThresholdedReLU(self, layer):

@@ -7,18 +7,17 @@ https://github.com/f0uriest/keras2c
 Converts keras model to C code
 """
 
-# imports
+# Imports
 from keras2c.layer2c import Layers2C
 from keras2c.weights2c import Weights2C
-from keras2c.io_parsing import layer_type, get_all_io_names, get_layer_io_names, \
-    get_model_io_names, flatten
+from keras2c.io_parsing import (
+    layer_type, get_all_io_names, get_layer_io_names, get_model_io_names,
+    flatten)
 from keras2c.check_model import check_model
 from keras2c.make_test_suite import make_test_suite
 import numpy as np
 import subprocess
-import tensorflow.keras as keras
-import tensorflow as tf
-tf.compat.v1.disable_eager_execution()
+import keras
 
 
 __author__ = "Rory Conlin"
@@ -31,11 +30,11 @@ __email__ = "wconlin@princeton.edu"
 def model2c(model, function_name, malloc=False, verbose=True):
     """Generates C code for model
 
-    Writes main function definition to "function_name.c" and a public header 
+    Writes main function definition to "function_name.c" and a public header
     with declarations to "function_name.h"
 
     Args:
-        model (keras Model): model to convert
+        model (keras.Model): model to convert
         function_name (str): name of C function
         malloc (bool): whether to allocate variables on the stack or heap
         verbose (bool): whether to print info to stdout
@@ -112,8 +111,8 @@ def gen_function_reset(function_name):
         function_name (str): name of main function
 
     Returns:
-       signature (str): delcaration of the reset function
-       function (str): definition of the reset function
+        signature (str): declaration of the reset function
+        function (str): definition of the reset function
     """
 
     reset_sig = 'void ' + function_name + '_reset_states()'
@@ -129,15 +128,15 @@ def gen_function_reset(function_name):
 def gen_function_initialize(function_name, malloc_vars):
     """Writes an initialize function
 
-    Initialize function is used to load variables into memory and do other start up tasks
+    Initialize function is used to load variables into memory and do other start-up tasks
 
     Args:
         function_name (str): name of main function
         malloc_vars (dict): variables to read in
 
     Returns:
-       signature (str): delcaration of the initialization function
-       function (str): definition of the initialization function
+        signature (str): declaration of the initialization function
+        function (str): definition of the initialization function
     """
 
     init_sig = 'void ' + function_name + '_initialize('
@@ -167,8 +166,8 @@ def gen_function_terminate(function_name, malloc_vars):
         malloc_vars (dict): variables to deallocate
 
     Returns:
-       signature (str): delcaration of the terminate function
-       function (str): definition of the terminate function
+        signature (str): declaration of the terminate function
+        function (str): definition of the terminate function
     """
 
     term_sig = 'void ' + function_name + '_terminate('
@@ -186,17 +185,17 @@ def gen_function_terminate(function_name, malloc_vars):
 
 
 def k2c(model, function_name, malloc=False, num_tests=10, verbose=True):
-    """Converts keras model to C code and generates test suite
+    """Converts Keras model to C code and generates test suite
 
     Args:
-        model (keras Model or str): model to convert or path to saved .h5 file
+        model (keras.Model or str): model to convert or path to saved .h5 file
         function_name (str): name of main function
         malloc (bool): whether to allocate variables on the stack or heap
         num_tests (int): how many tests to generate in the test suite
         verbose (bool): whether to print progress
 
     Raises:
-        ValueError: if model is not instance of keras.models.Model 
+        ValueError: if model is not an instance of keras.Model
 
     Returns:
         None
@@ -205,14 +204,13 @@ def k2c(model, function_name, malloc=False, num_tests=10, verbose=True):
     function_name = str(function_name)
     filename = function_name + '.c'
     if isinstance(model, str):
-        model = keras.models.load_model(model, compile=False)
-    elif not isinstance(model, keras.models.Model):
-
+        model = keras.load_model(model)
+    elif not isinstance(model, keras.Model):
         raise ValueError('Unknown model type. Model should ' +
-                         'either be an instance of keras.models.Model, ' +
+                         'either be an instance of keras.Model, ' +
                          'or a filepath to a saved .h5 model')
 
-    # check that the model can be converted
+    # Check that the model can be converted
     check_model(model, function_name)
     if verbose:
         print('All checks passed')

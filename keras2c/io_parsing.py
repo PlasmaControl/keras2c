@@ -6,6 +6,7 @@ https://github.com/f0uriest/keras2c
 
 Helper functions to get input and output names for each layer etc.
 """
+import keras
 
 __author__ = "Rory Conlin"
 __copyright__ = "Copyright 2020, Rory Conlin"
@@ -41,6 +42,11 @@ def get_all_io_names(model):
     return list(set(flatten(a)))
 
 
+def is_multi_input(layer):
+    # If `layer.input` is a list, it's a multi-input layer
+    return isinstance(layer.input, list)
+
+
 def get_layer_num_io(layer):
     """Gets the number of inputs and outputs for a layer
 
@@ -51,24 +57,49 @@ def get_layer_num_io(layer):
         num_inputs (int): number of input nodes to the layer
         num_outputs (int): number of output nodes from the layer
     """
-
+    # Initialize input and output counts
     num_inputs = 0
-    error = False
-    while not error:
-        try:
-            layer.get_input_at(num_inputs)
-            num_inputs += 1
-        except ValueError:
-            error = True
-
     num_outputs = 0
-    error = False
-    while not error:
-        try:
-            layer.get_output_at(num_outputs)
-            num_outputs += 1
-        except ValueError:
-            error = True
+
+    # Handle InputLayer separately
+    if isinstance(layer, keras.layers.InputLayer):
+        num_inputs = 0  # InputLayer has no inbound nodes
+        num_outputs = 1  # It produces one output tensor
+    else:
+        # Number of inputs
+        if hasattr(layer, 'inputs'):
+            inputs = layer.inputs
+        elif hasattr(layer, 'input'):
+            inputs = layer.input
+        else:
+            inputs = None
+
+        if inputs is not None:
+            if isinstance(inputs, list):
+                num_inputs = len(inputs)
+            else:
+                num_inputs = 1
+
+        # Number of outputs
+        if hasattr(layer, 'outputs'):
+            outputs = layer.outputs
+        elif hasattr(layer, 'output'):
+            outputs = layer.output
+        else:
+            outputs = None
+
+        if outputs is not None:
+            if isinstance(outputs, list):
+                num_outputs = len(outputs)
+            else:
+                num_outputs = 1
+
+        # Determine if it's a multi-input layer
+        if num_inputs > 1:
+            print("This is a multi-input layer.")
+        else:
+            print("This is a single-input layer.")
+
     return num_inputs, num_outputs
 
 
@@ -82,42 +113,65 @@ def get_layer_io_names(layer):
         inputs (list): names of all the input nodes to the layer
         outputs (list): names of all the output nodes from the layer
     """
-
-    num_inputs, num_outputs = get_layer_num_io(layer)
     inputs = []
-    # num_inputs>1 -> shared layer
-    for i in range(num_inputs):
-        # is the input a list?
-        if isinstance(layer.get_input_at(i), list):
-            temp_list = []
-            list_length = len(layer.get_input_at(i))
-            for j in range(list_length):
-                name = layer.get_input_at(i)[j].name.split(':')[
-                    0].split('/')[0]
-                temp_list.append(name)
-            inputs.insert(i, temp_list)
-        else:
-            name = layer.get_input_at(i).name.split(':')[0].split('/')[0]
-            inputs.insert(i, name)
-
     outputs = []
-    for i in range(num_outputs):
-        # is the output a list?
-        if isinstance(layer.get_output_at(i), list):
-            temp_list = []
-            list_length = len(layer.get_output_at(i))
-            for j in range(list_length):
-                name = layer.get_output_at(i)[j].name.split(':')[
-                    0].split('/')[0]
-                temp_list.append(name)
-            outputs.insert(i, temp_list)
-        else:
-            name = layer.get_output_at(i).name
-            if 'bidirectional' in name.lower():
-                name = name.split('/')[-2]
+
+    # Handle InputLayer separately
+    if isinstance(layer, keras.layers.InputLayer):
+        # InputLayer has no inputs, only an output
+        name = layer.output.name.split(':')[0].split('/')[0]
+        outputs.append(name)
+        print("This is an InputLayer.")
+    else:
+        # Handle layers with multiple inputs
+        if hasattr(layer, 'input'):
+            input_tensors = layer.input
+            if isinstance(input_tensors, list):
+                for tensor in input_tensors:
+                    name = tensor.name.split(':')[0].split('/')[0]
+                    inputs.append(name)
             else:
-                name = name.split('/')[0]
-            outputs.insert(i, name)
+                name = input_tensors.name.split(':')[0].split('/')[0]
+                inputs.append(name)
+        elif hasattr(layer, 'inputs'):
+            input_tensors = layer.inputs
+            if isinstance(input_tensors, list):
+                for tensor in input_tensors:
+                    name = tensor.name.split(':')[0].split('/')[0]
+                    inputs.append(name)
+            else:
+                name = input_tensors.name.split(':')[0].split('/')[0]
+                inputs.append(name)
+        else:
+            print(f"No inputs found for layer {layer.name}")
+
+        # Handle layers with multiple outputs
+        if hasattr(layer, 'output'):
+            output_tensors = layer.output
+            if isinstance(output_tensors, list):
+                for tensor in output_tensors:
+                    name = tensor.name.split(':')[0].split('/')[0]
+                    outputs.append(name)
+            else:
+                name = output_tensors.name.split(':')[0].split('/')[0]
+                outputs.append(name)
+        elif hasattr(layer, 'outputs'):
+            output_tensors = layer.outputs
+            if isinstance(output_tensors, list):
+                for tensor in output_tensors:
+                    name = tensor.name.split(':')[0].split('/')[0]
+                    outputs.append(name)
+            else:
+                name = output_tensors.name.split(':')[0].split('/')[0]
+                outputs.append(name)
+        else:
+            print(f"No outputs found for layer {layer.name}")
+
+        # Determine if it's a multi-input layer
+        if len(inputs) > 1:
+            print("This is a multi-input layer.")
+        else:
+            print("This is a single-input layer.")
 
     return inputs, outputs
 

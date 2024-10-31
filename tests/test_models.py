@@ -6,19 +6,15 @@ Implements tests for full models
 #!/usr/bin/env python3
 
 import unittest
-import tensorflow.keras as keras
-from tensorflow.keras import models
+import keras
 from tensorflow.keras import layers
 from tensorflow.keras.layers import Input, Dense, LSTM, Conv1D, Conv2D, ConvLSTM2D, Dot, Add, Multiply, Concatenate, Reshape, Permute, ZeroPadding1D, Cropping1D
 from tensorflow.keras.models import Model
-import numpy as np
 from keras2c import keras2c_main
-import subprocess
 import time
-import os
 from test_core_layers import build_and_run
 import tensorflow as tf
-tf.compat.v1.disable_eager_execution()
+
 
 __author__ = "Rory Conlin"
 __copyright__ = "Copyright 2020, Rory Conlin"

@@ -6,13 +6,11 @@ Implements tests for core layers
 #!/usr/bin/env python3
 
 import unittest
-import tensorflow.keras as keras
+import keras
 from keras2c import keras2c_main
 import subprocess
 import time
 import os
-import tensorflow as tf
-tf.compat.v1.disable_eager_execution()
 
 __author__ = "Rory Conlin"
 __copyright__ = "Copyright 2020, Rory Conlin"
@@ -28,7 +26,7 @@ def build_and_run(name, return_output=False):
 
     cwd = os.getcwd()
     os.chdir(os.path.abspath('./include/'))
-    lib_code = subprocess.run(['make']).returncode
+    lib_code = subprocess.run(['make'], shell=True).returncode
     os.chdir(os.path.abspath(cwd))
     if lib_code != 0:
         return 'lib build failed'
@@ -40,7 +38,7 @@ def build_and_run(name, return_output=False):
 
     cc = CC + ' ' + ccflags + ' -o ' + name + ' ' + name + '.c ' + \
         name + '_test_suite.c -L./include/ -l:libkeras2c.a -lm'
-    build_code = subprocess.run(cc.split()).returncode
+    build_code = subprocess.run(cc.split(), shell=True).returncode
     if build_code != 0:
         return 'build failed'
     proc_output = subprocess.run(['./' + name])
@@ -58,7 +56,7 @@ class TestCoreLayers(unittest.TestCase):
     def test_Dense1(self):
         inshp = (21, 4, 9)
         units = 45
-        a = keras.layers.Input(inshp)
+        a = keras.layers.Input(shape=inshp)
         b = keras.layers.Dense(units, activation='relu')(a)
         model = keras.models.Model(inputs=a, outputs=b)
         name = 'test___Dense1' + str(int(time.time()))
@@ -69,7 +67,7 @@ class TestCoreLayers(unittest.TestCase):
     def test_Dense2_Activation(self):
         inshp = (40, 30)
         units = 500
-        a = keras.layers.Input(inshp)
+        a = keras.layers.Input(shape=inshp)
         b = keras.layers.Dense(units, activation='tanh', use_bias=False)(a)
         c = keras.layers.Activation('exponential')(b)
         model = keras.models.Model(inputs=a, outputs=c)
@@ -80,7 +78,7 @@ class TestCoreLayers(unittest.TestCase):
 
     def test_Dropout_Reshape_Flatten(self):
         inshp = (10, 40, 30)
-        a = keras.layers.Input(inshp)
+        a = keras.layers.Input(shape=inshp)
         b = keras.layers.Flatten()(a)
         c = keras.layers.Dropout(.4)(b)
         d = keras.layers.Reshape((20, 30, 20))(c)
@@ -92,9 +90,8 @@ class TestCoreLayers(unittest.TestCase):
 
     def test_Permute(self):
         inshp = (6, 12, 9)
-        a = keras.layers.Input(inshp)
+        a = keras.layers.Input(shape=inshp)
         b = keras.layers.Permute((3, 1, 2))(a)
-     #   c = keras.layers.Dense(20)(b)
         model = keras.models.Model(inputs=a, outputs=b)
         name = 'test___permute' + str(int(time.time()))
         keras2c_main.k2c(model, name)
@@ -103,7 +100,7 @@ class TestCoreLayers(unittest.TestCase):
 
     def test_repeat_vector(self):
         inshp = (13,)
-        a = keras.layers.Input(inshp)
+        a = keras.layers.Input(shape=inshp)
         b = keras.layers.RepeatVector(23)(a)
         c = keras.layers.ActivityRegularization(l1=.5, l2=.3)(b)
         d = keras.layers.Dense(20)(c)
@@ -115,7 +112,7 @@ class TestCoreLayers(unittest.TestCase):
 
     def test_dummy_layers(self):
         inshp = (4, 5, 6, 7)
-        a = keras.layers.Input(inshp)
+        a = keras.layers.Input(shape=inshp)
         b = keras.layers.SpatialDropout3D(.2)(a)
         c = keras.layers.Reshape((20, 6, 7))(b)
         d = keras.layers.SpatialDropout2D(.3)(c)
@@ -133,13 +130,12 @@ class TestEmbedding(unittest.TestCase):
     """tests for embedding layers"""
 
     def test_Embedding1(self):
-        inshp = (10, 20)
-        input_dim = 20
+        inshp = (10,)
+        input_dim = 50
         output_dim = 30
-        a = keras.layers.Input(inshp)
-        b = keras.layers.Activation('relu')(a)
+        a = keras.layers.Input(shape=inshp, dtype='int32')
         c = keras.layers.Embedding(
-            input_dim=input_dim, output_dim=output_dim)(b)
+            input_dim=input_dim, output_dim=output_dim)(a)
         model = keras.models.Model(inputs=a, outputs=c)
         name = 'test___Embedding1' + str(int(time.time()))
         keras2c_main.k2c(model, name)
@@ -152,9 +148,9 @@ class TestNormalization(unittest.TestCase):
 
     def test_BatchNorm1(self):
         inshp = (10, 11, 12)
-        axis = 3
+        axis = -1
         init = keras.initializers.RandomUniform(minval=0.1, maxval=1.0)
-        a = keras.layers.Input(inshp)
+        a = keras.layers.Input(shape=inshp)
         b = keras.layers.BatchNormalization(axis=axis,
                                             beta_initializer=init,
                                             gamma_initializer=init,
@@ -171,7 +167,7 @@ class TestNormalization(unittest.TestCase):
         inshp = (10, 11, 12)
         axis = 2
         init = keras.initializers.RandomUniform(minval=0.1, maxval=1.0)
-        a = keras.layers.Input(inshp)
+        a = keras.layers.Input(shape=inshp)
         b = keras.layers.BatchNormalization(axis=axis,
                                             beta_initializer=init,
                                             gamma_initializer=init,
@@ -188,7 +184,7 @@ class TestNormalization(unittest.TestCase):
         inshp = (10, 11, 12, 13)
         axis = 1
         init = keras.initializers.RandomUniform(minval=0.1, maxval=1.0)
-        a = keras.layers.Input(inshp)
+        a = keras.layers.Input(shape=inshp)
         b = keras.layers.BatchNormalization(axis=axis,
                                             beta_initializer=init,
                                             gamma_initializer=init,
@@ -205,7 +201,7 @@ class TestNormalization(unittest.TestCase):
         inshp = (10, 11, 12)
         axis = 2
         init = keras.initializers.RandomUniform(minval=0.1, maxval=2.0)
-        a = keras.layers.Input(inshp)
+        a = keras.layers.Input(shape=inshp)
         b = keras.layers.BatchNormalization(axis=axis,
                                             beta_initializer=init,
                                             gamma_initializer=init,
@@ -224,9 +220,9 @@ class TestSharedLayers(unittest.TestCase):
 
     def test_SharedLayer1(self):
         inshp = (10, 20)
-        xi = keras.layers.Input(inshp)
+        xi = keras.layers.Input(shape=inshp)
         x = keras.layers.Dense(20, activation='relu')(xi)
-        yi = keras.layers.Input(inshp)
+        yi = keras.layers.Input(shape=inshp)
         y = keras.layers.Dense(20, activation='relu')(yi)
         f = keras.layers.Dense(30, activation='relu')
         x = f(x)
@@ -237,7 +233,3 @@ class TestSharedLayers(unittest.TestCase):
         keras2c_main.k2c(model, name)
         rcode = build_and_run(name)
         self.assertEqual(rcode, 0)
-
-
-if __name__ == "__main__":
-    unittest.main()

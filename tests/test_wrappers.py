@@ -6,15 +6,12 @@ Implements tests for layer wrappers
 #!/usr/bin/env python3
 
 from test_core_layers import build_and_run
-import numpy as np
-import os
 import time
-import subprocess
 from keras2c import keras2c_main
 import unittest
-import tensorflow.keras as keras
+import keras
 from tensorflow.python.framework.ops import disable_eager_execution
-disable_eager_execution()
+
 
 __author__ = "Rory Conlin"
 __copyright__ = "Copyright 2020, Rory Conlin"

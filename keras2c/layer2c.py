@@ -7,11 +7,11 @@ https://github.com/f0uriest/keras2c
 Writes individual layers to C code
 """
 
-# imports
-from keras2c.io_parsing import layer_type, get_model_io_names, get_all_io_names, get_layer_io_names, flatten
-import tensorflow as tf
-tf.compat.v1.disable_eager_execution()
-
+# Imports
+from keras2c.io_parsing import (
+    layer_type, get_model_io_names, get_all_io_names, get_layer_io_names, flatten
+)
+import keras
 
 __author__ = "Rory Conlin"
 __copyright__ = "Copyright 2020, Rory Conlin"
@@ -24,7 +24,7 @@ class Layers2C():
     """Creates an object to parse and write layer functions.
 
     Args:
-        model (keras Model): model to parse
+        model (keras.Model): model to parse
         malloc (bool): Whether to allocate variables on the heap using malloc.
     """
 
@@ -42,7 +42,6 @@ class Layers2C():
 
         Returns:
             layers (str): C code for calling layer functions in correct order
-
         """
         written_io = set(self.model_inputs)
         unwritten_io = set(get_all_io_names(self.model)) - written_io
@@ -50,13 +49,13 @@ class Layers2C():
             for layer in self.model.layers:
                 layer_inputs, layer_outputs = get_layer_io_names(layer)
                 for i, (inp, outp) in enumerate(zip(layer_inputs, layer_outputs)):
-                    if (set(flatten(inp)).issubset(written_io) and
-                            set(flatten(outp)).issubset(unwritten_io))or \
-                            layer_type(layer) == 'InputLayer':
+                    if (
+                        set(flatten(inp)).issubset(written_io)
+                        and set(flatten(outp)).issubset(unwritten_io)
+                    ) or layer_type(layer) == 'InputLayer':
                         if verbose:
                             print('Writing layer ', outp)
-                        method = getattr(
-                            self, '_write_layer_' + layer_type(layer))
+                        method = getattr(self, '_write_layer_' + layer_type(layer))
                         method(layer, inp, outp, i)
                         written_io |= set(flatten(inp))
                         written_io |= set(flatten(outp))
@@ -90,7 +89,7 @@ class Layers2C():
                     outp_nm.append(o + '_output')
                     is_model_output = True
                 else:
-                    outp_nm.append('&' + outp + '_output')
+                    outp_nm.append('&' + o + '_output')
         else:
             if outp in self.model_outputs or 'timeslice' in outp:
                 outp_nm = outp + '_output'
@@ -103,21 +102,23 @@ class Layers2C():
             return nm, pnm, inp_nm, outp_nm
 
     def _write_layer_TimeDistributed(self, layer, inputs, outputs, i):
-        # nm, pnm, inputs, outputs = self._format_io_names(layer, inputs, outputs)
-        self.layers += 'for(size_t i=0; i<' + layer.name + \
-            '_timesteps; ++i) { \n'
+        self.layers += f'for(size_t i=0; i<{layer.name}_timesteps; ++i) {{ \n'
         if inputs in self.model_inputs:
-            self.layers += layer.layer.name + '_timeslice_input.array = &' + \
-                inputs + '_input->array[i*' + layer.name + '_in_offset]; \n'
+            self.layers += (
+                f'{layer.layer.name}_timeslice_input.array = &{inputs}_input->array[i*{layer.name}_in_offset]; \n'
+            )
         else:
-            self.layers += layer.layer.name + '_timeslice_input.array = &' + \
-                inputs + '_output.array[i*' + layer.name + '_in_offset]; \n'
+            self.layers += (
+                f'{layer.layer.name}_timeslice_input.array = &{inputs}_output.array[i*{layer.name}_in_offset]; \n'
+            )
         if outputs in self.model_outputs:
-            self.layers += layer.layer.name + '_timeslice_output.array = &' + \
-                outputs + '_output->array[i*' + layer.name + '_out_offset]; \n'
+            self.layers += (
+                f'{layer.layer.name}_timeslice_output.array = &{outputs}_output->array[i*{layer.name}_out_offset]; \n'
+            )
         else:
-            self.layers += layer.layer.name + '_timeslice_output.array = &' + \
-                outputs + '_output.array[i*' + layer.name + '_out_offset]; \n'
+            self.layers += (
+                f'{layer.layer.name}_timeslice_output.array = &{outputs}_output.array[i*{layer.name}_out_offset]; \n'
+            )
 
         inp = '&' + layer.layer.name + '_timeslice'
         outp = '&' + layer.layer.name + '_timeslice'
@@ -128,15 +129,12 @@ class Layers2C():
     def _write_layer_Bidirectional(self, layer, inputs, outputs, i):
         subname = layer.layer.name
         method = getattr(self, '_write_layer_' + layer_type(layer.layer))
-        method(layer.forward_layer, inputs,
-               'forward_' + subname, i)
-        method(layer.backward_layer, inputs,
-               'backward_' + subname, i)
+        method(layer.forward_layer, inputs, 'forward_' + subname, i)
+        method(layer.backward_layer, inputs, 'backward_' + subname, i)
         mode = layer.merge_mode
-        inputs = ['forward_' + subname,
-                  'backward_' + subname]
+        inputs = ['forward_' + subname, 'backward_' + subname]
         if layer.layer.return_sequences:
-            self.layers += 'k2c_flip(&backward_' + subname + '_output,0); \n'
+            self.layers += f'k2c_flip(&backward_{subname}_output,0); \n'
         if mode == 'sum':
             self._write_layer_Merge(layer, inputs, outputs, i, 'Add')
         elif mode == 'mul':
@@ -359,7 +357,7 @@ class Layers2C():
 
         if layer_type(layer) == 'LeakyReLU':
             self.layers += 'k2c_LeakyReLU(' + inp + 'array,' + \
-                inp + 'numel,' + nm + '_alpha); \n'
+                inp + 'numel,' + nm + '_negative_slope); \n'
         if layer_type(layer) == 'PReLU':
             self.layers += 'k2c_PReLU(' + inp + 'array,' + inp + \
                 'numel,' + nm + '_alpha.array); \n'

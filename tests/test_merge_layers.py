@@ -6,14 +6,12 @@ Implements tests for merge layers
 #!/usr/bin/env python3
 
 import unittest
-import tensorflow.keras as keras
+import keras
 from keras2c import keras2c_main
-import subprocess
 import time
-import os
 from test_core_layers import build_and_run
 import tensorflow as tf
-tf.compat.v1.disable_eager_execution()
+
 
 __author__ = "Rory Conlin"
 __copyright__ = "Copyright 2020, Rory Conlin"
@@ -184,7 +182,3 @@ class TestMergeLayers(unittest.TestCase):
         keras2c_main.k2c(model, name)
         rcode = build_and_run(name)
         self.assertEqual(rcode, 0)
-
-
-if __name__ == "__main__":
-    unittest.main()

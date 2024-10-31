@@ -186,18 +186,18 @@ k2c_activationType * k2c_softsign = k2c_softsign_func;
 /**
  * Leaky version of a Rectified Linear Unit.
  * It allows a small gradient when the unit is not active:
- *   y = {alpha*x    if x < 0}
+ *   y = {negative_slope*x    if x < 0}
  *       {x          if x >= 0}
  *
  * :param x: array of input values. Gets overwritten by output.
  * :param size: length of input array.
- * :param alpha: slope of negative portion of activation curve.
+ * :param negative_slope: slope of negative portion of activation curve.
  */
-void k2c_LeakyReLU(float * x, const size_t size, const float alpha) {
+void k2c_LeakyReLU(float * x, const size_t size, const float negative_slope) {
 
     for (size_t i=0; i<size; ++i) {
         if (x[i]<0) {
-            x[i] = alpha*x[i];
+            x[i] = negative_slope*x[i];
         }
     }
 }
