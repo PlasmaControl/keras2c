@@ -349,11 +349,16 @@ class Weights2C:
         else:
             b = np.zeros(A.shape[1])
 
-        self._write_weights_array2c(A, layer.name + '_kernel')
-        self._write_weights_array2c(b, layer.name + '_bias')
-        self.stack_vars += 'float ' + layer.name + \
-            '_fwork[' + str(np.prod(layer.input_shape[1:]) +
-                            np.prod(A.shape)) + '] = {0}; \n'
+        self._write_weights_array2c(A, f"{layer.name}_kernel")
+        self._write_weights_array2c(b, f"{layer.name}_bias")
+
+        # Access the input shape via layer.input.shape
+        input_shape = layer.input.shape
+        # Exclude the batch dimension and handle None values
+        input_shape = [dim if dim is not None else 1 for dim in input_shape[1:]]
+
+        fwork_size = np.prod(input_shape) + np.prod(A.shape)
+        self.stack_vars += f'float {layer.name}_fwork[{fwork_size}] = {{0}}; \n'
         self.stack_vars += '\n \n'
 
     def _write_weights_Conv1D(self, layer):
@@ -366,7 +371,7 @@ class Weights2C:
         self.stack_vars += 'size_t ' + layer.name + \
             '_dilation = ' + str(dilation) + '; \n'
         self._write_outputs(layer)
-        inshp = layer.get_input_at(0).shape[1:]
+        inshp = layer.input.shape[1:]
         if padding == 'causal':
             pad_along_height = dilation*(kernel_size-1)
             pad_top = pad_along_height
@@ -408,7 +413,7 @@ class Weights2C:
                                            for i in dilation]) + '}; \n'
         self._write_outputs(layer)
         if padding == 'same':
-            inshp = layer.get_input_at(0).shape[1:]
+            inshp = layer.input.shape[1:]
             pad_along_height = dilation[0]*(kernel_size[0]-1)
             pad_top = int(pad_along_height // 2)
             pad_bottom = int(pad_along_height - pad_top)
@@ -446,7 +451,7 @@ class Weights2C:
                                            for i in dilation]) + '}; \n'
         self._write_outputs(layer)
         if padding == 'same':
-            inshp = layer.get_input_at(0).shape[1:]
+            inshp = layer.input.shape[1:]
             pad_along_height = dilation[0]*(kernel_size[0]-1)
             pad_top = int(pad_along_height // 2)
             pad_bottom = int(pad_along_height - pad_top)
@@ -813,7 +818,7 @@ class Weights2C:
     def _write_weights_Flatten(self, layer):
         _, outputs = get_layer_io_names(layer)
         for i, outp in enumerate(outputs):
-            inshp = layer.get_input_at(i).shape[1:]
+            inshp = layer.input.shape[1:]
             if outp not in self.model_io[1]:
                 self._write_weights_array2c(
                     np.zeros(inshp).flatten(), outp + '_output')
