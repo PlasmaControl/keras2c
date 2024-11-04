@@ -17,3 +17,4 @@ docs/_build/*
 local/*
 .venv/*
 foobar*
+*.egg-info/*
