@@ -23,12 +23,14 @@ CC = 'gcc'
 
 
 def build_and_run(name, return_output=False):
-
     cwd = os.getcwd()
     os.chdir(os.path.abspath('./include/'))
-    lib_code = subprocess.run(['make'], shell=True).returncode
+    lib_process = subprocess.run(['make'], shell=True, capture_output=True, text=True)
     os.chdir(os.path.abspath(cwd))
-    if lib_code != 0:
+    if lib_process.returncode != 0:
+        print("Library build failed with the following output:")
+        print(lib_process.stdout)
+        print(lib_process.stderr)
         return 'lib build failed'
 
     if os.environ.get('CI'):
@@ -38,8 +40,11 @@ def build_and_run(name, return_output=False):
 
     cc = CC + ' ' + ccflags + ' -o ' + name + ' ' + name + '.c ' + \
         name + '_test_suite.c -L./include/ -l:libkeras2c.a -lm'
-    build_code = subprocess.run(cc.split(), shell=True).returncode
-    if build_code != 0:
+    build_process = subprocess.run(cc.split(), shell=True, capture_output=True, text=True)
+    if build_process.returncode != 0:
+        print("Build failed with the following output:")
+        print(build_process.stdout)
+        print(build_process.stderr)
         return 'build failed'
     proc_output = subprocess.run(['./' + name])
     rcode = proc_output.returncode
@@ -62,6 +67,7 @@ class TestCoreLayers(unittest.TestCase):
         name = 'test___Dense1' + str(int(time.time()))
         keras2c_main.k2c(model, name)
         rcode = build_and_run(name)
+        print(rcode)
         self.assertEqual(rcode, 0)
 
     def test_Dense2_Activation(self):
