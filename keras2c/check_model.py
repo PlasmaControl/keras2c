@@ -170,9 +170,13 @@ def config_supported_check(model):
             log += f"'shared_axes' option for layer '{layer.name}' is not supported at this time.\n"
         if layer_type(layer) in ['Add', 'Subtract', 'Multiply', 'Average',
                                  'Maximum', 'Minimum']:
-            inshps = layer.input_shape
+            inshps = [tensor.shape for tensor in layer.input]
             if isinstance(inshps, list):
-                insize = [np.prod(inp[1:]) for inp in inshps]
+                insize = []
+                for inp in inshps:
+                    # Exclude batch dimension and replace None with 1
+                    shape = [dim if dim is not None else 1 for dim in inp[1:]]
+                    insize.append(np.prod(shape))
                 if len(set(insize)) > 1:
                     valid = False
                     log += f"Broadcasting merge functions between tensors of different shapes for layer '{layer.name}' is not currently supported.\n"

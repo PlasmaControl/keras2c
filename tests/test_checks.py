@@ -46,10 +46,10 @@ class TestChecks(unittest.TestCase):
 
     def test_activation_supported(self):
         inshp = (10, 8)
-        name = 'foobar'
+        name = 'foobar_1'
         a = keras.layers.Input(shape=inshp)
-        b = keras.layers.LSTM(10, activation='elu',
-                              recurrent_activation='selu')(a)
+        b = keras.layers.LSTM(10, activation='gelu',
+                              recurrent_activation='swish')(a)
         model = keras.models.Model(inputs=a, outputs=b)
         with self.assertRaises(AssertionError):
             keras2c_main.k2c(model, name)
@@ -58,9 +58,10 @@ class TestChecks(unittest.TestCase):
 class TestConfigSupported(unittest.TestCase):
 
     def test_rnn_config_supported(self):
-        inshp = (20, 10, 8)
+        inshp = (20, 80)
+        batch_size = 32
         name = 'foobar'
-        a = keras.layers.Input(shape=inshp, batch_size=None)
+        a = keras.layers.Input(shape=inshp, batch_size=batch_size)
         b = keras.layers.LSTM(10, return_state=True,
                               stateful=True)(a)
         model = keras.models.Model(inputs=a, outputs=b)
