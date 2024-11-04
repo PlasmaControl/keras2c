@@ -40,7 +40,7 @@ def build_and_run(name, return_output=False):
 
     cc = CC + ' ' + ccflags + ' -o ' + name + ' ' + name + '.c ' + \
         name + '_test_suite.c -L./include/ -l:libkeras2c.a -lm'
-    build_process = subprocess.run(cc.split(), shell=True, capture_output=True, text=True)
+    build_process = subprocess.run(cc, shell=True, capture_output=True, text=True)
     if build_process.returncode != 0:
         print("Build failed with the following output:")
         print(build_process.stdout)
