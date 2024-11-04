@@ -7,9 +7,6 @@ Implements tests for core layers
 
 import unittest
 import os
-
-os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
-
 from tensorflow import keras
 from keras2c import keras2c_main
 import subprocess
@@ -51,13 +48,9 @@ def build_and_run(name, return_output=False):
         return 'build failed'
     proc_output = subprocess.run(['./' + name])
     rcode = proc_output.returncode
-    if rcode == 0:
-        if not os.environ.get('CI'):
-            subprocess.run('rm ' + name + '*', shell=True)
-            return (rcode, proc_output.stdout) if return_output else rcode
-    return rcode
-
-
+    if not os.environ.get('CI'):
+        subprocess.run('rm ' + name + '*', shell=True)
+    return (rcode, proc_output.stdout) if return_output else rcode
 class TestCoreLayers(unittest.TestCase):
     """
     Unit tests for core Keras layers using keras2c.

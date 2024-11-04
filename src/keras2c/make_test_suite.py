@@ -87,11 +87,10 @@ def make_test_suite(
             rand_inputs = []
             for j in range(num_inputs):
                 rand_input = 4 * np.random.random(size=tuple(input_shape[j])) - 2
-                # if not stateful:
-                #     rand_input = rand_input[np.newaxis, ...]
+                if not stateful:
+                    rand_input = rand_input[np.newaxis, ...]
                 rand_inputs.append(rand_input)
             # Make predictions
-            rand_inputs = np.array(rand_inputs)
             outputs = model.predict(rand_inputs)
             if isinstance(outputs, list):
                 outputs_concat = np.concatenate([np.ravel(o) for o in outputs])
