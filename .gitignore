@@ -16,3 +16,4 @@ test___*
 docs/_build/*
 local/*
 .venv/*
+foobar*
