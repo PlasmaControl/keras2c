@@ -127,14 +127,24 @@ class Layers2C():
         self.layers += '\n } \n'
 
     def _write_layer_Bidirectional(self, layer, inputs, outputs, i):
-        subname = layer.layer.name
-        method = getattr(self, '_write_layer_' + layer_type(layer.layer))
+        # Get the wrapped layer type (e.g., 'LSTM', 'GRU')
+        wrapped_layer_type = layer_type(layer.forward_layer)
+        # Generate a subname based on the wrapped layer type
+        subname = wrapped_layer_type.lower()
+
+        method = getattr(self, '_write_layer_' + wrapped_layer_type)
+
+        # Process forward and backward layers
         method(layer.forward_layer, inputs, 'forward_' + subname, i)
         method(layer.backward_layer, inputs, 'backward_' + subname, i)
+
         mode = layer.merge_mode
+        # Update inputs to be the outputs of the forward and backward layers
         inputs = ['forward_' + subname, 'backward_' + subname]
-        if layer.layer.return_sequences:
+
+        if layer.forward_layer.return_sequences:
             self.layers += f'k2c_flip(&backward_{subname}_output,0); \n'
+
         if mode == 'sum':
             self._write_layer_Merge(layer, inputs, outputs, i, 'Add')
         elif mode == 'mul':

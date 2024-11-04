@@ -141,6 +141,38 @@ class Weights2C:
                     np.zeros(outshp), f'{layer.name}_output')
 
     def _write_weights_Bidirectional(self, layer):
+        inputs, outputs = get_layer_io_names(layer)
+
+        # Get the input shape of the Bidirectional layer (excluding batch dimension)
+        input_shape = layer.input.shape  # This includes batch dimension
+        input_shape_no_batch = input_shape[1:]  # Exclude batch dimension
+
+        # Get the forward and backward layers
+        forward_layer = layer.forward_layer
+        backward_layer = layer.backward_layer
+
+        # Compute output shapes for forward and backward layers
+        # Include batch dimension as None when computing output shape
+        forward_output_shape = forward_layer.compute_output_shape(
+            (None,) + input_shape_no_batch)
+        backward_output_shape = backward_layer.compute_output_shape(
+            (None,) + input_shape_no_batch)
+
+        # Exclude batch dimension from output shapes
+        forward_output_shape_no_batch = forward_output_shape[1:]
+        backward_output_shape_no_batch = backward_output_shape[1:]
+
+        # Now, use these shapes as needed
+        # For example, write variables to self.stack_vars
+        self.stack_vars += 'size_t ' + layer.name + '_input_shape[] = {' + \
+                           ','.join(map(str, input_shape_no_batch)) + '}; \n'
+        self.stack_vars += 'size_t ' + layer.name + '_forward_output_shape[] = {' + \
+                           ','.join(map(str,
+                                        forward_output_shape_no_batch)) + '}; \n'
+        self.stack_vars += 'size_t ' + layer.name + '_backward_output_shape[] = {' + \
+                           ','.join(map(str,
+                                        backward_output_shape_no_batch)) + '}; \n'
+        """
         try:
             foo = layer.forward_layer.input_shape
             foo = layer.backward_layer.input_shape
@@ -165,24 +197,25 @@ class Weights2C:
             subname = layer.layer.name
             self.stack_vars += f'k2c_tensor * {output_names[0]} = forward_{subname}_output; \n'
             self.stack_vars += f'k2c_tensor * {output_names[1]} = backward_{subname}_output; \n'
+        """
 
     def _write_weights_TimeDistributed(self, layer):
         self._write_outputs(layer)
         try:
             foo = layer.layer.input_shape
         except:
-            temp_input = keras.layers.Input(shape=layer.input_shape[2:], batch_size=1)
+            temp_input = keras.layers.Input(shape=layer.input.shape[2:], batch_size=1)
             foo = layer.layer(temp_input)
         self._write_weights_layer(layer.layer)
-        timeslice_input = np.squeeze(np.zeros(layer.layer.input_shape[1:]))
-        timeslice_output = np.squeeze(np.zeros(layer.layer.output_shape[1:]))
+        timeslice_input = np.squeeze(np.zeros(layer.layer.input.shape[1:]))
+        timeslice_output = np.squeeze(np.zeros(layer.layer.output.shape[1:]))
         self._write_weights_array2c(
             timeslice_input, f'{layer.layer.name}_timeslice_input')
         self._write_weights_array2c(
             timeslice_output, f'{layer.layer.name}_timeslice_output')
-        self.stack_vars += f'const size_t {layer.name}_timesteps = {layer.input_shape[1]}; \n'
-        self.stack_vars += f'const size_t {layer.name}_in_offset = {np.prod(layer.input_shape[2:])}; \n'
-        self.stack_vars += f'const size_t {layer.name}_out_offset = {np.prod(layer.output_shape[2:])}; \n'
+        self.stack_vars += f'const size_t {layer.name}_timesteps = {layer.input.shape[1]}; \n'
+        self.stack_vars += f'const size_t {layer.name}_in_offset = {np.prod(layer.input.shape[2:])}; \n'
+        self.stack_vars += f'const size_t {layer.name}_out_offset = {np.prod(layer.output.shape[2:])}; \n'
 
     def _write_weights_Input(self, layer):
         self.stack_vars += ''
