@@ -6,11 +6,14 @@ Implements tests for core layers
 #!/usr/bin/env python3
 
 import unittest
-import keras
+import os
+
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+
+from tensorflow import keras
 from keras2c import keras2c_main
 import subprocess
 import time
-import os
 
 __author__ = "Rory Conlin"
 __copyright__ = "Copyright 2020, Rory Conlin"
@@ -56,7 +59,18 @@ def build_and_run(name, return_output=False):
 
 
 class TestCoreLayers(unittest.TestCase):
-    """tests for core layers"""
+    """
+    Unit tests for core Keras layers using keras2c.
+    This test suite includes the following tests:
+    - test_Dense1: Tests a Dense layer with ReLU activation.
+    - test_Dense2_Activation: Tests a Dense layer without bias followed by an Activation layer with exponential activation.
+    - test_Dropout_Reshape_Flatten: Tests a sequence of Flatten, Dropout, and Reshape layers.
+    - test_Permute: Tests a Permute layer.
+    - test_repeat_vector: Tests a RepeatVector layer followed by an ActivityRegularization and Dense layer.
+    - test_dummy_layers: Tests a sequence of SpatialDropout3D, Reshape, SpatialDropout2D, Reshape, SpatialDropout1D, and Flatten layers.
+    Each test builds a Keras model, converts it using keras2c, and verifies that the generated code runs successfully.
+    """
+    
 
     def test_Dense1(self):
         inshp = (21, 4, 9)
@@ -67,7 +81,6 @@ class TestCoreLayers(unittest.TestCase):
         name = 'test___Dense1' + str(int(time.time()))
         keras2c_main.k2c(model, name)
         rcode = build_and_run(name)
-        print(rcode)
         self.assertEqual(rcode, 0)
 
     def test_Dense2_Activation(self):

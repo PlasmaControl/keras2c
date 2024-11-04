@@ -6,7 +6,7 @@ Implements tests for the checks run on the model before conversion
 #!/usr/bin/env python3
 
 import unittest
-import keras
+from tensorflow import keras
 from keras2c import keras2c_main
 import numpy as np
 

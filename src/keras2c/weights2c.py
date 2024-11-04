@@ -10,8 +10,8 @@ Gets weights and other parameters from each layer and writes to C file
 # Imports
 import numpy as np
 from keras2c.io_parsing import layer_type, get_layer_io_names, get_model_io_names
-from keras import backend as K
-import keras
+from tensorflow.keras import backend as K
+from tensorflow import keras
 
 maxndim = 5
 
@@ -352,12 +352,13 @@ class Weights2C:
         self._write_weights_array2c(A, f"{layer.name}_kernel")
         self._write_weights_array2c(b, f"{layer.name}_bias")
 
-        # Access the input shape via layer.input.shape
         input_shape = layer.input.shape
+        output_shape = layer.output.shape
+        
         # Exclude the batch dimension and handle None values
         input_shape = [dim if dim is not None else 1 for dim in input_shape[1:]]
 
-        fwork_size = np.prod(input_shape) + np.prod(A.shape)
+        fwork_size = np.prod(input_shape) + np.prod(output_shape[1:])
         self.stack_vars += f'float {layer.name}_fwork[{fwork_size}] = {{0}}; \n'
         self.stack_vars += '\n \n'
 

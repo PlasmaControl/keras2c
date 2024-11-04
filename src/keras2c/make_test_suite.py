@@ -12,7 +12,7 @@ import numpy as np
 from keras2c.io_parsing import get_model_io_names
 from keras2c.weights2c import Weights2C
 import subprocess
-import keras
+from tensorflow import keras
 
 __author__ = "Rory Conlin"
 __copyright__ = "Copyright 2020, Rory Conlin"
@@ -92,8 +92,6 @@ def make_test_suite(
                 rand_inputs.append(rand_input)
             # Make predictions
             rand_inputs = np.array(rand_inputs)
-            print(rand_inputs.shape)
-            print(model.inputs)
             outputs = model.predict(rand_inputs)
             if isinstance(outputs, list):
                 outputs_concat = np.concatenate([np.ravel(o) for o in outputs])

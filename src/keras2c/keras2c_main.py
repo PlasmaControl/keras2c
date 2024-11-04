@@ -17,7 +17,7 @@ from keras2c.check_model import check_model
 from keras2c.make_test_suite import make_test_suite
 import numpy as np
 import subprocess
-import keras
+from tensorflow import keras
 
 
 __author__ = "Rory Conlin"
