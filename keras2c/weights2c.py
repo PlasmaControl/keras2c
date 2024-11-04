@@ -498,8 +498,8 @@ class Weights2C:
         self.stack_vars += 'size_t ' + layer.name + \
             '_pool_size = ' + str(pool_size) + '; \n'
         self._write_outputs(layer)
-        inshp = layer.input_shape[1:]
-        outshp = layer.output_shape[1:]
+        inshp = layer.input.shape[1:]
+        outshp = layer.output.shape[1:]
         if pad == 'same':
             pad_along_height = max((outshp[0] - 1) * stride +
                                    pool_size - inshp[0], 0)
@@ -529,8 +529,8 @@ class Weights2C:
                                             for i in pool_size]) + '}; \n'
         self._write_outputs(layer)
         if padding == 'same':
-            inshp = layer.input_shape[1:]
-            outshp = layer.output_shape[1:]
+            inshp = layer.input.shape[1:]
+            outshp = layer.output.shape[1:]
             pad_along_height = max((outshp[0] - 1) * stride[0] +
                                    pool_size[0] - inshp[0], 0)
             pad_top = int(pad_along_height // 2)
@@ -607,7 +607,7 @@ class Weights2C:
                 ' = ' + str(num_tensors) + '; \n'
             ax = layer.get_config()['axis']
             if ax < 0:
-                input_rank = len(layer.inputs[0].shape)
+                input_rank = len(layer.input[0].shape)
                 ax += input_rank
             adjusted_axis = ax - 1  # Adjust for batch dimension
             self.stack_vars += 'size_t ' + layer.name + '_axis = ' +\

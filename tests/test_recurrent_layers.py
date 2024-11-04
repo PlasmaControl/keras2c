@@ -26,7 +26,7 @@ class TestRecurrentLayers(unittest.TestCase):
     def test_SimpleRNN1(self):
         inshp = (4, 4, 46)
         units = 17
-        a = Input(shape=inshp)
+        a = Input(shape=inshp[1:], batch_size=inshp[0])
         b = SimpleRNN(units, activation='relu',
                       return_sequences=False,
                       stateful=True)(a)
@@ -93,7 +93,7 @@ class TestRecurrentLayers(unittest.TestCase):
     def test_LSTM3(self):
         inshp = (3, 4, 80)
         units = 23
-        a = Input(shape=inshp)
+        a = Input(shape=inshp[1:], batch_size=inshp[0])
         b = LSTM(units, go_backwards=False,
                  return_sequences=True,
                  activation='sigmoid',
@@ -122,7 +122,7 @@ class TestRecurrentLayers(unittest.TestCase):
     def test_GRU2(self):
         inshp = (5, 12, 46)
         units = 17
-        a = Input(shape=inshp)
+        a = Input(shape=inshp[1:], batch_size=inshp[0])
         b = GRU(units, activation='softplus',
                 recurrent_activation='sigmoid',
                 return_sequences=True,

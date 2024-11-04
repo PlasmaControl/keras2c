@@ -80,7 +80,11 @@ def make_test_suite(
 
     for i in range(num_tests):
         if i == num_tests // 2 and stateful:
-            model.reset_states()
+            # Reset states of stateful layers
+            for layer in model.layers:
+                if hasattr(layer, 'reset_states') and callable(
+                        layer.reset_states):
+                    layer.reset_states()
         # Generate random input and write to file
         ct = 0
         while True:
