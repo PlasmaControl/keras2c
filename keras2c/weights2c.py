@@ -498,8 +498,8 @@ class Weights2C:
         self.stack_vars += 'size_t ' + layer.name + \
             '_pool_size = ' + str(pool_size) + '; \n'
         self._write_outputs(layer)
-        inshp = layer.get_input_at(0).shape[1:]
-        outshp = layer.get_output_at(0).shape[1:]
+        inshp = layer.input_shape[1:]
+        outshp = layer.output_shape[1:]
         if pad == 'same':
             pad_along_height = max((outshp[0] - 1) * stride +
                                    pool_size - inshp[0], 0)
@@ -529,15 +529,15 @@ class Weights2C:
                                             for i in pool_size]) + '}; \n'
         self._write_outputs(layer)
         if padding == 'same':
-            inshp = layer.get_input_at(0).shape[1:]
-            outshp = layer.get_output_at(0).shape[1:]
+            inshp = layer.input_shape[1:]
+            outshp = layer.output_shape[1:]
             pad_along_height = max((outshp[0] - 1) * stride[0] +
                                    pool_size[0] - inshp[0], 0)
             pad_top = int(pad_along_height // 2)
             pad_bottom = int(pad_along_height - pad_top)
             pad_along_width = max((outshp[1] - 1) * stride[1] +
                                   pool_size[1] - inshp[1], 0)
-            pad_left = pad_along_width//2
+            pad_left = int(pad_along_width // 2)
             pad_right = pad_along_width - pad_left
             padshp = (inshp[0]+pad_along_height,
                       inshp[1]+pad_along_width, inshp[2])
@@ -601,15 +601,17 @@ class Weights2C:
     def _write_weights_Concatenate(self, layer):
         inputs, outputs = get_layer_io_names(layer)
         for i, (inp, outp) in enumerate(zip(inputs, outputs)):
-            outshp = layer.get_output_at(i).shape[1:]
+            outshp = layer.output.shape[1:]
             num_tensors = len(inp)
             self.stack_vars += 'size_t ' + layer.name + '_num_tensors' + str(i) + \
                 ' = ' + str(num_tensors) + '; \n'
             ax = layer.get_config()['axis']
             if ax < 0:
-                ax += len(layer.get_input_at(i)[0].shape)
+                input_rank = len(layer.inputs[0].shape)
+                ax += input_rank
+            adjusted_axis = ax - 1  # Adjust for batch dimension
             self.stack_vars += 'size_t ' + layer.name + '_axis = ' +\
-                str(ax-1) + '; \n'
+                str(adjusted_axis) + '; \n'
         if outp not in self.model_io[1]:
             self._write_weights_array2c(np.zeros(outshp),
                                         outp + '_output')

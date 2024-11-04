@@ -38,7 +38,7 @@ def build_and_run(name, return_output=False):
 
     cc = CC + ' ' + ccflags + ' -o ' + name + ' ' + name + '.c ' + \
         name + '_test_suite.c -L./include/ -l:libkeras2c.a -lm'
-    build_code = subprocess.run(cc.split(), shell=True).returncode
+    build_code = subprocess.run(cc, shell=True).returncode
     if build_code != 0:
         return 'build failed'
     proc_output = subprocess.run(['./' + name])
