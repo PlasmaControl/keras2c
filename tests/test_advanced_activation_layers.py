@@ -7,7 +7,7 @@ Implements tests for advanced activation layers
 """
 
 import unittest
-import keras
+from tensorflow import keras
 from keras2c import keras2c_main
 import time
 from test_core_layers import build_and_run

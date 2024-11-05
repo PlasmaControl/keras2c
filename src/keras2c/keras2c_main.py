@@ -17,7 +17,7 @@ from keras2c.check_model import check_model
 from keras2c.make_test_suite import make_test_suite
 import numpy as np
 import subprocess
-import keras
+from tensorflow import keras
 
 
 __author__ = "Rory Conlin"
@@ -72,7 +72,7 @@ def model2c(model, function_name, malloc=False, verbose=True):
     term_sig, term_fun = gen_function_terminate(function_name, malloc_vars)
     reset_sig, reset_fun = gen_function_reset(function_name)
 
-    with open(function_name + '.c', 'x+') as source:
+    with open(function_name + '.c', 'w') as source:
         source.write(includes)
         source.write(static_vars + '\n\n')
         source.write(function_signature)
@@ -85,7 +85,7 @@ def model2c(model, function_name, malloc=False, verbose=True):
         if stateful:
             source.write(reset_fun)
 
-    with open(function_name + '.h', 'x+') as header:
+    with open(function_name + '.h', 'w') as header:
         header.write('#pragma once \n')
         header.write('#include "./include/k2c_tensor_include.h" \n')
         header.write(function_signature + '; \n')
@@ -146,11 +146,11 @@ def gen_function_initialize(function_name, malloc_vars):
 
     init_fun = init_sig
     init_fun += ' { \n\n'
-    for key in malloc_vars.keys():
-        fname = function_name + key + ".csv"
-        np.savetxt(fname, malloc_vars[key], fmt="%.8e", delimiter=',')
-        init_fun += '*' + key + " = k2c_read_array(\"" + \
-            fname + "\"," + str(malloc_vars[key].size) + "); \n"
+    for key, value in malloc_vars.items():
+        init_fun += '*' + key + " = (float*) malloc(" + str(value.size) + " * sizeof(float)); \n"
+        init_fun += "for (size_t i = 0; i < " + str(value.size) + "; ++i) {\n"
+        init_fun += "    (*" + key + ")[i] = " + str(value.flatten(order='C')[0]) + "f;\n"
+        init_fun += "}\n"
     init_fun += "} \n\n"
 
     return init_sig, init_fun

@@ -6,11 +6,11 @@ Implements tests for core layers
 #!/usr/bin/env python3
 
 import unittest
-import keras
+import os
+from tensorflow import keras
 from keras2c import keras2c_main
 import subprocess
 import time
-import os
 
 __author__ = "Rory Conlin"
 __copyright__ = "Copyright 2020, Rory Conlin"
@@ -23,12 +23,14 @@ CC = 'gcc'
 
 
 def build_and_run(name, return_output=False):
-
     cwd = os.getcwd()
     os.chdir(os.path.abspath('./include/'))
-    lib_code = subprocess.run(['make'], shell=True).returncode
+    lib_process = subprocess.run(['make'], shell=True, capture_output=True, text=True)
     os.chdir(os.path.abspath(cwd))
-    if lib_code != 0:
+    if lib_process.returncode != 0:
+        print("Library build failed with the following output:")
+        print(lib_process.stdout)
+        print(lib_process.stderr)
         return 'lib build failed'
 
     if os.environ.get('CI'):
@@ -43,15 +45,22 @@ def build_and_run(name, return_output=False):
         return 'build failed'
     proc_output = subprocess.run(['./' + name])
     rcode = proc_output.returncode
-    if rcode == 0:
-        if not os.environ.get('CI'):
-            subprocess.run('rm ' + name + '*', shell=True)
-            return (rcode, proc_output.stdout) if return_output else rcode
-    return rcode
-
-
+    if not os.environ.get('CI'):
+        subprocess.run('rm ' + name + '*', shell=True)
+    return (rcode, proc_output.stdout) if return_output else rcode
 class TestCoreLayers(unittest.TestCase):
-    """tests for core layers"""
+    """
+    Unit tests for core Keras layers using keras2c.
+    This test suite includes the following tests:
+    - test_Dense1: Tests a Dense layer with ReLU activation.
+    - test_Dense2_Activation: Tests a Dense layer without bias followed by an Activation layer with exponential activation.
+    - test_Dropout_Reshape_Flatten: Tests a sequence of Flatten, Dropout, and Reshape layers.
+    - test_Permute: Tests a Permute layer.
+    - test_repeat_vector: Tests a RepeatVector layer followed by an ActivityRegularization and Dense layer.
+    - test_dummy_layers: Tests a sequence of SpatialDropout3D, Reshape, SpatialDropout2D, Reshape, SpatialDropout1D, and Flatten layers.
+    Each test builds a Keras model, converts it using keras2c, and verifies that the generated code runs successfully.
+    """
+    
 
     def test_Dense1(self):
         inshp = (21, 4, 9)
