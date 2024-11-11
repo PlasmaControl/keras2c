@@ -45,7 +45,7 @@ class Layers2C():
         """
         written_io = set(self.model_inputs)
         unwritten_io = set(get_all_io_names(self.model)) - written_io
-        while len(unwritten_io) > 0:
+        while len(unwritten_io) > 0: # unwritten_io doesn't change
             for layer in self.model.layers:
                 layer_inputs, layer_outputs = get_layer_io_names(layer)
                 for i, (inp, outp) in enumerate(zip(layer_inputs, layer_outputs)):

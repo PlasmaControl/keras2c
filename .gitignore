@@ -15,5 +15,5 @@ __pycache__/
 test___*
 docs/_build/*
 local/*
-.venv/*
+.venv*
 foobar*
