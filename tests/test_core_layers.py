@@ -65,7 +65,17 @@ class TestCoreLayers(unittest.TestCase):
     - test_dummy_layers: Tests a sequence of SpatialDropout3D, Reshape, SpatialDropout2D, Reshape, SpatialDropout1D, and Flatten layers.
     Each test builds a Keras model, converts it using keras2c, and verifies that the generated code runs successfully.
     """
-    
+
+
+    def test_Activation1(self):
+        inshp = (10, 20)
+        a = keras.layers.Input(shape=inshp)
+        b = keras.layers.Activation('relu')(a)
+        model = keras.models.Model(inputs=a, outputs=b)
+        name = 'test___Activation1' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)
 
     def test_Dense1(self):
         inshp = (21, 4, 9)
