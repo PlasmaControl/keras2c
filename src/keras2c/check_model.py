@@ -12,7 +12,7 @@ import numpy as np
 from keras2c.io_parsing import layer_type, flatten
 from keras2c.weights2c import Weights2C
 from keras2c.layer2c import Layers2C
-from tensorflow import keras
+
 
 __author__ = "Rory Conlin"
 __copyright__ = "Copyright 2020, Rory Conlin"

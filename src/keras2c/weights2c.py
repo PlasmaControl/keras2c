@@ -10,7 +10,6 @@ Gets weights and other parameters from each layer and writes to C file
 # Imports
 import numpy as np
 from keras2c.io_parsing import layer_type, get_layer_io_names, get_model_io_names
-from tensorflow.keras import backend as K
 from tensorflow import keras
 
 maxndim = 5
@@ -379,12 +378,12 @@ class Weights2C:
         A = weights[0]
         if layer.get_config()['use_bias']:
             b = weights[1]
-            self._write_weights_array2c(b, f"{layer.name}_bias")
         else:
-            b = None  # No bias term
+            b = np.zeros(A.shape[1])  # No bias term
     
         self._write_weights_array2c(A, f"{layer.name}_kernel")
-    
+        self._write_weights_array2c(b, f"{layer.name}_bias")
+
         input_shape = layer.input.shape
         output_shape = layer.output.shape
         
