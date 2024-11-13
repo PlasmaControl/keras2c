@@ -43,24 +43,24 @@ class Layers2C():
         Returns:
             layers (str): C code for calling layer functions in correct order
         """
-        written_io = set(self.model_inputs)
-        unwritten_io = set(get_all_io_names(self.model)) - written_io
-        while len(unwritten_io) > 0: # unwritten_io doesn't change
-            for layer in self.model.layers:
-                layer_inputs, layer_outputs = get_layer_io_names(layer)
-                for i, (inp, outp) in enumerate(zip(layer_inputs, layer_outputs)):
-                    if (
-                        set(flatten(inp)).issubset(written_io)
-                        and set(flatten(outp)).issubset(unwritten_io)
-                    ) or layer_type(layer) == 'InputLayer':
-                        if verbose:
-                            print('Writing layer ', outp)
-                        method = getattr(self, '_write_layer_' + layer_type(layer))
-                        method(layer, inp, outp, i)
-                        written_io |= set(flatten(inp))
-                        written_io |= set(flatten(outp))
-                        unwritten_io -= set(flatten(inp))
-                        unwritten_io -= set(flatten(outp))
+        
+        # written_io = set(self.model_inputs)
+        # unwritten_io = set(get_all_io_names(self.model)) - written_io
+        
+        # while len(unwritten_io) > 0: # unwritten_io doesn't change
+        for layer in self.model.layers:
+            layer_inputs, layer_outputs = get_layer_io_names(layer)
+            for i, (inp, outp) in enumerate(zip(layer_inputs, layer_outputs)):
+                # io_subset = set(inp).issubset(written_io) and set(outp).issubset(unwritten_io)
+                # if io_subset or layer_type(layer) == 'InputLayer':
+                if verbose:
+                    print('Writing layer ', outp)
+                method = getattr(self, '_write_layer_' + layer_type(layer))
+                method(layer, inp, outp, i)
+                        # written_io |= set(flatten(inp))
+                        # written_io |= set(flatten(outp))
+                        # unwritten_io -= set(flatten(inp))
+                        # unwritten_io -= set(flatten(outp))
         return self.layers
 
     def _format_io_names(self, layer, inp, outp, model_io=False):
