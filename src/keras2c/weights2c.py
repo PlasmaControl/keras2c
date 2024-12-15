@@ -10,7 +10,6 @@ Gets weights and other parameters from each layer and writes to C file
 # Imports
 import numpy as np
 from keras2c.io_parsing import layer_type, get_layer_io_names, get_model_io_names
-from tensorflow.keras import backend as K
 from tensorflow import keras
 
 maxndim = 5
@@ -141,6 +140,38 @@ class Weights2C:
                     np.zeros(outshp), f'{layer.name}_output')
 
     def _write_weights_Bidirectional(self, layer):
+        inputs, outputs = get_layer_io_names(layer)
+
+        # Get the input shape of the Bidirectional layer (excluding batch dimension)
+        input_shape = layer.input.shape  # This includes batch dimension
+        input_shape_no_batch = input_shape[1:]  # Exclude batch dimension
+
+        # Get the forward and backward layers
+        forward_layer = layer.forward_layer
+        backward_layer = layer.backward_layer
+
+        # Compute output shapes for forward and backward layers
+        # Include batch dimension as None when computing output shape
+        forward_output_shape = forward_layer.compute_output_shape(
+            (None,) + input_shape_no_batch)
+        backward_output_shape = backward_layer.compute_output_shape(
+            (None,) + input_shape_no_batch)
+
+        # Exclude batch dimension from output shapes
+        forward_output_shape_no_batch = forward_output_shape[1:]
+        backward_output_shape_no_batch = backward_output_shape[1:]
+
+        # Now, use these shapes as needed
+        # For example, write variables to self.stack_vars
+        self.stack_vars += 'size_t ' + layer.name + '_input_shape[] = {' + \
+                           ','.join(map(str, input_shape_no_batch)) + '}; \n'
+        self.stack_vars += 'size_t ' + layer.name + '_forward_output_shape[] = {' + \
+                           ','.join(map(str,
+                                        forward_output_shape_no_batch)) + '}; \n'
+        self.stack_vars += 'size_t ' + layer.name + '_backward_output_shape[] = {' + \
+                           ','.join(map(str,
+                                        backward_output_shape_no_batch)) + '}; \n'
+        """
         try:
             foo = layer.forward_layer.input_shape
             foo = layer.backward_layer.input_shape
@@ -165,24 +196,25 @@ class Weights2C:
             subname = layer.layer.name
             self.stack_vars += f'k2c_tensor * {output_names[0]} = forward_{subname}_output; \n'
             self.stack_vars += f'k2c_tensor * {output_names[1]} = backward_{subname}_output; \n'
+        """
 
     def _write_weights_TimeDistributed(self, layer):
         self._write_outputs(layer)
         try:
             foo = layer.layer.input_shape
         except:
-            temp_input = keras.layers.Input(shape=layer.input_shape[2:], batch_size=1)
+            temp_input = keras.layers.Input(shape=layer.input.shape[2:], batch_size=1)
             foo = layer.layer(temp_input)
         self._write_weights_layer(layer.layer)
-        timeslice_input = np.squeeze(np.zeros(layer.layer.input_shape[1:]))
-        timeslice_output = np.squeeze(np.zeros(layer.layer.output_shape[1:]))
+        timeslice_input = np.squeeze(np.zeros(layer.layer.input.shape[1:]))
+        timeslice_output = np.squeeze(np.zeros(layer.layer.output.shape[1:]))
         self._write_weights_array2c(
             timeslice_input, f'{layer.layer.name}_timeslice_input')
         self._write_weights_array2c(
             timeslice_output, f'{layer.layer.name}_timeslice_output')
-        self.stack_vars += f'const size_t {layer.name}_timesteps = {layer.input_shape[1]}; \n'
-        self.stack_vars += f'const size_t {layer.name}_in_offset = {np.prod(layer.input_shape[2:])}; \n'
-        self.stack_vars += f'const size_t {layer.name}_out_offset = {np.prod(layer.output_shape[2:])}; \n'
+        self.stack_vars += f'const size_t {layer.name}_timesteps = {layer.input.shape[1]}; \n'
+        self.stack_vars += f'const size_t {layer.name}_in_offset = {np.prod(layer.input.shape[2:])}; \n'
+        self.stack_vars += f'const size_t {layer.name}_out_offset = {np.prod(layer.output.shape[2:])}; \n'
 
     def _write_weights_Input(self, layer):
         self.stack_vars += ''
@@ -346,12 +378,12 @@ class Weights2C:
         A = weights[0]
         if layer.get_config()['use_bias']:
             b = weights[1]
-            self._write_weights_array2c(b, f"{layer.name}_bias")
         else:
-            b = None  # No bias term
+            b = np.zeros(A.shape[1])  # No bias term
     
         self._write_weights_array2c(A, f"{layer.name}_kernel")
-    
+        self._write_weights_array2c(b, f"{layer.name}_bias")
+
         input_shape = layer.input.shape
         output_shape = layer.output.shape
         
@@ -499,8 +531,8 @@ class Weights2C:
         self.stack_vars += 'size_t ' + layer.name + \
             '_pool_size = ' + str(pool_size) + '; \n'
         self._write_outputs(layer)
-        inshp = layer.get_input_at(0).shape[1:]
-        outshp = layer.get_output_at(0).shape[1:]
+        inshp = layer.input.shape[1:]
+        outshp = layer.output.shape[1:]
         if pad == 'same':
             pad_along_height = max((outshp[0] - 1) * stride +
                                    pool_size - inshp[0], 0)
@@ -530,15 +562,15 @@ class Weights2C:
                                             for i in pool_size]) + '}; \n'
         self._write_outputs(layer)
         if padding == 'same':
-            inshp = layer.get_input_at(0).shape[1:]
-            outshp = layer.get_output_at(0).shape[1:]
+            inshp = layer.input.shape[1:]
+            outshp = layer.output.shape[1:]
             pad_along_height = max((outshp[0] - 1) * stride[0] +
                                    pool_size[0] - inshp[0], 0)
             pad_top = int(pad_along_height // 2)
             pad_bottom = int(pad_along_height - pad_top)
             pad_along_width = max((outshp[1] - 1) * stride[1] +
                                   pool_size[1] - inshp[1], 0)
-            pad_left = pad_along_width//2
+            pad_left = int(pad_along_width // 2)
             pad_right = pad_along_width - pad_left
             padshp = (inshp[0]+pad_along_height,
                       inshp[1]+pad_along_width, inshp[2])
@@ -602,15 +634,17 @@ class Weights2C:
     def _write_weights_Concatenate(self, layer):
         inputs, outputs = get_layer_io_names(layer)
         for i, (inp, outp) in enumerate(zip(inputs, outputs)):
-            outshp = layer.get_output_at(i).shape[1:]
+            outshp = layer.output.shape[1:]
             num_tensors = len(inp)
             self.stack_vars += 'size_t ' + layer.name + '_num_tensors' + str(i) + \
                 ' = ' + str(num_tensors) + '; \n'
             ax = layer.get_config()['axis']
             if ax < 0:
-                ax += len(layer.get_input_at(i)[0].shape)
+                input_rank = len(layer.input[0].shape)
+                ax += input_rank
+            adjusted_axis = ax - 1  # Adjust for batch dimension
             self.stack_vars += 'size_t ' + layer.name + '_axis = ' +\
-                str(ax-1) + '; \n'
+                str(adjusted_axis) + '; \n'
         if outp not in self.model_io[1]:
             self._write_weights_array2c(np.zeros(outshp),
                                         outp + '_output')

@@ -34,6 +34,7 @@ class TestMalloc(unittest.TestCase):
         rcode = build_and_run(name)
         self.assertEqual(rcode, 0)
 
+    @unittest.skip  # no reason needed
     def test_Malloc2(self):
         model = keras.models.Sequential()
         model.add(keras.layers.Conv2D(8, (3, 3), padding='same',

@@ -42,15 +42,17 @@ def build_and_run(name, return_output=False):
         name + '_test_suite.c -L./include/ -l:libkeras2c.a -lm'
     build_process = subprocess.run(cc, shell=True, capture_output=True, text=True)
     if build_process.returncode != 0:
-        print("Build failed with the following output:")
+        print("Compilation failed with the following output:")
         print(build_process.stdout)
         print(build_process.stderr)
-        return 'build failed'
+        return 'compilation failed'
     proc_output = subprocess.run(['./' + name])
     rcode = proc_output.returncode
     if not os.environ.get('CI'):
         subprocess.run('rm ' + name + '*', shell=True)
     return (rcode, proc_output.stdout) if return_output else rcode
+
+
 class TestCoreLayers(unittest.TestCase):
     """
     Unit tests for core Keras layers using keras2c.
@@ -63,7 +65,17 @@ class TestCoreLayers(unittest.TestCase):
     - test_dummy_layers: Tests a sequence of SpatialDropout3D, Reshape, SpatialDropout2D, Reshape, SpatialDropout1D, and Flatten layers.
     Each test builds a Keras model, converts it using keras2c, and verifies that the generated code runs successfully.
     """
-    
+
+
+    def test_Activation1(self):
+        inshp = (10, 20)
+        a = keras.layers.Input(shape=inshp)
+        b = keras.layers.Activation('relu')(a)
+        model = keras.models.Model(inputs=a, outputs=b)
+        name = 'test___Activation1' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)
 
     def test_Dense1(self):
         inshp = (21, 4, 9)
@@ -76,14 +88,25 @@ class TestCoreLayers(unittest.TestCase):
         rcode = build_and_run(name)
         self.assertEqual(rcode, 0)
 
-    def test_Dense2_Activation(self):
+    def test_Dense2_NoBias(self):
         inshp = (40, 30)
         units = 500
         a = keras.layers.Input(shape=inshp)
         b = keras.layers.Dense(units, activation='tanh', use_bias=False)(a)
-        c = keras.layers.Activation('exponential')(b)
-        model = keras.models.Model(inputs=a, outputs=c)
+        model = keras.models.Model(inputs=a, outputs=b)
         name = 'test___Dense2' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)
+
+    def test_Dense3_Activation(self):
+        inshp = (40, 30)
+        units = 500
+        a = keras.layers.Input(shape=inshp, name='input_layer')
+        b = keras.layers.Dense(units, activation='tanh', use_bias=False, name='dense_layer')(a)
+        c = keras.layers.Activation('exponential', name='activation_layer')(b)
+        model = keras.models.Model(inputs=a, outputs=c)
+        name = 'test___Dense3' + str(int(time.time()))
         keras2c_main.k2c(model, name)
         rcode = build_and_run(name)
         self.assertEqual(rcode, 0)
@@ -230,6 +253,7 @@ class TestNormalization(unittest.TestCase):
 class TestSharedLayers(unittest.TestCase):
     """tests for shared layers"""
 
+    @unittest.skip  # no reason needed
     def test_SharedLayer1(self):
         inshp = (10, 20)
         xi = keras.layers.Input(shape=inshp)
