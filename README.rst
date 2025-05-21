@@ -10,6 +10,13 @@ keras2c
 keras2c is a library for deploying keras neural networks in C99, using only standard libraries.
 It is designed to be as simple as possible for real time applications.
 
+Please cite `this paper <https://doi.org/10.1016/j.engappai.2021.104182>`_ if you use this work in your research:
+
+.. code-block:: bibtex
+
+    R. Conlin, K. Erickson, J. Abbate, and E. Kolemen, “Keras2c: A library for converting Keras neural networks to real-time compatible C,” 
+    Engineering Applications of Artificial Intelligence, vol. 100, p. 104182, Apr. 2021, doi: 10.1016/j.engappai.2021.104182.
+
 Quickstart
 **********
 
