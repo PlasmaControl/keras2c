@@ -1,4 +1,4 @@
-Metadata-Version: 2.1
+Metadata-Version: 2.4
 Name: keras2c
 Version: 0.1
 Summary: A library for converting Keras neural networks to real-time compatible C.
@@ -17,6 +17,7 @@ Classifier: Programming Language :: Python :: 3.10
 Classifier: Programming Language :: Python :: 3.11
 Description-Content-Type: text/markdown
 License-File: LICENSE
-Requires-Dist: tensorflow
+Requires-Dist: tensorflow>=2.0
 Requires-Dist: keras
-Requires-Dist: numpy
+Requires-Dist: numpy>=1.13.0
+Dynamic: license-file

@@ -4,6 +4,7 @@ pyproject.toml
 setup.py
 src/keras2c/__init__.py
 src/keras2c/__main__.py
+src/keras2c/backend.py
 src/keras2c/check_model.py
 src/keras2c/io_parsing.py
 src/keras2c/keras2c_main.py
