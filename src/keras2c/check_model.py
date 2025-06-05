@@ -121,10 +121,16 @@ def activation_supported_check(model):
         recurrent_activation = config.get('recurrent_activation')
         if activation not in supported_activations and activation is not None:
             valid = False
-            log += f"Activation type '{activation}' for layer '{layer.name}' is not supported at this time.\n"
+            log += (
+                f"Activation type '{activation}' for layer '{layer.name}' "
+                "is not supported at this time.\n"
+            )
         if recurrent_activation not in supported_activations and recurrent_activation is not None:
             valid = False
-            log += f"Recurrent activation type '{recurrent_activation}' for layer '{layer.name}' is not supported at this time.\n"
+            log += (
+                f"Recurrent activation type '{recurrent_activation}' for "
+                f"layer '{layer.name}' is not supported at this time.\n"
+            )
         return valid, log
 
     valid = True
@@ -158,16 +164,28 @@ def config_supported_check(model):
         config = layer.get_config()
         if config.get('merge_mode', 'foo') is None:
             valid = False
-            log += "Merge mode of 'None' for Bidirectional layers is not supported. Try using two separate RNNs instead.\n"
+            log += (
+                "Merge mode of 'None' for Bidirectional layers is not "
+                "supported. Try using two separate RNNs instead.\n"
+            )
         if config.get('data_format') not in ['channels_last', None]:
             valid = False
-            log += f"Data format '{config.get('data_format')}' for layer '{layer.name}' is not supported at this time.\n"
+            log += (
+                f"Data format '{config.get('data_format')}' for layer "
+                f"'{layer.name}' is not supported at this time.\n"
+            )
         if config.get('return_state'):
             valid = False
-            log += f"'return_state' option for layer '{layer.name}' is not supported at this time.\n"
+            log += (
+                f"'return_state' option for layer '{layer.name}' is "
+                "not supported at this time.\n"
+            )
         if config.get('shared_axes'):
             valid = False
-            log += f"'shared_axes' option for layer '{layer.name}' is not supported at this time.\n"
+            log += (
+                f"'shared_axes' option for layer '{layer.name}' is "
+                "not supported at this time.\n"
+            )
         if layer_type(layer) in ['Add', 'Subtract', 'Multiply', 'Average',
                                  'Maximum', 'Minimum']:
             inshps = [tensor.shape for tensor in layer.input]
@@ -179,7 +197,11 @@ def config_supported_check(model):
                     insize.append(np.prod(shape))
                 if len(set(insize)) > 1:
                     valid = False
-                    log += f"Broadcasting merge functions between tensors of different shapes for layer '{layer.name}' is not currently supported.\n"
+                    log += (
+                        "Broadcasting merge functions between tensors of "
+                        f"different shapes for layer '{layer.name}' is not "
+                        "currently supported.\n"
+                    )
         if layer_type(layer) in ['BatchNormalization']:
             if isinstance(config.get('axis'), (list, tuple)) and len(flatten(config.get('axis'))) > 1:
                 valid = False

@@ -185,13 +185,18 @@ def make_test_suite(
     file.write("\n")
     s = "clock_t t1 = clock(); \n"
     s += (
-        f'printf("Average time over {num_tests} tests: %e s \\n", \n ((double)t1-t0)/(double)CLOCKS_PER_SEC/(double){num_tests}); \n'
+        f'printf("Average time over {num_tests} tests: %e s \\n",\n'
+        f'        ((double)t1-t0)/(double)CLOCKS_PER_SEC/(double){num_tests}); \n'
     )
     file.write(s)
 
     for i in range(num_tests):
         for j in range(num_outputs):
-            s = f"errors[{i * num_outputs + j}] = maxabs(&keras_{model_outputs[j]}_test{i + 1},&c_{model_outputs[j]}_test{i + 1}); \n"
+            s = (
+                f"errors[{i * num_outputs + j}] = "
+                f"maxabs(&keras_{model_outputs[j]}_test{i + 1},"
+                f"&c_{model_outputs[j]}_test{i + 1}); \n"
+            )
             file.write(s)
     s = "float maxerror = errors[0]; \n"
     s += "for(size_t i=1; i< num_tests*num_outputs;i++){ \n"
