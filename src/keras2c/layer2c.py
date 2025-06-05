@@ -48,7 +48,15 @@ class Layers2C():
         while len(unwritten_io) > 0:
             for layer in self.model.layers:
                 layer_inputs, layer_outputs = get_layer_io_names(layer)
-                for i, (inp, outp) in enumerate(zip(layer_inputs, layer_outputs)):
+                if len(layer_outputs) == 0:
+                    continue
+                if len(layer_inputs) > 1:
+                    inp = layer_inputs
+                elif len(layer_inputs) == 1:
+                    inp = layer_inputs[0]
+                else:
+                    inp = []
+                for i, outp in enumerate(layer_outputs):
                     if (
                         set(flatten(inp)).issubset(written_io)
                         and set(flatten(outp)).issubset(unwritten_io)

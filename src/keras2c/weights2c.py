@@ -137,7 +137,7 @@ class Weights2C:
             outshp = layer.output.shape[1:]
             if outputs[0] not in self.model_io[1]:
                 self._write_weights_array2c(
-                    np.zeros(outshp), f'{layer.name}_output')
+                    np.zeros(outshp), f'{outputs[0]}_output')
 
     def _write_weights_Bidirectional(self, layer):
         inputs, outputs = get_layer_io_names(layer)
@@ -625,29 +625,38 @@ class Weights2C:
     def _write_weights_Merge(self, layer):
         self._write_outputs(layer)
         inputs, outputs = get_layer_io_names(layer)
-        for i, (inp, outp) in enumerate(zip(inputs, outputs)):
-            num_tensors = len(inp)
-            self.stack_vars += 'size_t ' + layer.name + '_num_tensors' + str(i) + \
+        if not outputs:
+            return
+        num_tensors = len(inputs)
+        for i, outp in enumerate(outputs):
+            self.stack_vars += (
+                'size_t ' + layer.name + '_num_tensors' + str(i) +
                 ' = ' + str(num_tensors) + '; \n'
+            )
         self.stack_vars += '\n\n'
 
     def _write_weights_Concatenate(self, layer):
         inputs, outputs = get_layer_io_names(layer)
-        for i, (inp, outp) in enumerate(zip(inputs, outputs)):
-            outshp = layer.output.shape[1:]
-            num_tensors = len(inp)
-            self.stack_vars += 'size_t ' + layer.name + '_num_tensors' + str(i) + \
+        if not outputs:
+            return
+        outshp = layer.output.shape[1:]
+        num_tensors = len(inputs)
+        ax = layer.get_config()['axis']
+        if ax < 0:
+            input_rank = len(layer.input[0].shape)
+            ax += input_rank
+        adjusted_axis = ax - 1  # Adjust for batch dimension
+        for i, outp in enumerate(outputs):
+            self.stack_vars += (
+                'size_t ' + layer.name + '_num_tensors' + str(i) +
                 ' = ' + str(num_tensors) + '; \n'
-            ax = layer.get_config()['axis']
-            if ax < 0:
-                input_rank = len(layer.input[0].shape)
-                ax += input_rank
-            adjusted_axis = ax - 1  # Adjust for batch dimension
-            self.stack_vars += 'size_t ' + layer.name + '_axis = ' +\
+            )
+            self.stack_vars += (
+                'size_t ' + layer.name + '_axis = ' +
                 str(adjusted_axis) + '; \n'
-        if outp not in self.model_io[1]:
-            self._write_weights_array2c(np.zeros(outshp),
-                                        outp + '_output')
+            )
+            if outp not in self.model_io[1]:
+                self._write_weights_array2c(np.zeros(outshp), outp + '_output')
         self.stack_vars += '\n\n'
 
     def _write_weights_ELU(self, layer):
