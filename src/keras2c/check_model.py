@@ -158,7 +158,7 @@ def config_supported_check(model):
         config = layer.get_config()
         if config.get('merge_mode', 'foo') is None:
             valid = False
-            log += f"Merge mode of 'None' for Bidirectional layers is not supported. Try using two separate RNNs instead.\n"
+            log += "Merge mode of 'None' for Bidirectional layers is not supported. Try using two separate RNNs instead.\n"
         if config.get('data_format') not in ['channels_last', None]:
             valid = False
             log += f"Data format '{config.get('data_format')}' for layer '{layer.name}' is not supported at this time.\n"
