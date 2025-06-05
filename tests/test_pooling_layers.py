@@ -6,8 +6,6 @@ Implements tests for pooling layers
 #!/usr/bin/env python3
 
 import unittest
-from tensorflow import keras
-from tensorflow.keras import layers
 from tensorflow.keras.layers import (
     Input, MaxPooling1D, AveragePooling1D, MaxPooling2D, AveragePooling2D,
     GlobalAveragePooling1D, GlobalMaxPooling1D, GlobalAveragePooling2D,
