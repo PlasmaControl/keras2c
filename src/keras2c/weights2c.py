@@ -675,7 +675,7 @@ class Weights2C:
 
     def _write_weights_ThresholdedReLU(self, layer):
         theta = layer.get_config()['theta']
-        self.stack_vars = 'float ' + layer.name + \
+        self.stack_vars += 'float ' + layer.name + \
             '_theta = ' + str(theta) + '; \n'
         self.stack_vars += '\n\n'
 
