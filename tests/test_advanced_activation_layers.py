@@ -68,3 +68,15 @@ class TestAdvancedActivation(unittest.TestCase):
         keras2c_main.k2c(model, name)
         rcode = build_and_run(name)
         self.assertEqual(rcode, 0)
+
+    def test_ThresholdedReLU(self):
+        """Test conversion of ThresholdedReLU."""
+        inshp = (4, 5, 6, 3)
+        theta = 0.5
+        a = keras.Input(shape=inshp)
+        b = keras.layers.ThresholdedReLU(theta=theta)(a)
+        model = keras.Model(inputs=a, outputs=b)
+        name = 'test___ThresholdedReLU' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)
