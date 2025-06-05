@@ -15,6 +15,7 @@ from keras2c.io_parsing import (
     flatten)
 from keras2c.check_model import check_model
 from keras2c.make_test_suite import make_test_suite
+from keras2c.types import Keras2CConfig
 import numpy as np
 import subprocess
 from .backend import keras
@@ -206,14 +207,29 @@ def k2c(model, function_name, malloc=False, num_tests=10, verbose=True):
         None
     """
 
+    cfg = Keras2CConfig(
+        model=model,
+        function_name=function_name,
+        malloc=malloc,
+        num_tests=num_tests,
+        verbose=verbose,
+    )
+
+    model = cfg.model
+    function_name = cfg.function_name
+    malloc = cfg.malloc
+    num_tests = cfg.num_tests
+    verbose = cfg.verbose
+
     function_name = str(function_name)
     filename = function_name + '.c'
     if isinstance(model, str):
         model = keras.load_model(model)
     elif not isinstance(model, keras.Model):
-        raise ValueError('Unknown model type. Model should ' +
-                         'either be an instance of keras.Model, ' +
-                         'or a filepath to a saved .h5 model')
+        raise ValueError(
+            'Unknown model type. Model should either be an instance of keras.Model, '
+            'or a filepath to a saved .h5 model'
+        )
 
     # Check that the model can be converted
     check_model(model, function_name)

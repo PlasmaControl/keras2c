@@ -204,7 +204,7 @@ class Weights2C:
         self._write_outputs(layer)
         try:
             foo = layer.layer.input_shape
-        except:
+        except Exception:
             temp_input = keras.layers.Input(shape=layer.input.shape[2:], batch_size=1)
             foo = layer.layer(temp_input)
         self._write_weights_layer(layer.layer)
