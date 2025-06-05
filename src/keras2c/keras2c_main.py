@@ -219,7 +219,6 @@ def k2c(model, function_name, malloc=False, num_tests=10, verbose=True):
     verbose = cfg.verbose
 
     function_name = str(function_name)
-    filename = function_name + '.c'
     if isinstance(model, str):
         model = keras.load_model(model)
     elif not isinstance(model, keras.Model):

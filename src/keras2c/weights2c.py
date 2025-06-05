@@ -181,13 +181,13 @@ class Weights2C:
                                         backward_output_shape_no_batch)) + '}; \n'
         """
         try:
-            foo = layer.forward_layer.input_shape
-            foo = layer.backward_layer.input_shape
-        except:
+            layer.forward_layer.input_shape
+            layer.backward_layer.input_shape
+        except Exception:
             temp_input = keras.layers.Input(shape=layer.input_shape[2:])
-            foo = layer.layer(temp_input)
-            foo = layer.forward_layer(temp_input)
-            foo = layer.backward_layer(temp_input)
+            layer.layer(temp_input)
+            layer.forward_layer(temp_input)
+            layer.backward_layer(temp_input)
         self._write_weights_layer(layer.backward_layer)
         self._write_weights_layer(layer.forward_layer)
         if layer.merge_mode:
@@ -209,10 +209,10 @@ class Weights2C:
     def _write_weights_TimeDistributed(self, layer):
         self._write_outputs(layer)
         try:
-            foo = layer.layer.input_shape
+            layer.layer.input_shape
         except Exception:
             temp_input = keras.layers.Input(shape=layer.input.shape[2:], batch_size=1)
-            foo = layer.layer(temp_input)
+            layer.layer(temp_input)
         self._write_weights_layer(layer.layer)
         timeslice_input = np.squeeze(np.zeros(layer.layer.input.shape[1:]))
         timeslice_output = np.squeeze(np.zeros(layer.layer.output.shape[1:]))
