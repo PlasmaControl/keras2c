@@ -6,12 +6,19 @@ Implements tests for full models
 #!/usr/bin/env python3
 
 import unittest
-from tensorflow import keras
-from tensorflow.keras import layers
 from tensorflow.keras.layers import (
-    Input, Dense, LSTM, Conv1D, Conv2D, ConvLSTM2D, Dot, Add,
-    Multiply, Concatenate, Reshape, Permute, ZeroPadding1D, Cropping1D,
-    Activation, MaxPooling2D, Dropout, Flatten
+    Input,
+    Dense,
+    LSTM,
+    Conv1D,
+    Conv2D,
+    Add,
+    Concatenate,
+    Reshape,
+    Permute,
+    MaxPooling2D,
+    Dropout,
+    Flatten,
 )
 from tensorflow.keras.models import Model, Sequential
 from keras2c import keras2c_main
@@ -177,7 +184,6 @@ class TestModels(unittest.TestCase):
         input_profile_names = ['a', 'b', 'c']
         target_profile_names = ['a', 'b']
         actuator_names = ['aa', 'bb', 'cc']
-        lookbacks = {'a': 1, 'b': 1, 'c': 1, 'aa': 5, 'bb': 5, 'cc': 5}
         profile_lookback = 1
         actuator_lookback = 5
         lookahead = 4
