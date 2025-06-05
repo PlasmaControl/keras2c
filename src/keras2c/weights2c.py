@@ -41,7 +41,7 @@ class Weights2C:
 
     @staticmethod
     def array2c(array, name, malloc=False):
-        """Generates C code for a k2c_tensor array type
+        """Generates C code for a k2c_tensor array type.
 
         Args:
             array (array-like): Python array to write
@@ -49,7 +49,9 @@ class Weights2C:
             malloc (bool): whether to allocate on the heap
 
         Returns:
-            arr (str): generated code for the array as a k2c_tensor
+            str: generated code for the array when ``malloc`` is ``False``.
+            (str, dict): generated code and dictionary of arrays to allocate
+                when ``malloc`` is ``True``.
         """
         temp = array.flatten(order='C')
         size = array.size
