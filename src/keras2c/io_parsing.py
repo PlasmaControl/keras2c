@@ -6,7 +6,7 @@ https://github.com/f0uriest/keras2c
 
 Helper functions to get input and output names for each layer etc.
 """
-import keras
+from .backend import keras
 
 __author__ = "Rory Conlin"
 __copyright__ = "Copyright 2020, Rory Conlin"
@@ -94,11 +94,7 @@ def get_layer_num_io(layer):
             else:
                 num_outputs = 1
 
-        # Determine if it's a multi-input layer
-        if num_inputs > 1:
-            print("This is a multi-input layer.")
-        else:
-            print("This is a single-input layer.")
+
 
     return num_inputs, num_outputs
 
@@ -121,7 +117,6 @@ def get_layer_io_names(layer):
         # InputLayer has no inputs, only an output
         name = layer.output.name.split(':')[0].split('/')[0]
         outputs.append(name)
-        print("This is an InputLayer.")
     else:
         # Handle layers with multiple inputs
         if hasattr(layer, 'input'):
@@ -143,7 +138,7 @@ def get_layer_io_names(layer):
                 name = input_tensors.name.split(':')[0].split('/')[0]
                 inputs.append(name)
         else:
-            print(f"No inputs found for layer {layer.name}")
+            pass
 
         # Handle layers with multiple outputs
         if hasattr(layer, 'output'):
@@ -165,13 +160,9 @@ def get_layer_io_names(layer):
                 name = output_tensors.name.split(':')[0].split('/')[0]
                 outputs.append(name)
         else:
-            print(f"No outputs found for layer {layer.name}")
+            pass
 
-        # Determine if it's a multi-input layer
-        if len(inputs) > 1:
-            print("This is a multi-input layer.")
-        else:
-            print("This is a single-input layer.")
+
 
     return inputs, outputs
 
