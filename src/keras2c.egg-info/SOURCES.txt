@@ -10,6 +10,7 @@ src/keras2c/io_parsing.py
 src/keras2c/keras2c_main.py
 src/keras2c/layer2c.py
 src/keras2c/make_test_suite.py
+src/keras2c/types.py
 src/keras2c/weights2c.py
 src/keras2c.egg-info/PKG-INFO
 src/keras2c.egg-info/SOURCES.txt
