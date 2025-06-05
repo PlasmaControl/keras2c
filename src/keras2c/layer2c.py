@@ -245,7 +245,13 @@ class Layers2C():
                 + '); \n'
             )
         else:
-            self._write_layer_ZeroPad(layer, inputs, ctx.pointer + '_padded_input', i)
+            # When padding is 'same', pad the already-formatted input tensor.
+            # `inputs` here refers to the raw IO name, but `_format_io_names`
+            # returns the correct pointer string in ``ctx.inputs``. Using the
+            # raw name breaks compilation for model inputs such as
+            # ``keras_tensor`` where the variable is actually called
+            # ``keras_tensor_input``.
+            self._write_layer_ZeroPad(layer, ctx.inputs, ctx.pointer + '_padded_input', i)
             self.layers += (
                 fname
                 + ctx.outputs
@@ -293,7 +299,10 @@ class Layers2C():
         if layer.get_config()['padding'] == 'valid':
             s += ctx.inputs + ','
         else:
-            self._write_layer_ZeroPad(layer, inputs, ctx.pointer + '_padded_input', i)
+            # Use the formatted input name from ``ctx.inputs`` when padding
+            # is ``same``. Passing the raw name causes unresolved identifiers
+            # for model inputs.
+            self._write_layer_ZeroPad(layer, ctx.inputs, ctx.pointer + '_padded_input', i)
             s += ctx.pointer + '_padded_input,'
         s += ctx.name + '_pool_size, \n\t' + ctx.name + '_stride); \n'
         self.layers += s

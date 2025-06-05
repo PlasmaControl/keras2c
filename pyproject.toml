@@ -63,3 +63,10 @@ testpaths = ["tests"]
 line-length = 120
 target-version = "py312"
 extend-exclude = ["scratch"]
+
+[dependency-groups]
+dev = [
+    "codecov>=2.1.13",
+    "pytest>=7.4.4",
+    "pytest-cov>=4.1.0",
+]
