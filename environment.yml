@@ -1,0 +1,11 @@
+name: keras2c
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python>=3.10
+  - numpy>=1.13
+  - tensorflow>=2.0
+  - pip
+  - pip:
+      - keras

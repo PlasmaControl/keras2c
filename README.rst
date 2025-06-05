@@ -23,6 +23,7 @@ Quickstart
 For windows, make sure that you have gcc installed. We recommend CYGWIN with make and gcc
 
 After cloning the repo, install the necessary packages with ``pip install -r requirements.txt``.
+Alternatively, create a conda environment using ``conda env create -f environment.yml``.
 
 keras2c can be used from the command line:
 
