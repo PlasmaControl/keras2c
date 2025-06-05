@@ -21,12 +21,14 @@ class TestChecks(unittest.TestCase):
     """tests for model validity checking"""
 
     def test_is_model(self):
+        """Non-Model input should raise ``ValueError``."""
         model = np.arange(10)
         name = 'foo'
         with self.assertRaises(ValueError):
             keras2c_main.k2c(model, name)
 
     def test_is_valid_cname(self):
+        """Invalid C identifier should trigger ``AssertionError``."""
         inshp = (10, 8)
         name = '2foobar'
         a = keras.layers.Input(shape=inshp)
@@ -36,6 +38,7 @@ class TestChecks(unittest.TestCase):
             keras2c_main.k2c(model, name)
 
     def test_supported_layers(self):
+        """Unsupported layers should fail the conversion checks."""
         inshp = (10, 8)
         name = 'foobar'
         a = keras.layers.Input(shape=inshp)
@@ -45,11 +48,13 @@ class TestChecks(unittest.TestCase):
             keras2c_main.k2c(model, name)
 
     def test_activation_supported(self):
+        """Unsupported activations should raise ``AssertionError``."""
         inshp = (10, 8)
         name = 'foobar_1'
         a = keras.layers.Input(shape=inshp)
-        b = keras.layers.LSTM(10, activation='gelu',
-                              recurrent_activation='swish')(a)
+        b = keras.layers.LSTM(
+            10, activation='gelu', recurrent_activation='swish'
+        )(a)
         model = keras.models.Model(inputs=a, outputs=b)
         with self.assertRaises(AssertionError):
             keras2c_main.k2c(model, name)
@@ -69,6 +74,7 @@ class TestConfigSupported(unittest.TestCase):
             keras2c_main.k2c(model, name)
 
     def test_shared_axes(self):
+        """PReLU with shared axes is currently unsupported."""
         inshp = (10, 8, 12)
         name = 'foobar'
         a = keras.layers.Input(shape=inshp)
@@ -78,16 +84,19 @@ class TestConfigSupported(unittest.TestCase):
             keras2c_main.k2c(model, name)
 
     def test_data_format(self):
+        """Unsupported data format should trigger ``AssertionError``."""
         inshp = (8, 12)
         name = 'foobar'
         a = keras.layers.Input(shape=inshp)
-        b = keras.layers.Conv1D(filters=10, kernel_size=2,
-                                data_format='channels_first')(a)
+        b = keras.layers.Conv1D(
+            filters=10, kernel_size=2, data_format='channels_first'
+        )(a)
         model = keras.models.Model(inputs=a, outputs=b)
         with self.assertRaises(AssertionError):
             keras2c_main.k2c(model, name)
 
     def test_broadcast_merge(self):
+        """Merging tensors of different sizes should fail."""
         inshp1 = (12,)
         inshp2 = (10, 12)
         name = 'foobar'
