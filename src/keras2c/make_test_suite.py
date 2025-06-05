@@ -98,7 +98,10 @@ def make_test_suite(
                     # attempt to infer size from connected Embedding layer
                     for layer in model.layers:
                         for node in layer._inbound_nodes:
-                            if inp_layer in getattr(node, 'input_tensors', []):
+                            inputs = getattr(node, 'input_tensors', [])
+                            if not isinstance(inputs, (list, tuple)):
+                                inputs = [inputs]
+                            if inp_layer in inputs:
                                 if hasattr(layer, 'input_dim'):
                                     high = layer.input_dim
                                 break

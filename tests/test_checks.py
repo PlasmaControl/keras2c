@@ -48,7 +48,7 @@ class TestChecks(unittest.TestCase):
             keras2c_main.k2c(model, name)
 
     def test_activation_supported(self):
-        """Unsupported activations should raise ``AssertionError``."""
+        """Previously unsupported activations should now convert without errors."""
         inshp = (10, 8)
         name = 'foobar_1'
         a = keras.layers.Input(shape=inshp)
@@ -56,8 +56,7 @@ class TestChecks(unittest.TestCase):
             10, activation='gelu', recurrent_activation='swish'
         )(a)
         model = keras.models.Model(inputs=a, outputs=b)
-        with self.assertRaises(AssertionError):
-            keras2c_main.k2c(model, name)
+        keras2c_main.k2c(model, name)
 
 
 class TestConfigSupported(unittest.TestCase):
