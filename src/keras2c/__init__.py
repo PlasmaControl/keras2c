@@ -5,7 +5,6 @@ Licensed under MIT License
 https://github.com/f0uriest/keras2c
 """
 
-from . import keras2c_main
 from .keras2c_main import k2c
 
 import os
@@ -17,3 +16,5 @@ __license__ = "MIT"
 __maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
 __email__ = "wconlin@princeton.edu"
 __version__ = "1.0"
+
+__all__ = ["k2c"]
