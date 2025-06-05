@@ -1,7 +1,7 @@
 """keras2c_main.py
 This file is part of keras2c
 Copyright 2020 Rory Conlin
-Licensed under MIT License
+Licensed under LGPLv3
 https://github.com/f0uriest/keras2c
 
 Converts keras model to C code

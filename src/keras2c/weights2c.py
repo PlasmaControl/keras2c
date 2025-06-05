@@ -1,7 +1,7 @@
 """weights2c.py
 This file is part of keras2c
 Copyright 2020 Rory Conlin
-Licensed under MIT License
+Licensed under LGPLv3
 https://github.com/f0uriest/keras2c
 
 Gets weights and other parameters from each layer and writes to C file

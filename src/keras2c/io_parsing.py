@@ -1,7 +1,7 @@
 """io_parsing.py
 This file is part of keras2c
 Copyright 2020 Rory Conlin
-Licensed under MIT License
+Licensed under LGPLv3
 https://github.com/f0uriest/keras2c
 
 Helper functions to get input and output names for each layer etc.
