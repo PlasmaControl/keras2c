@@ -1,6 +1,5 @@
 repos:
-  - repo: https://github.com/pre-commit/mirrors-pylint
-    rev: v2.15.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.12
     hooks:
-      - id: pylint
-        additional_dependencies: [tensorflow, numpy]
+      - id: ruff
