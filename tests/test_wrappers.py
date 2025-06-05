@@ -7,8 +7,8 @@ Implements tests for layer wrappers
 
 import unittest
 import time
-from keras.models import Sequential, Model
-from keras.layers import (
+from tensorflow.keras.models import Sequential, Model
+from tensorflow.keras.layers import (
     Input, Dense, LSTM, Bidirectional, TimeDistributed, Conv1D, Conv2D
 )
 from keras2c import keras2c_main

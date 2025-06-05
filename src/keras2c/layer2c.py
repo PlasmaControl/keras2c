@@ -11,7 +11,7 @@ Writes individual layers to C code
 from keras2c.io_parsing import (
     layer_type, get_model_io_names, get_all_io_names, get_layer_io_names, flatten
 )
-import keras
+from .backend import keras
 
 __author__ = "Rory Conlin"
 __copyright__ = "Copyright 2020, Rory Conlin"

@@ -10,7 +10,7 @@ Gets weights and other parameters from each layer and writes to C file
 # Imports
 import numpy as np
 from keras2c.io_parsing import layer_type, get_layer_io_names, get_model_io_names
-from tensorflow import keras
+from .backend import keras
 
 maxndim = 5
 
