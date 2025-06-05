@@ -1,4 +1,8 @@
+<<<<<<< HEAD:.github/workflows/ruff.yml
+name: Ruff
+=======
 name: Ruff Lint
+>>>>>>> master:.github/workflows/pylint.yml
 
 on: [push]
 
@@ -19,6 +23,12 @@ jobs:
         python -m pip install --upgrade pip
         pip install ruff
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+<<<<<<< HEAD:.github/workflows/ruff.yml
+    - name: Lint with ruff
+      run: |
+        ruff $(git ls-files '*.py')
+=======
     - name: Analysing the code with ruff
       run: |
         ruff check .
+>>>>>>> master:.github/workflows/pylint.yml

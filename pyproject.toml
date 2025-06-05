@@ -60,4 +60,7 @@ testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 120
+<<<<<<< HEAD
+=======
 target-version = "py310"
+>>>>>>> master
