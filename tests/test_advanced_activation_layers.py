@@ -26,7 +26,7 @@ class TestAdvancedActivation(unittest.TestCase):
         inshp = (9, 7, 6, 3)
         alpha = 0.5
         a = keras.Input(shape=inshp)
-        b = keras.layers.LeakyReLU(alpha=alpha)(a)
+        b = keras.layers.LeakyReLU(negative_slope=alpha)(a)
         model = keras.Model(inputs=a, outputs=b)
         name = 'test___LeakyReLU' + str(int(time.time()))
         keras2c_main.k2c(model, name)
