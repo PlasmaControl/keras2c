@@ -61,4 +61,4 @@ testpaths = ["tests"]
 [tool.ruff]
 line-length = 120
 target-version = "py310"
-ignore = ["F401", "F841"]
+extend-exclude = ["scratch"]
