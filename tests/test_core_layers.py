@@ -25,7 +25,13 @@ CC = 'gcc'
 def build_and_run(name, return_output=False):
     cwd = os.getcwd()
     os.chdir(os.path.abspath('./include/'))
-    lib_process = subprocess.run(['make'], shell=True, capture_output=True, text=True)
+    lib_process = subprocess.run(
+        ['make'],
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+    )
     os.chdir(os.path.abspath(cwd))
     if lib_process.returncode != 0:
         print("Library build failed with the following output:")
@@ -40,16 +46,33 @@ def build_and_run(name, return_output=False):
 
     cc = CC + ' ' + ccflags + ' -o ' + name + ' ' + name + '.c ' + \
         name + '_test_suite.c -L./include/ -l:libkeras2c.a -lm'
-    build_process = subprocess.run(cc, shell=True, capture_output=True, text=True)
+    build_process = subprocess.run(
+        cc,
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+    )
     if build_process.returncode != 0:
         print("Compilation failed with the following output:")
         print(build_process.stdout)
         print(build_process.stderr)
         return 'compilation failed'
-    proc_output = subprocess.run(['./' + name])
+    proc_output = subprocess.run(
+        ['./' + name],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+    )
     rcode = proc_output.returncode
     if not os.environ.get('CI'):
-        subprocess.run('rm ' + name + '*', shell=True)
+        subprocess.run(
+            'rm ' + name + '*',
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
+        )
     return (rcode, proc_output.stdout) if return_output else rcode
 
 
