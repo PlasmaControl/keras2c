@@ -9,6 +9,7 @@ dependencies = [
     "tensorflow>=2.0",
     "keras",
     "numpy>=1.13.0",
+    "pydantic>=1.10,<2",
 ]
 authors = [
   {name = "Rory Conlin", email = "wconlin@princeton.edu"},
