@@ -6,9 +6,9 @@ Implements tests for recurrent layers
 #!/usr/bin/env python3
 
 import unittest
-import keras
-from keras.layers import Input, SimpleRNN, LSTM, GRU
-from keras.models import Model
+from tensorflow import keras
+from tensorflow.keras.layers import Input, SimpleRNN, LSTM, GRU
+from tensorflow.keras.models import Model
 from keras2c import keras2c_main
 import time
 from test_core_layers import build_and_run
