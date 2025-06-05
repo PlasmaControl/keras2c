@@ -34,7 +34,10 @@ def parse_args(args):
         "-m",
         "--malloc",
         action="store_true",
-        help="""Use dynamic memory for large arrays. Weights will be saved to .csv files that will be loaded at runtime"""
+        help=(
+            "Use dynamic memory for large arrays. "
+            "Weights will be saved to .csv files that will be loaded at runtime"
+        ),
     )
     parser.add_argument(
         "-t",
