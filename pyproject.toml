@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 dynamic = ["version"]
 name = "keras2c"
-requires-python = ">=3.6"
+requires-python = ">=3.7"
 dependencies = [
     "tensorflow>=2.0",
     "keras",
