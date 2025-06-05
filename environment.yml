@@ -1,10 +1,13 @@
-name: keras2c
+name: keras2c-env
 channels:
-  - conda-forge
   - defaults
+  - conda-forge
 dependencies:
-  - python>=3.10
-  - numpy>=1.13
+  - python=3.10
+  - pytest
+  - flake8
+  - numpy
+  - pandas
   - tensorflow>=2.0
   - pip
   - pip:
