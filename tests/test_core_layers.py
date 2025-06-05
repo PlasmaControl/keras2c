@@ -58,11 +58,13 @@ class TestCoreLayers(unittest.TestCase):
     Unit tests for core Keras layers using keras2c.
     This test suite includes the following tests:
     - test_Dense1: Tests a Dense layer with ReLU activation.
-    - test_Dense2_Activation: Tests a Dense layer without bias followed by an Activation layer with exponential activation.
+    - test_Dense2_Activation: Tests a Dense layer without bias followed by an
+      Activation layer with exponential activation.
     - test_Dropout_Reshape_Flatten: Tests a sequence of Flatten, Dropout, and Reshape layers.
     - test_Permute: Tests a Permute layer.
     - test_repeat_vector: Tests a RepeatVector layer followed by an ActivityRegularization and Dense layer.
-    - test_dummy_layers: Tests a sequence of SpatialDropout3D, Reshape, SpatialDropout2D, Reshape, SpatialDropout1D, and Flatten layers.
+    - test_dummy_layers: Tests a sequence of SpatialDropout3D, Reshape,
+      SpatialDropout2D, Reshape, SpatialDropout1D, and Flatten layers.
     Each test builds a Keras model, converts it using keras2c, and verifies that the generated code runs successfully.
     """
 

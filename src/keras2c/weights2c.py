@@ -60,7 +60,10 @@ class Weights2C:
         shp = np.concatenate((shp, np.ones(maxndim - ndim)))
         if malloc:
             to_malloc = {}
-            s = f'k2c_tensor {name} = {{ {name}_array, {ndim}, {size}, {{ {np.array2string(shp.astype(int), separator=",")[1:-1]} }} }}; \n'
+            s = (
+                f'k2c_tensor {name} = {{ {name}_array, {ndim}, {size}, '
+                f'{{ {np.array2string(shp.astype(int), separator=",")[1:-1]} }} }}; \n'
+            )
             to_malloc.update({f'{name}_array': temp})
             return s, to_malloc
         else:
@@ -81,7 +84,10 @@ class Weights2C:
                     if count % 5 == 0:
                         s += '\n'
                 s += '}; \n'
-            s += f'k2c_tensor {name} = {{ &{name}_array[0], {ndim}, {size}, {{ {np.array2string(shp.astype(int), separator=",")[1:-1]} }} }}; \n'
+            s += (
+                f'k2c_tensor {name} = {{ &{name}_array[0], {ndim}, {size}, '
+                f'{{ {np.array2string(shp.astype(int), separator=",")[1:-1]} }} }}; \n'
+            )
             return s
 
     def _write_weights_array2c(self, array, name):
