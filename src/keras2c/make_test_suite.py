@@ -13,6 +13,7 @@ from keras2c.io_parsing import get_model_io_names
 from keras2c.weights2c import Weights2C
 import subprocess
 from .backend import keras
+from tensorflow import dtypes as tf_dtypes
 
 __author__ = "Rory Conlin"
 __copyright__ = "Copyright 2020, Rory Conlin"
@@ -91,7 +92,10 @@ def make_test_suite(
             rand_inputs = []
             for j in range(num_inputs):
                 inp_layer = model.inputs[j]
-                if hasattr(inp_layer, 'dtype') and np.issubdtype(np.dtype(inp_layer.dtype), np.integer):
+                dt = getattr(inp_layer, 'dtype', None)
+                if dt is not None and hasattr(dt, 'as_numpy_dtype'):
+                    dt = dt.as_numpy_dtype
+                if dt is not None and np.issubdtype(np.dtype(dt), np.integer):
                     high = 10
                     # attempt to infer size from connected Embedding layer
                     for layer in model.layers:
@@ -100,7 +104,7 @@ def make_test_suite(
                                 if hasattr(layer, 'input_dim'):
                                     high = layer.input_dim
                                 break
-                    rand_input = np.random.randint(0, high, size=tuple(input_shape[j]), dtype=np.dtype(inp_layer.dtype))
+                    rand_input = np.random.randint(0, high, size=tuple(input_shape[j]), dtype=np.dtype(dt))
                 else:
                     rand_input = 4 * np.random.random(size=tuple(input_shape[j])) - 2
                 if not stateful:

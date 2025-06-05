@@ -674,7 +674,8 @@ class Weights2C:
         self.stack_vars += '\n\n'
 
     def _write_weights_LeakyReLU(self, layer):
-        alpha = layer.get_config()['negative_slope']
+        cfg = layer.get_config()
+        alpha = cfg.get('negative_slope', cfg.get('alpha'))
         self.stack_vars += 'float ' + layer.name + \
             '_negative_slope = ' + str(alpha) + '; \n'
         self.stack_vars += '\n\n'
