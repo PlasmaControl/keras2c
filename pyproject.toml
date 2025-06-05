@@ -20,7 +20,7 @@ maintainers = [
   {name = "Peter Steiner", email = "peter.steiner@princeton.edu"}
 ]
 description = "A library for converting Keras neural networks to real-time compatible C."
-readme = "README.md"
+readme = "README.rst"
 license = {text = "LGPLv3 License"}
 keywords = ["Keras", "C", "machine learning"]
 classifiers = [
