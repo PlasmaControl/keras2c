@@ -24,3 +24,6 @@ class Keras2CConfig(BaseModel):
     malloc: bool = False
     num_tests: int = 10
     verbose: bool = True
+
+    class Config:
+        arbitrary_types_allowed = True

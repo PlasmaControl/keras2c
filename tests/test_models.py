@@ -177,7 +177,6 @@ class TestModels(unittest.TestCase):
         input_profile_names = ['a', 'b', 'c']
         target_profile_names = ['a', 'b']
         actuator_names = ['aa', 'bb', 'cc']
-        lookbacks = {'a': 1, 'b': 1, 'c': 1, 'aa': 5, 'bb': 5, 'cc': 5}
         profile_lookback = 1
         actuator_lookback = 5
         lookahead = 4

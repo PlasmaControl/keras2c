@@ -555,8 +555,6 @@ class Layers2C():
         nm = ctx.name
         inputs = ctx.inputs
         outputs = ctx.outputs
-        is_model_input = ctx.is_model_input
-        is_model_output = ctx.is_model_output
         self.layers += 'k2c_reshape(' + outputs + ',' + inputs + ',' + nm + \
             '_newshp,' + nm + '_newndim); \n'
 
