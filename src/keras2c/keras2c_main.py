@@ -147,10 +147,15 @@ def gen_function_initialize(function_name, malloc_vars):
     init_fun = init_sig
     init_fun += ' { \n\n'
     for key, value in malloc_vars.items():
-        init_fun += '*' + key + " = (float*) malloc(" + str(value.size) + " * sizeof(float)); \n"
-        init_fun += "for (size_t i = 0; i < " + str(value.size) + "; ++i) {\n"
-        init_fun += "    (*" + key + ")[i] = " + str(value.flatten(order='C')[0]) + "f;\n"
-        init_fun += "}\n"
+        flat = value.flatten(order='C')
+        init_fun += 'static const float ' + key + '_init[' + str(flat.size) + '] = {\n'
+        for idx, val in enumerate(flat):
+            init_fun += f'{val:+.8e}f,'
+            if (idx + 1) % 5 == 0:
+                init_fun += '\n'
+        init_fun += '};\n'
+        init_fun += '*' + key + ' = (float*) malloc(' + str(flat.size) + ' * sizeof(float)); \n'
+        init_fun += 'memcpy(*' + key + ', ' + key + '_init, ' + str(flat.size) + ' * sizeof(float));\n'
     init_fun += "} \n\n"
 
     return init_sig, init_fun
