@@ -57,3 +57,7 @@ Issues = "https://github.com/f0uriest/keras2c/issues"
 minversion = "6.0"
 addopts = "-ra -q"
 testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
