@@ -1,8 +1,4 @@
-<<<<<<< HEAD:.github/workflows/ruff.yml
-name: Ruff
-=======
 name: Ruff Lint
->>>>>>> master:.github/workflows/pylint.yml
 
 on: [push]
 
@@ -11,10 +7,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10"]
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python
       uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
@@ -22,13 +18,6 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install ruff
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-<<<<<<< HEAD:.github/workflows/ruff.yml
-    - name: Lint with ruff
-      run: |
-        ruff $(git ls-files '*.py')
-=======
     - name: Analysing the code with ruff
       run: |
         ruff check .
->>>>>>> master:.github/workflows/pylint.yml
