@@ -112,7 +112,8 @@ def make_test_suite(
                     rand_input = rand_input[np.newaxis, ...]
                 rand_inputs.append(rand_input)
             # Make predictions
-            outputs = model.predict(rand_inputs)
+            pred_input = rand_inputs if num_inputs > 1 else rand_inputs[0]
+            outputs = model.predict(pred_input)
             if isinstance(outputs, list):
                 outputs_concat = np.concatenate([np.ravel(o) for o in outputs])
             else:
