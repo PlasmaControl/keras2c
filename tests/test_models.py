@@ -7,18 +7,8 @@ Implements tests for full models
 
 import unittest
 from tensorflow.keras.layers import (
-    Input,
-    Dense,
-    LSTM,
-    Conv1D,
-    Conv2D,
-    Add,
-    Concatenate,
-    Reshape,
-    Permute,
-    MaxPooling2D,
-    Dropout,
-    Flatten,
+    Input, Dense, LSTM, Conv1D, Conv2D, Add, Concatenate, Reshape,
+    Permute, MaxPooling2D, Dropout, Flatten
 )
 from tensorflow.keras.models import Model, Sequential
 from keras2c import keras2c_main

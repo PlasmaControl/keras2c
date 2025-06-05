@@ -12,8 +12,6 @@ import numpy as np
 from keras2c.io_parsing import get_model_io_names
 from keras2c.weights2c import Weights2C
 import subprocess
-from .backend import keras
-from tensorflow import dtypes as tf_dtypes
 
 __author__ = "Rory Conlin"
 __copyright__ = "Copyright 2020, Rory Conlin"
