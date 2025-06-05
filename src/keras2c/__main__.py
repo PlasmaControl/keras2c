@@ -48,6 +48,7 @@ def parse_args(args):
 
 
 def main(args=None):
+    """Entry point for the ``keras2c`` command line interface."""
     if args is None:
         args = sys.argv[1:]
 
