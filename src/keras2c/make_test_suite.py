@@ -90,7 +90,19 @@ def make_test_suite(
         while True:
             rand_inputs = []
             for j in range(num_inputs):
-                rand_input = 4 * np.random.random(size=tuple(input_shape[j])) - 2
+                inp_layer = model.inputs[j]
+                if hasattr(inp_layer, 'dtype') and np.issubdtype(np.dtype(inp_layer.dtype), np.integer):
+                    high = 10
+                    # attempt to infer size from connected Embedding layer
+                    for layer in model.layers:
+                        for node in layer._inbound_nodes:
+                            if inp_layer in getattr(node, 'input_tensors', []):
+                                if hasattr(layer, 'input_dim'):
+                                    high = layer.input_dim
+                                break
+                    rand_input = np.random.randint(0, high, size=tuple(input_shape[j]), dtype=np.dtype(inp_layer.dtype))
+                else:
+                    rand_input = 4 * np.random.random(size=tuple(input_shape[j])) - 2
                 if not stateful:
                     rand_input = rand_input[np.newaxis, ...]
                 rand_inputs.append(rand_input)

@@ -227,10 +227,16 @@ class Weights2C:
     def _write_weights_BatchNormalization(self, layer):
         center = layer.get_config()['center']
         scale = layer.get_config()['scale']
-        if isinstance(layer.get_config()['axis'], (list, tuple, np.ndarray)):
-            axis = layer.get_config()['axis'][0]-1
+        axis_cfg = layer.get_config()['axis']
+        if isinstance(axis_cfg, (list, tuple, np.ndarray)):
+            axis_cfg = axis_cfg[0]
+        if isinstance(layer.input, (list, tuple)):
+            ndim = len(layer.input[0].shape)
         else:
-            axis = layer.get_config()['axis']-1
+            ndim = len(layer.input.shape)
+        if axis_cfg < 0:
+            axis_cfg = ndim + axis_cfg
+        axis = axis_cfg - 1
 
         epsilon = layer.get_config()['epsilon']
 
