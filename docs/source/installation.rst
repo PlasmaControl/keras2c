@@ -18,7 +18,7 @@ Alternatively, create a conda environment using the provided YAML file:
     conda env create -f environment.yml
 
 
-Additional packages are required for building the documentation and running the tests, which can also be installed with pip:
+Additional packages for building the documentation and running the tests are included in the conda environment, but can also be installed separately with pip:
 
 .. code-block:: bash
 
