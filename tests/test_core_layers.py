@@ -26,7 +26,7 @@ def build_and_run(name, return_output=False):
     cwd = os.getcwd()
     os.chdir(os.path.abspath('./include/'))
     lib_process = subprocess.run(
-        ['make'],
+        'make CC=' + CC,
         shell=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
