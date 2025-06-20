@@ -26,5 +26,8 @@ Additional packages for building the documentation and running the tests are inc
     pip install -r tests/requirements.txt
 
 
-By default, the tests compile code with ``gcc``. This can be modified to use a different compiler by changing the variable ``CC`` in ``tests/test_core_layers.py`` and ``include/makefile``
-It is also recommended to install ``astyle`` to automatically format the generated code.
+By default, the tests compile code with ``gcc``. You can set the ``CC``
+environment variable to use a different compiler, for example ``clang`` on macOS
+or ``gcc`` from MSYS2/MinGW on Windows.  The makefile will fall back to ``gcc``
+if ``CC`` is unset.  It is also recommended to install ``astyle`` to
+automatically format the generated code.
