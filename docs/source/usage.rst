@@ -70,7 +70,7 @@ The test suite (or other main program) can then be compiled with:
 
 .. code-block:: bash
 		
-    gcc -std=c99 -I./include/ -o <executable_name> <function_name>.c <function_name>_test_suite.c -L./include/ -l:libkeras2c.a -lm
+    gcc -std=c99 -I./include/ -o <executable_name> <function_name>.c <function_name>_test_suite.c -L./include/ -lkeras2c -lm
 
     
 

@@ -46,6 +46,9 @@ jobs:
       run: |
         ruff check .
       shell: bash
+    - name: Build C library
+      run: make -C include
+      shell: bash
     - name: Test with pytest
       run: |
         pytest

@@ -44,8 +44,18 @@ def build_and_run(name, return_output=False):
     else:
         ccflags = '-Ofast -std=c99 -I./include/'
 
-    cc = CC + ' ' + ccflags + ' -o ' + name + ' ' + name + '.c ' + \
-        name + '_test_suite.c -L./include/ -l:libkeras2c.a -lm'
+    cc = (
+        CC
+        + ' '
+        + ccflags
+        + ' -o '
+        + name
+        + ' '
+        + name
+        + '.c '
+        + name
+        + '_test_suite.c -L./include/ -lkeras2c -lm'
+    )
     build_process = subprocess.run(
         cc,
         shell=True,
