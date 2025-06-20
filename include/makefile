@@ -1,5 +1,5 @@
 
-CC=gcc
+CC ?= gcc
 
 ifeq ($(CC), gcc)
 	OPTFLAGS = -O3 -march=native 

@@ -19,7 +19,7 @@ __maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
 __email__ = "wconlin@princeton.edu"
 
 
-CC = 'gcc'
+CC = os.environ.get('CC', 'gcc')
 
 
 def build_and_run(name, return_output=False):
