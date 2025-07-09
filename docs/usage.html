@@ -206,7 +206,7 @@ For very large models or on machines with limited stack size this may lead to er
 <code class="docutils literal notranslate"><span class="pre">&lt;function_name&gt;_test_suite.c</span></code> contains a <code class="docutils literal notranslate"><span class="pre">main</span></code> program to run sample inputs through the generated code to ensure that it produces the same outputs as the original python model.</p>
 <p>To compile and run the tests, the C backend must be built first. This can be done by running <code class="docutils literal notranslate"><span class="pre">make</span></code> from within the <code class="docutils literal notranslate"><span class="pre">include</span></code> folder, to generate <code class="docutils literal notranslate"><span class="pre">libkeras2c.a</span></code>.
 The test suite (or other main program) can then be compiled with:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gcc -std<span class="o">=</span>c99 -I./include/ -o &lt;executable_name&gt; &lt;function_name&gt;.c &lt;function_name&gt;_test_suite.c -L./include/ -l:libkeras2c.a -lm
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gcc -std<span class="o">=</span>c99 -I./include/ -o &lt;executable_name&gt; &lt;function_name&gt;.c &lt;function_name&gt;_test_suite.c -L./include/ -lkeras2c -lm
 </pre></div>
 </div>
 </div>

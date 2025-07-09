@@ -11,6 +11,12 @@ The Python requirements can be installed with pip:
 
     pip install -r requirements.txt
 
+Alternatively, create a conda environment using the provided YAML file:
+
+.. code-block:: bash
+
+    conda env create -f environment.yml
+
 
 Additional packages are required for building the documentation and running the tests, which can also be installed with pip:
 

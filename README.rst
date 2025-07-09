@@ -10,10 +10,20 @@ keras2c
 keras2c is a library for deploying keras neural networks in C99, using only standard libraries.
 It is designed to be as simple as possible for real time applications.
 
+Please cite `this paper <https://doi.org/10.1016/j.engappai.2021.104182>`_ if you use this work in your research:
+
+.. code-block:: bibtex
+
+    R. Conlin, K. Erickson, J. Abbate, and E. Kolemen, “Keras2c: A library for converting Keras neural networks to real-time compatible C,” 
+    Engineering Applications of Artificial Intelligence, vol. 100, p. 104182, Apr. 2021, doi: 10.1016/j.engappai.2021.104182.
+
 Quickstart
 **********
 
+For windows, make sure that you have gcc installed. We recommend CYGWIN with make and gcc
+
 After cloning the repo, install the necessary packages with ``pip install -r requirements.txt``.
+Alternatively, create a conda environment using ``conda env create -f environment.yml``.
 
 keras2c can be used from the command line:
 
@@ -53,7 +63,7 @@ Supported Layers
 - **Recurrent Layers**: SimpleRNN, GRU, LSTM, SimpleRNNCell, GRUCell, LSTMCell
 - **Embedding Layers**: Embedding
 - **Merge Layers**: Add, Subtract, Multiply, Average, Maximum, Minimum, Concatenate, Dot
-- **Advanced Activation Layers**: LeakyReLU, PReLU, ELU, ThresholdedReLU, Softmax, ReLU
+- **Advanced Activation Layers**: LeakyReLU, PReLU, ELU, Softmax, ReLU
 - **Normalization Layers**: BatchNormalization
 - **Noise Layers**: GaussianNoise, GaussianDropout, AlphaDropout
 - **Layer Wrappers**: TimeDistributed, Bidirectional

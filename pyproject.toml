@@ -1,0 +1,72 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+dynamic = ["version"]
+name = "keras2c"
+requires-python = ">=3.7"
+dependencies = [
+    "tensorflow>=2.0",
+    "keras",
+    "numpy>=1.13.0",
+    "pydantic>=1.10,<2",
+]
+authors = [
+  {name = "Rory Conlin", email = "wconlin@princeton.edu"},
+  {name = "Keith Erickson", email = "kerickso@pppl.gov"},
+  {name = "Joseph Abbate", email = "jabbate@princeton.edu"},
+  {name = "Egemen Kolemen", email = "ekolemen@princeton.edu"},
+]
+maintainers = [
+  {name = "Peter Steiner", email = "peter.steiner@princeton.edu"}
+]
+description = "A library for converting Keras neural networks to real-time compatible C."
+readme = "README.rst"
+license = {text = "LGPLv3 License"}
+keywords = ["Keras", "C", "machine learning"]
+classifiers = [
+  # How mature is this project? Common values are
+  #   3 - Alpha
+  #   4 - Beta
+  #   5 - Production/Stable
+  "Development Status :: 4 - Beta",
+
+  # Indicate who your project is intended for
+  "Intended Audience :: Developers",
+  "Topic :: Software Development :: Build Tools",
+
+  # Pick your license as you wish (see also "license" above)
+  "License :: OSI Approved :: LGPLv3 License",
+
+  # Specify the Python versions you support here.
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+]
+
+[project.urls]
+Documentation = "https://f0uriest.github.io/keras2c/"
+Repository = "https://github.com/f0uriest/keras2c/"
+Issues = "https://github.com/f0uriest/keras2c/issues"
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+extend-exclude = ["scratch"]
+
+[dependency-groups]
+dev = [
+    "codecov>=2.1.13",
+    "pytest>=7.4.4",
+    "pytest-cov>=4.1.0",
+]
