@@ -6,6 +6,10 @@ keras2c
 
 |License| |DOI|
 
+IMPORTANT: Keras2C has started updating to be compatible with newer versions of Python on July 9th, 2025. Changes may be breaking. To use the original/stable version, use the Release v1.0.2. https://github.com/PlasmaControl/keras2c/releases/tag/v1.0.2 with the command
+.. code-block:: bash
+
+    git clone  git@github.com:PlasmaControl/keras2c.git --branch v1.0.2
 
 keras2c is a library for deploying keras neural networks in C99, using only standard libraries.
 It is designed to be as simple as possible for real time applications.
