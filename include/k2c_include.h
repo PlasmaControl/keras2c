@@ -145,3 +145,11 @@ void k2c_gru(k2c_tensor* output, const k2c_tensor* input, float * state,
              k2c_activationType *recurrent_activation,
              k2c_activationType *output_activation);
 
+// Convolution Transpose layers
+void k2c_conv1d_transpose(k2c_tensor *output, const k2c_tensor *input,
+                          const k2c_tensor *kernel, const k2c_tensor *bias,
+                          const size_t stride, const size_t start_crop,
+                          k2c_activationType *activation);
+
+// Split layers
+void k2c_split(k2c_tensor *output, k2c_tensor *input, size_t offset);
