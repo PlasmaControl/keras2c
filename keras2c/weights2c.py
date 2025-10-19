@@ -1,7 +1,7 @@
 """weights2c.py
 This file is part of keras2c
 Copyright 2020 Rory Conlin
-Licensed under MIT License
+Licensed under LGPLv3 License
 https://github.com/f0uriest/keras2c
 
 Gets weights and other parameters from each layer and writes to C file
@@ -15,12 +15,16 @@ import tensorflow as tf
 tf.compat.v1.disable_eager_execution()
 maxndim = 5
 
+# Original author
+# __author__ = "Rory Conlin"
+# __copyright__ = "Copyright 2020, Rory Conlin"
+# __license__ = "MIT"
+# __maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
+# __email__ = "wconlin@princeton.edu"
 
-__author__ = "Rory Conlin"
-__copyright__ = "Copyright 2020, Rory Conlin"
-__license__ = "MIT"
-__maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
-__email__ = "wconlin@princeton.edu"
+# Modified by
+__author__ = "Anchal Gupta"
+__email__ = "guptaa@fusion.gat.com"
 
 
 class Weights2C():
@@ -99,9 +103,9 @@ class Weights2C():
         else:
             self.stack_vars += temp
 
-    def _write_weights_layer(self, layer):
+    def _write_weights_layer(self, layer, **kwargs):
         method = getattr(self, '_write_weights_' + layer_type(layer))
-        return method(layer)
+        return method(layer, **kwargs)
 
     def write_weights(self, verbose=True):
         """Parses and generates code for model weights and other parameters
@@ -113,7 +117,7 @@ class Weights2C():
             (tuple): tuple containing
 
                 - **stack_vars** (*str*): code for variables allocated on the stack
-                - **malloc_vars** (*dict*): dictionary of name,value pairs for arrays to be 
+                - **malloc_vars** (*dict*): dictionary of name,value pairs for arrays to be
                     allocated on the heap
                 - **static_vars** (*str*): code fora C struct containing static variables
                     (eg, states of a stateful RNN)
@@ -136,12 +140,19 @@ class Weights2C():
 
     def _write_outputs(self, layer):
         _, outputs = get_layer_io_names(layer)
-        if len(outputs) > 1:
+        if isinstance(outputs, list):
             for i, outp in enumerate(outputs):
-                outshp = layer.get_output_at(i).shape[1:]
-                if outp not in self.model_io[1]:
-                    self._write_weights_array2c(
-                        np.zeros(outshp), outp + '_output')
+                if isinstance(outp, list):
+                    for j, outpp in enumerate(outp):
+                        outshp = layer.get_output_at(i)[j].shape[1:]
+                        if outpp not in self.model_io[1]:
+                            self._write_weights_array2c(
+                                np.zeros(outshp), outpp + '_output')
+                else:
+                    outshp = layer.get_output_at(i).shape[1:]
+                    if outp not in self.model_io[1]:
+                        self._write_weights_array2c(
+                            np.zeros(outshp), outp + '_output')
         else:
             outshp = layer.output_shape[1:]
             if outputs[0] not in self.model_io[1]:
@@ -160,10 +171,15 @@ class Weights2C():
             foo = layer.layer.__call__(temp_input)
             foo = layer.forward_layer.__call__(temp_input)
             foo = layer.backward_layer.__call__(temp_input)
-        self._write_weights_layer(layer.backward_layer)
-        self._write_weights_layer(layer.forward_layer)
-        if layer.merge_mode:
 
+        self._write_weights_layer(layer.backward_layer, skip_outputs=True)
+        outshp = layer.backward_layer.get_output_at(0).shape[1:]
+        self._write_weights_array2c(np.zeros(outshp), layer.backward_layer.name + '_output')
+
+        self._write_weights_layer(layer.forward_layer, skip_outputs=True)
+        outshp = layer.forward_layer.get_output_at(0).shape[1:]
+        self._write_weights_array2c(np.zeros(outshp), layer.forward_layer.name + '_output')
+        if layer.merge_mode:
             self._write_outputs(layer)
             self.stack_vars += 'size_t ' + layer.name + '_num_tensors' + str(0) + \
                 ' = ' + str(2) + '; \n'
@@ -183,8 +199,9 @@ class Weights2C():
             self.stack_vars += 'k2c_tensor * ' + \
                 output_names[1] + ' = backward_' + subname + '_output; \n'
 
-    def _write_weights_TimeDistributed(self, layer):
-        self._write_outputs(layer)
+    def _write_weights_TimeDistributed(self, layer, skip_outputs=False):
+        if not skip_outputs:
+            self._write_outputs(layer)
         try:
             foo = layer.layer.input_shape
         except:
@@ -213,7 +230,7 @@ class Weights2C():
     def _write_weights_InputLayer(self, layer):
         self.stack_vars += ''
 
-    def _write_weights_BatchNormalization(self, layer):
+    def _write_weights_BatchNormalization(self, layer, skip_outputs=False):
         center = layer.get_config()['center']
         scale = layer.get_config()['scale']
         if isinstance(layer.get_config()['axis'], (list, tuple, np.ndarray)):
@@ -245,7 +262,8 @@ class Weights2C():
             gamma = np.ones(mean.shape)
 
         stdev = np.sqrt(variance + epsilon)
-        self._write_outputs(layer)
+        if not skip_outputs:
+            self._write_outputs(layer)
         self.stack_vars += 'size_t ' + layer.name + \
             '_axis = ' + str(axis) + '; \n'
         self._write_weights_array2c(mean, layer.name + '_mean')
@@ -254,9 +272,10 @@ class Weights2C():
         self._write_weights_array2c(beta, layer.name + '_beta')
         self.stack_vars += '\n\n'
 
-    def _write_weights_LSTM(self, layer):
+    def _write_weights_LSTM(self, layer, skip_outputs=False):
         units = layer.get_config()['units']
-        self._write_outputs(layer)
+        if not skip_outputs:
+            self._write_outputs(layer)
         self.stack_vars += 'float ' + layer.name + \
                            '_fwork[' + str(8*units) + '] = {0}; \n'
         self.stack_vars += 'int ' + layer.name + '_go_backwards = ' + \
@@ -288,9 +307,10 @@ class Weights2C():
         self._write_weights_array2c(bias, layer.name + '_bias')
         self.stack_vars += '\n \n'
 
-    def _write_weights_GRU(self, layer):
+    def _write_weights_GRU(self, layer, skip_outputs=False):
         units = layer.get_config()['units']
-        self._write_outputs(layer)
+        if not skip_outputs:
+            self._write_outputs(layer)
         self.stack_vars += 'float ' + layer.name + \
             '_fwork[' + str(6*units) + '] = {0}; \n'
         self.stack_vars += 'int ' + layer.name + '_reset_after = ' + \
@@ -332,9 +352,10 @@ class Weights2C():
         self._write_weights_array2c(cbias, layer.name + '_bias')
         self.stack_vars += '\n \n'
 
-    def _write_weights_SimpleRNN(self, layer):
+    def _write_weights_SimpleRNN(self, layer, skip_outputs=False):
         units = layer.get_config()['units']
-        self._write_outputs(layer)
+        if not skip_outputs:
+            self._write_outputs(layer)
         self.stack_vars += 'int ' + layer.name + '_go_backwards = ' + \
             str(int(layer.get_config()['go_backwards'])) + ';\n'
         self.stack_vars += 'int ' + layer.name + '_return_sequences = ' + \
@@ -363,8 +384,9 @@ class Weights2C():
         self._write_weights_array2c(bias, layer.name + '_bias')
         self.stack_vars += '\n \n'
 
-    def _write_weights_Dense(self, layer):
-        self._write_outputs(layer)
+    def _write_weights_Dense(self, layer, skip_outputs=False):
+        if not skip_outputs:
+            self._write_outputs(layer)
         weights = layer.get_weights()
         A = weights[0]
         if layer.get_config()['use_bias']:
@@ -379,7 +401,7 @@ class Weights2C():
                             np.prod(A.shape)) + '] = {0}; \n'
         self.stack_vars += '\n \n'
 
-    def _write_weights_Conv1D(self, layer):
+    def _write_weights_Conv1D(self, layer, skip_outputs=False):
         padding = layer.get_config()['padding']
         stride = layer.get_config()['strides'][0]
         dilation = layer.get_config()['dilation_rate'][0]
@@ -388,7 +410,8 @@ class Weights2C():
             '_stride = ' + str(stride) + '; \n'
         self.stack_vars += 'size_t ' + layer.name + \
             '_dilation = ' + str(dilation) + '; \n'
-        self._write_outputs(layer)
+        if not skip_outputs:
+            self._write_outputs(layer)
         inshp = layer.get_input_at(0).shape[1:]
         if padding == 'causal':
             pad_along_height = dilation*(kernel_size-1)
@@ -419,7 +442,7 @@ class Weights2C():
         self._write_weights_array2c(bias, layer.name + '_bias')
         self.stack_vars += '\n \n'
 
-    def _write_weights_Conv2D(self, layer):
+    def _write_weights_Conv2D(self, layer, skip_outputs=False):
         padding = layer.get_config()['padding']
         stride = layer.get_config()['strides']
         dilation = layer.get_config()['dilation_rate']
@@ -429,7 +452,8 @@ class Weights2C():
         self.stack_vars += 'size_t ' + layer.name + \
             '_dilation[2] = {' + ','.join([str(i)
                                            for i in dilation]) + '}; \n'
-        self._write_outputs(layer)
+        if not skip_outputs:
+            self._write_outputs(layer)
         if padding == 'same':
             inshp = layer.get_input_at(0).shape[1:]
             pad_along_height = dilation[0]*(kernel_size[0]-1)
@@ -457,7 +481,7 @@ class Weights2C():
         self._write_weights_array2c(bias, layer.name + '_bias')
         self.stack_vars += '\n \n'
 
-    def _write_weights_Conv3D(self, layer):
+    def _write_weights_Conv3D(self, layer, skip_outputs=False):
         padding = layer.get_config()['padding']
         stride = layer.get_config()['strides']
         dilation = layer.get_config()['dilation_rate']
@@ -467,7 +491,8 @@ class Weights2C():
         self.stack_vars += 'size_t ' + layer.name + \
             '_dilation[3] = {' + ','.join([str(i)
                                            for i in dilation]) + '}; \n'
-        self._write_outputs(layer)
+        if not skip_outputs:
+            self._write_outputs(layer)
         if padding == 'same':
             inshp = layer.get_input_at(0).shape[1:]
             pad_along_height = dilation[0]*(kernel_size[0]-1)
@@ -501,13 +526,50 @@ class Weights2C():
         self._write_weights_array2c(bias, layer.name + '_bias')
         self.stack_vars += '\n \n'
 
-    def _write_weights_MaxPooling1D(self, layer):
-        return self._write_weights_Pooling1D(layer)
+    def _write_weights_Conv1DTranspose(self, layer, skip_outputs=False):
+        padding = layer.get_config()['padding']
+        stride = layer.get_config()['strides'][0]
+        dilation = layer.get_config()['dilation_rate'][0]
+        if dilation != 1:
+            raise ValueError('Dilation not supported for Conv1DTranspose')
+        kernel_size = layer.get_config()['kernel_size'][0]
 
-    def _write_weights_AveragePooling1D(self, layer):
-        return self._write_weights_Pooling1D(layer)
+        # Write stride to C
+        self.stack_vars += 'size_t ' + layer.name + \
+            '_stride = ' + str(stride) + '; \n'
 
-    def _write_weights_Pooling1D(self, layer):
+        if padding == 'valid':
+            start_crop = 0
+        elif padding == 'same':
+            start_crop = (kernel_size - stride) // 2
+        else:
+            raise ValueError('Only same and valid padding supported for Conv1DTranspose')
+        # Write start_crop to C
+        self.stack_vars += 'size_t ' + layer.name + \
+            '_start_crop = ' + str(start_crop) + '; \n'
+
+        # Initialize layer.name + '_output'
+        if not skip_outputs:
+            self._write_outputs(layer)
+
+        # Write kernel and bias to C
+        weights = layer.get_weights()
+        kernel = weights[0]
+        if layer.get_config()['use_bias']:
+            bias = weights[1]
+        else:
+            bias = np.zeros(kernel.shape[1])
+        self._write_weights_array2c(kernel, layer.name + '_kernel')
+        self._write_weights_array2c(bias, layer.name + '_bias')
+        self.stack_vars += '\n \n'
+
+    def _write_weights_MaxPooling1D(self, layer, **kwargs):
+        return self._write_weights_Pooling1D(layer, **kwargs)
+
+    def _write_weights_AveragePooling1D(self, layer, **kwargs):
+        return self._write_weights_Pooling1D(layer, **kwargs)
+
+    def _write_weights_Pooling1D(self, layer, skip_outputs=False):
         pad = layer.get_config()['padding']
         stride = layer.get_config()['strides'][0]
         pool_size = layer.get_config()['pool_size'][0]
@@ -515,7 +577,8 @@ class Weights2C():
             '_stride = ' + str(stride) + '; \n'
         self.stack_vars += 'size_t ' + layer.name + \
             '_pool_size = ' + str(pool_size) + '; \n'
-        self._write_outputs(layer)
+        if not skip_outputs:
+            self._write_outputs(layer)
         inshp = layer.get_input_at(0).shape[1:]
         outshp = layer.get_output_at(0).shape[1:]
         if pad == 'same':
@@ -530,13 +593,13 @@ class Weights2C():
             self.stack_vars += 'float ' + layer.name + '_fill = -HUGE_VALF; \n'
         self.stack_vars += '\n\n'
 
-    def _write_weights_MaxPooling2D(self, layer):
-        return self._write_weights_Pooling2D(layer)
+    def _write_weights_MaxPooling2D(self, layer, **kwargs):
+        return self._write_weights_Pooling2D(layer, **kwargs)
 
-    def _write_weights_AveragePooling2D(self, layer):
-        return self._write_weights_Pooling2D(layer)
+    def _write_weights_AveragePooling2D(self, layer, **kwargs):
+        return self._write_weights_Pooling2D(layer, **kwargs)
 
-    def _write_weights_Pooling2D(self, layer):
+    def _write_weights_Pooling2D(self, layer, skip_outputs=False):
         padding = layer.get_config()['padding']
         stride = layer.get_config()['strides']
         pool_size = layer.get_config()['pool_size']
@@ -545,7 +608,8 @@ class Weights2C():
         self.stack_vars += 'size_t ' + layer.name + \
             '_pool_size[2] = {' + ','.join([str(i)
                                             for i in pool_size]) + '}; \n'
-        self._write_outputs(layer)
+        if not skip_outputs:
+            self._write_outputs(layer)
         if padding == 'same':
             inshp = layer.get_input_at(0).shape[1:]
             outshp = layer.get_output_at(0).shape[1:]
@@ -567,48 +631,50 @@ class Weights2C():
             self.stack_vars += 'float ' + layer.name + '_fill = -HUGE_VALF; \n'
         self.stack_vars += '\n\n'
 
-    def _write_weights_GlobalMaxPooling1D(self, layer):
-        return self._write_weights_GlobalPooling(layer)
+    def _write_weights_GlobalMaxPooling1D(self, layer, **kwargs):
+        return self._write_weights_GlobalPooling(layer, **kwargs)
 
-    def _write_weights_GlobalMaxPooling2D(self, layer):
-        return self._write_weights_GlobalPooling(layer)
+    def _write_weights_GlobalMaxPooling2D(self, layer, **kwargs):
+        return self._write_weights_GlobalPooling(layer, **kwargs)
 
-    def _write_weights_GlobalMaxPooling3D(self, layer):
-        return self._write_weights_GlobalPooling(layer)
+    def _write_weights_GlobalMaxPooling3D(self, layer, **kwargs):
+        return self._write_weights_GlobalPooling(layer, **kwargs)
 
-    def _write_weights_GlobalAveragePooling1D(self, layer):
-        return self._write_weights_GlobalPooling(layer)
+    def _write_weights_GlobalAveragePooling1D(self, layer, **kwargs):
+        return self._write_weights_GlobalPooling(layer, **kwargs)
 
-    def _write_weights_GlobalAveragePooling2D(self, layer):
-        return self._write_weights_GlobalPooling(layer)
+    def _write_weights_GlobalAveragePooling2D(self, layer, **kwargs):
+        return self._write_weights_GlobalPooling(layer, **kwargs)
 
-    def _write_weights_GlobalAveragePooling3D(self, layer):
-        return self._write_weights_GlobalPooling(layer)
+    def _write_weights_GlobalAveragePooling3D(self, layer, **kwargs):
+        return self._write_weights_GlobalPooling(layer, **kwargs)
 
-    def _write_weights_GlobalPooling(self, layer):
-        self._write_outputs(layer)
+    def _write_weights_GlobalPooling(self, layer, skip_outputs=False):
+        if not skip_outputs:
+            self._write_outputs(layer)
         self.stack_vars += '\n\n'
 
-    def _write_weights_Add(self, layer):
-        return self._write_weights_Merge(layer)
+    def _write_weights_Add(self, layer, **kwargs):
+        return self._write_weights_Merge(layer, **kwargs)
 
-    def _write_weights_Subtract(self, layer):
-        return self._write_weights_Merge(layer)
+    def _write_weights_Subtract(self, layer, **kwargs):
+        return self._write_weights_Merge(layer, **kwargs)
 
-    def _write_weights_Multiply(self, layer):
-        return self._write_weights_Merge(layer)
+    def _write_weights_Multiply(self, layer, **kwargs):
+        return self._write_weights_Merge(layer, **kwargs)
 
-    def _write_weights_Average(self, layer):
-        return self._write_weights_Merge(layer)
+    def _write_weights_Average(self, layer, **kwargs):
+        return self._write_weights_Merge(layer, **kwargs)
 
-    def _write_weights_Maximum(self, layer):
-        return self._write_weights_Merge(layer)
+    def _write_weights_Maximum(self, layer, **kwargs):
+        return self._write_weights_Merge(layer, **kwargs)
 
-    def _write_weights_Minimum(self, layer):
-        return self._write_weights_Merge(layer)
+    def _write_weights_Minimum(self, layer, **kwargs):
+        return self._write_weights_Merge(layer, **kwargs)
 
-    def _write_weights_Merge(self, layer):
-        self._write_outputs(layer)
+    def _write_weights_Merge(self, layer, skip_outputs=False):
+        if not skip_outputs:
+            self._write_outputs(layer)
         inputs, outputs = get_layer_io_names(layer)
         for i, (inp, outp) in enumerate(zip(inputs, outputs)):
             num_tensors = len(inp)
@@ -616,7 +682,7 @@ class Weights2C():
                 ' = ' + str(num_tensors) + '; \n'
         self.stack_vars += '\n\n'
 
-    def _write_weights_Concatenate(self, layer):
+    def _write_weights_Concatenate(self, layer, ):
         inputs, outputs = get_layer_io_names(layer)
         for i, (inp, outp) in enumerate(zip(inputs, outputs)):
             outshp = layer.get_output_at(i).shape[1:]
@@ -670,9 +736,10 @@ class Weights2C():
             layer.get_weights()[0], layer.name + '_alpha')
         self.stack_vars += '\n\n'
 
-    def _write_weights_Reshape(self, layer):
+    def _write_weights_Reshape(self, layer, skip_outputs=False):
         nm = layer.name
-        self._write_outputs(layer)
+        if not skip_outputs:
+            self._write_outputs(layer)
         newshp = layer.get_config()['target_shape']
         newndim = len(newshp)
         newshp = np.concatenate((newshp, np.ones(maxndim-newndim)))
@@ -683,23 +750,26 @@ class Weights2C():
                                 separator=',')[1:-1]) + '}; \n'
         self.stack_vars += '\n\n'
 
-    def _write_weights_Permute(self, layer):
-        self._write_outputs(layer)
+    def _write_weights_Permute(self, layer, skip_outputs=False):
+        if not skip_outputs:
+            self._write_outputs(layer)
         permute = np.array(layer.get_config()['dims']).astype(int) - 1
         self.stack_vars += 'size_t ' + layer.name + '_permute[' + str(permute.size) + '] = {' +\
             str(np.array2string(permute.astype(int),
                                 separator=',')[1:-1]) + '}; \n'
         self.stack_vars += '\n\n'
 
-    def _write_weights_RepeatVector(self, layer):
-        self._write_outputs(layer)
+    def _write_weights_RepeatVector(self, layer, skip_outputs=False):
+        if not skip_outputs:
+            self._write_outputs(layer)
         n = layer.get_config()['n']
         self.stack_vars += 'size_t ' + layer.name + '_n = ' + str(n) + '; \n'
         self.stack_vars += '\n\n'
 
-    def _write_weights_Dot(self, layer):
+    def _write_weights_Dot(self, layer, skip_outputs=False):
         nm = layer.name
-        self._write_outputs(layer)
+        if not skip_outputs:
+            self._write_outputs(layer)
         work_size = np.prod(layer.input[0].shape[1:]) + \
             np.prod(layer.input[1].shape[1:])
         axes = np.array(layer.get_config()['axes']) - 1
@@ -714,48 +784,54 @@ class Weights2C():
             str(int(layer.get_config()['normalize'])) + '; \n'
         self.stack_vars += '\n\n'
 
-    def _write_weights_Embedding(self, layer):
+    def _write_weights_Embedding(self, layer, skip_outputs=False):
         nm = layer.name
-        self._write_outputs(layer)
+        if not skip_outputs:
+            self._write_outputs(layer)
         kernel = layer.get_weights()[0]
         self._write_weights_array2c(kernel, nm+'_kernel')
         self.stack_vars += '\n\n'
 
-    def _write_weights_UpSampling1D(self, layer):
+    def _write_weights_UpSampling1D(self, layer, skip_outputs=False):
         nm = layer.name
-        self._write_outputs(layer)
+        if not skip_outputs:
+            self._write_outputs(layer)
         size = layer.get_config()['size']
         self.stack_vars += 'size_t ' + nm + '_size = ' + str(size) + '; \n'
         self.stack_vars += '\n\n'
 
-    def _write_weights_UpSampling2D(self, layer):
+    def _write_weights_UpSampling2D(self, layer, skip_outputs=False):
         nm = layer.name
-        self._write_outputs(layer)
+        if not skip_outputs:
+            self._write_outputs(layer)
         size = layer.get_config()['size']
         self.stack_vars += 'size_t ' + nm + '_size[2] = {' + str(size[0]) + \
             ',' + str(size[1]) + '}; \n'
         self.stack_vars += '\n\n'
 
-    def _write_weights_UpSampling3D(self, layer):
+    def _write_weights_UpSampling3D(self, layer, skip_outputs=False):
         nm = layer.name
-        self._write_outputs(layer)
+        if not skip_outputs:
+            self._write_outputs(layer)
         size = layer.get_config()['size']
         self.stack_vars += 'size_t ' + nm + '_size[3] = {' + str(size[0]) + \
             ',' + str(size[1]) + ',' + str(size[2]) + '}; \n'
         self.stack_vars += '\n\n'
 
-    def _write_weights_Cropping1D(self, layer):
+    def _write_weights_Cropping1D(self, layer, skip_outputs=False):
         nm = layer.name
-        self._write_outputs(layer)
+        if not skip_outputs:
+            self._write_outputs(layer)
         crop_top = layer.get_config()['cropping'][0]
         crop_bottom = layer.get_config()['cropping'][1]
         self.stack_vars += 'size_t ' + nm + '_crop[2] = {' + str(crop_top) + ','\
             + str(crop_bottom) + '}; \n'
         self.stack_vars += '\n\n'
 
-    def _write_weights_Cropping2D(self, layer):
+    def _write_weights_Cropping2D(self, layer, skip_outputs=False):
         nm = layer.name
-        self._write_outputs(layer)
+        if not skip_outputs:
+            self._write_outputs(layer)
         crop_top = layer.get_config()['cropping'][0][0]
         crop_bottom = layer.get_config()['cropping'][0][1]
         crop_left = layer.get_config()['cropping'][1][0]
@@ -765,9 +841,10 @@ class Weights2C():
             ',' + str(crop_right) + '}; \n'
         self.stack_vars += '\n\n'
 
-    def _write_weights_Cropping3D(self, layer):
+    def _write_weights_Cropping3D(self, layer, skip_outputs=False):
         nm = layer.name
-        self._write_outputs(layer)
+        if not skip_outputs:
+            self._write_outputs(layer)
         crop0 = layer.get_config()['cropping'][0][0]
         crop1 = layer.get_config()['cropping'][0][1]
         crop2 = layer.get_config()['cropping'][1][0]
@@ -779,9 +856,10 @@ class Weights2C():
             ',' + str(crop4) + ',' + str(crop5) + '}; \n'
         self.stack_vars += '\n\n'
 
-    def _write_weights_ZeroPadding1D(self, layer):
+    def _write_weights_ZeroPadding1D(self, layer, skip_outputs=False):
         nm = layer.name
-        self._write_outputs(layer)
+        if not skip_outputs:
+            self._write_outputs(layer)
         pad_top = layer.get_config()['padding'][0]
         pad_bottom = layer.get_config()['padding'][1]
         self.stack_vars += 'size_t ' + nm + '_pad[2] = {' + str(pad_top) + ','\
@@ -789,9 +867,10 @@ class Weights2C():
         self.stack_vars += 'float ' + nm + '_fill = 0.0f; \n'
         self.stack_vars += '\n\n'
 
-    def _write_weights_ZeroPadding2D(self, layer):
+    def _write_weights_ZeroPadding2D(self, layer, skip_outputs=False):
         nm = layer.name
-        self._write_outputs(layer)
+        if not skip_outputs:
+            self._write_outputs(layer)
         pad_top = layer.get_config()['padding'][0][0]
         pad_bottom = layer.get_config()['padding'][0][1]
         pad_left = layer.get_config()['padding'][1][0]
@@ -802,9 +881,10 @@ class Weights2C():
         self.stack_vars += 'float ' + nm + '_fill = 0.0f; \n'
         self.stack_vars += '\n\n'
 
-    def _write_weights_ZeroPadding3D(self, layer):
+    def _write_weights_ZeroPadding3D(self, layer, skip_outputs=False):
         nm = layer.name
-        self._write_outputs(layer)
+        if not skip_outputs:
+            self._write_outputs(layer)
         pad0 = layer.get_config()['padding'][0][0]
         pad1 = layer.get_config()['padding'][0][1]
         pad2 = layer.get_config()['padding'][1][0]
@@ -848,3 +928,16 @@ class Weights2C():
     def _write_weights_Dropout(self, layer):
         # no weights needed
         pass
+
+    def _write_weights_TFOpLambda(self, layer):
+        self._write_weights_TensorFlowOpLayer(layer)
+
+    def _write_weights_TensorFlowOpLayer(self, layer, skip_outputs=False):
+        # Special case when tf.split is used
+        # no weights needed
+        if 'split' in layer.name:
+            if not skip_outputs:
+                self._write_outputs(layer)
+        else:
+            raise AssertionError('Unsupported TensorFlowOpLayer: ' + layer.name + '\n'
+                                 + 'Currently only split operation is supported.')

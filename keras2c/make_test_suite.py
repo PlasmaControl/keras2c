@@ -1,7 +1,7 @@
 """make_test_suite.py
 This file is part of keras2c
 Copyright 2020 Rory Conlin
-Licensed under MIT License
+Licensed under LGPLv3 License
 https://github.com/f0uriest/keras2c
 
 Generates automatic test suite for converted code
@@ -15,11 +15,16 @@ import tensorflow as tf
 import subprocess
 tf.compat.v1.disable_eager_execution()
 
-__author__ = "Rory Conlin"
-__copyright__ = "Copyright 2020, Rory Conlin"
-__license__ = "MIT"
-__maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
-__email__ = "wconlin@princeton.edu"
+# Original author
+# __author__ = "Rory Conlin"
+# __copyright__ = "Copyright 2020, Rory Conlin"
+# __license__ = "MIT"
+# __maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
+# __email__ = "wconlin@princeton.edu"
+
+# Modified by
+__author__ = "Anchal Gupta"
+__email__ = "guptaa@fusion.gat.com"
 
 
 def make_test_suite(model, function_name, malloc_vars, num_tests=10, stateful=False, verbose=True, tol=1e-5):
@@ -87,7 +92,14 @@ def make_test_suite(model, function_name, malloc_vars, num_tests=10, stateful=Fa
                 rand_inputs.insert(j, rand_input)
                 # make predictions
             outputs = model.predict(rand_inputs)
-            if np.isfinite(outputs).all():
+            if isinstance(outputs, list):
+                good = True
+                for outp in outputs:
+                    if not np.isfinite(outp).all():
+                        good = False
+                if good:
+                    break
+            elif np.isfinite(outputs).all():
                 break
             else:
                 ct += 1
@@ -109,7 +121,7 @@ def make_test_suite(model, function_name, malloc_vars, num_tests=10, stateful=Fa
                                          model_outputs[j] + '_test' + str(i+1)))
     s = 'int main(){\n'
     file.write(s)
-    
+
     s = ' float errors[' + str(num_tests*num_outputs) + '];\n'
     s += ' size_t num_tests = ' + str(num_tests) + '; \n'
     s += 'size_t num_outputs = ' + str(num_outputs) + '; \n'

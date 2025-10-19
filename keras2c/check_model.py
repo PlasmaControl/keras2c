@@ -1,7 +1,7 @@
 """check_model.py
 This file is part of keras2c
 Copyright 2020 Rory Conlin
-Licensed under MIT License
+Licensed under LGPLv3 License
 https://github.com/f0uriest/keras2c
 
 Checks a model before conversion to flag unsupported features
@@ -54,7 +54,7 @@ def name_check(model):
     valid = True
     log = ''
     for layer in model.layers:
-        if not is_valid_c_name(layer.name):
+        if not is_valid_c_name(layer.name.replace('.', '_')):
             valid = False
             log += "layer name '" + layer.name + "' is not a valid C name. \n"
     return valid, log

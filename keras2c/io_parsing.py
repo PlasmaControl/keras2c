@@ -1,18 +1,22 @@
 """io_parsing.py
 This file is part of keras2c
 Copyright 2020 Rory Conlin
-Licensed under MIT License
+Licensed under LGPLv3 License
 https://github.com/f0uriest/keras2c
 
 Helper functions to get input and output names for each layer etc.
 """
 
-__author__ = "Rory Conlin"
-__copyright__ = "Copyright 2020, Rory Conlin"
-__license__ = "MIT"
-__maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
-__email__ = "wconlin@princeton.edu"
+# Original author
+# __author__ = "Rory Conlin"
+# __copyright__ = "Copyright 2020, Rory Conlin"
+# __license__ = "MIT"
+# __maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
+# __email__ = "wconlin@princeton.edu"
 
+# Modified by
+__author__ = "Anchal Gupta"
+__email__ = "guptaa@fusion.gat.com"
 
 def layer_type(layer):
     """Gets the type of a layer
@@ -40,6 +44,17 @@ def get_all_io_names(model):
     a = [get_layer_io_names(layer) for layer in model.layers]
     return list(set(flatten(a)))
 
+def parse_io_name(name):
+    name = name.replace('.', '_')
+    skip_start = name.find('/')
+    skip_end = name.rfind(':')
+    out_str = name
+    if skip_start != -1:
+        out_str = name[:skip_start]
+    if skip_end != -1:
+        out_str += '_' + name[skip_end+1:]
+    out_str = out_str.replace(':', '_').replace('/', '_')
+    return out_str
 
 def get_layer_num_io(layer):
     """Gets the number of inputs and outputs for a layer
@@ -92,12 +107,13 @@ def get_layer_io_names(layer):
             temp_list = []
             list_length = len(layer.get_input_at(i))
             for j in range(list_length):
-                name = layer.get_input_at(i)[j].name.split(':')[
-                    0].split('/')[0]
+                name = parse_io_name(layer.get_input_at(i)[j].name)
+                # name = layer.get_input_at(i)[j].name.replace(':', '_').replace('/', '_').replace('.', '_')
                 temp_list.append(name)
             inputs.insert(i, temp_list)
         else:
-            name = layer.get_input_at(i).name.split(':')[0].split('/')[0]
+            name = parse_io_name(layer.get_input_at(i).name)
+            # name = layer.get_input_at(i).name.replace(':', '_').replace('/', '_').replace('.', '_')
             inputs.insert(i, name)
 
     outputs = []
@@ -107,16 +123,17 @@ def get_layer_io_names(layer):
             temp_list = []
             list_length = len(layer.get_output_at(i))
             for j in range(list_length):
-                name = layer.get_output_at(i)[j].name.split(':')[
-                    0].split('/')[0]
+                name = parse_io_name(layer.get_output_at(i)[j].name)
+                # name = layer.get_output_at(i)[j].name.replace(':', '_').replace('/', '_').replace('.', '_')
                 temp_list.append(name)
             outputs.insert(i, temp_list)
         else:
             name = layer.get_output_at(i).name
-            if 'bidirectional' in name.lower():
-                name = name.split('/')[-2]
-            else:
-                name = name.split('/')[0]
+            name = parse_io_name(name)
+            # if 'bidirectional' in name.lower():
+            #     name = name.replace(':', '_').replace('/', '_').replace('.', '_')
+            # else:
+            #     name = name.replace(':', '_').replace('/', '_').replace('.', '_')
             outputs.insert(i, name)
 
     return inputs, outputs
@@ -138,10 +155,10 @@ def get_model_io_names(model):
     inputs = []
     outputs = []
     for i in range(num_inputs):
-        nm = model.inputs[i].name.split(':')[0].split('/')[0]
+        nm = parse_io_name(model.inputs[i].name)
         inputs.append(nm)
     for i in range(num_outputs):
-        nm = model.outputs[i].name.split(':')[0].split('/')[0]
+        nm = parse_io_name(model.outputs[i].name)
         outputs.append(nm)
     return inputs, outputs
 
