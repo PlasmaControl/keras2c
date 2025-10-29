@@ -19,7 +19,7 @@ endif
 OBJ = \
 	k2c_activations.o \
 	k2c_convolution_layers.o \
-	k2c_conv_transpose_layers.o \
+	k2c_conv_transpose_layer.o \
 	k2c_core_layers.o \
 	k2c_embedding_layers.o \
 	k2c_helper_functions.o \
