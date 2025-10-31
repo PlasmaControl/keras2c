@@ -1,0 +1,22 @@
+Metadata-Version: 2.1
+Name: keras2c
+Version: 0.1
+Summary: A library for converting Keras neural networks to real-time compatible C.
+Author-email: Rory Conlin <wconlin@princeton.edu>, Keith Erickson <kerickso@pppl.gov>, Joseph Abbate <jabbate@princeton.edu>, Egemen Kolemen <ekolemen@princeton.edu>
+Maintainer-email: Peter Steiner <peter.steiner@princeton.edu>
+License: LGPLv3 License
+Project-URL: Documentation, https://f0uriest.github.io/keras2c/
+Project-URL: Repository, https://github.com/f0uriest/keras2c/
+Project-URL: Issues, https://github.com/f0uriest/keras2c/issues
+Keywords: Keras,C,machine learning
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Software Development :: Build Tools
+Classifier: License :: OSI Approved :: LGPLv3 License
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: tensorflow
+Requires-Dist: keras
+Requires-Dist: numpy

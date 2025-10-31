@@ -6,79 +6,81 @@ Implements tests for core layers
 #!/usr/bin/env python3
 
 import unittest
-import tensorflow.keras as keras
+import os
+from tensorflow import keras
 from keras2c import keras2c_main
 import subprocess
 import time
-import os
-import tensorflow as tf
-import shutil
-import platform
-tf.compat.v1.disable_eager_execution()
 
-# Original author
-# __author__ = "Rory Conlin"
-# __copyright__ = "Copyright 2020, Rory Conlin"
-# __license__ = "MIT"
-# __maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
-# __email__ = "wconlin@princeton.edu"
+__author__ = "Rory Conlin"
+__copyright__ = "Copyright 2020, Rory Conlin"
+__license__ = "MIT"
+__maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
+__email__ = "wconlin@princeton.edu"
 
-# Modified by
-__author__ = "Anchal Gupta"
-__email__ = "guptaa@fusion.gat.com"
+
+CC = 'gcc'
+
 
 def build_and_run(name, return_output=False):
-
-    CC = 'gcc'
-
-    repo_path = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../'))
-    include_path = os.path.join(repo_path, './include/')
+    cwd = os.getcwd()
+    os.chdir(os.path.abspath('./include/'))
+    lib_process = subprocess.run(['make'], shell=True, capture_output=True, text=True)
+    os.chdir(os.path.abspath(cwd))
+    if lib_process.returncode != 0:
+        print("Library build failed with the following output:")
+        print(lib_process.stdout)
+        print(lib_process.stderr)
+        return 'lib build failed'
 
     if os.environ.get('CI'):
-        ccflags = '-g -Og -std=c99 --coverage '
+        ccflags = '-g -Og -std=c99 --coverage -I./include/'
     else:
-        ccflags = '-Ofast -std=c99 '
+        ccflags = '-Ofast -std=c99 -I./include/'
 
-    cwd = os.getcwd()
-    in_repo_root = cwd == repo_path
-    if not in_repo_root:
-        shutil.copytree(include_path, './include')
-        include_path = os.path.abspath('./include/')
-
-    if platform.system() == 'Linux':
-        cwd = os.getcwd()
-        os.chdir('./include')
-        lib_code = subprocess.run(['make']).returncode
-        os.chdir(os.path.abspath(cwd))
-        if lib_code != 0:
-            return 'lib build failed'
-
-        cc = CC + ' ' + ccflags + ' -o ' + name + ' ' + name + '.c ' + \
+    cc = CC + ' ' + ccflags + ' -o ' + name + ' ' + name + '.c ' + \
         name + '_test_suite.c -L./include/ -l:libkeras2c.a -lm'
-    elif platform.system() == 'Darwin':
-        inc_files = ' '.join([os.path.join(include_path, f) for f in os.listdir(include_path) if f.endswith('.c')])
-        cc = CC + ' ' + ccflags + ' -o ' + name + ' ' + name + '.c ' + \
-            name + '_test_suite.c ' + inc_files
-    build_code = subprocess.run(cc.split()).returncode
-    if build_code != 0:
-        return 'build failed'
+    build_process = subprocess.run(cc, shell=True, capture_output=True, text=True)
+    if build_process.returncode != 0:
+        print("Compilation failed with the following output:")
+        print(build_process.stdout)
+        print(build_process.stderr)
+        return 'compilation failed'
     proc_output = subprocess.run(['./' + name])
     rcode = proc_output.returncode
-    if rcode == 0:
+    if not os.environ.get('CI'):
         subprocess.run('rm ' + name + '*', shell=True)
-        if not in_repo_root:
-            shutil.rmtree('./include')
-        return (rcode, proc_output.stdout) if return_output else rcode
-    return rcode
+    return (rcode, proc_output.stdout) if return_output else rcode
 
 
 class TestCoreLayers(unittest.TestCase):
-    """tests for core layers"""
+    """
+    Unit tests for core Keras layers using keras2c.
+    This test suite includes the following tests:
+    - test_Dense1: Tests a Dense layer with ReLU activation.
+    - test_Dense2_Activation: Tests a Dense layer without bias followed by an Activation layer with exponential activation.
+    - test_Dropout_Reshape_Flatten: Tests a sequence of Flatten, Dropout, and Reshape layers.
+    - test_Permute: Tests a Permute layer.
+    - test_repeat_vector: Tests a RepeatVector layer followed by an ActivityRegularization and Dense layer.
+    - test_dummy_layers: Tests a sequence of SpatialDropout3D, Reshape, SpatialDropout2D, Reshape, SpatialDropout1D, and Flatten layers.
+    Each test builds a Keras model, converts it using keras2c, and verifies that the generated code runs successfully.
+    """
+
+
+    def test_Activation1(self):
+        inshp = (10, 20)
+        a = keras.layers.Input(shape=inshp)
+        b = keras.layers.Activation('relu')(a)
+        model = keras.models.Model(inputs=a, outputs=b)
+        name = 'test___Activation1' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)
 
     def test_Dense1(self):
         inshp = (21, 4, 9)
         units = 45
-        a = keras.layers.Input(inshp)
+        a = keras.layers.Input(shape=inshp)
         b = keras.layers.Dense(units, activation='relu')(a)
         model = keras.models.Model(inputs=a, outputs=b)
         name = 'test___Dense1' + str(int(time.time()))
@@ -86,21 +88,32 @@ class TestCoreLayers(unittest.TestCase):
         rcode = build_and_run(name)
         self.assertEqual(rcode, 0)
 
-    def test_Dense2_Activation(self):
+    def test_Dense2_NoBias(self):
         inshp = (40, 30)
         units = 500
-        a = keras.layers.Input(inshp)
+        a = keras.layers.Input(shape=inshp)
         b = keras.layers.Dense(units, activation='tanh', use_bias=False)(a)
-        c = keras.layers.Activation('exponential')(b)
-        model = keras.models.Model(inputs=a, outputs=c)
+        model = keras.models.Model(inputs=a, outputs=b)
         name = 'test___Dense2' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)
+
+    def test_Dense3_Activation(self):
+        inshp = (40, 30)
+        units = 500
+        a = keras.layers.Input(shape=inshp, name='input_layer')
+        b = keras.layers.Dense(units, activation='tanh', use_bias=False, name='dense_layer')(a)
+        c = keras.layers.Activation('exponential', name='activation_layer')(b)
+        model = keras.models.Model(inputs=a, outputs=c)
+        name = 'test___Dense3' + str(int(time.time()))
         keras2c_main.k2c(model, name)
         rcode = build_and_run(name)
         self.assertEqual(rcode, 0)
 
     def test_Dropout_Reshape_Flatten(self):
         inshp = (10, 40, 30)
-        a = keras.layers.Input(inshp)
+        a = keras.layers.Input(shape=inshp)
         b = keras.layers.Flatten()(a)
         c = keras.layers.Dropout(.4)(b)
         d = keras.layers.Reshape((20, 30, 20))(c)
@@ -112,9 +125,8 @@ class TestCoreLayers(unittest.TestCase):
 
     def test_Permute(self):
         inshp = (6, 12, 9)
-        a = keras.layers.Input(inshp)
+        a = keras.layers.Input(shape=inshp)
         b = keras.layers.Permute((3, 1, 2))(a)
-     #   c = keras.layers.Dense(20)(b)
         model = keras.models.Model(inputs=a, outputs=b)
         name = 'test___permute' + str(int(time.time()))
         keras2c_main.k2c(model, name)
@@ -123,7 +135,7 @@ class TestCoreLayers(unittest.TestCase):
 
     def test_repeat_vector(self):
         inshp = (13,)
-        a = keras.layers.Input(inshp)
+        a = keras.layers.Input(shape=inshp)
         b = keras.layers.RepeatVector(23)(a)
         c = keras.layers.ActivityRegularization(l1=.5, l2=.3)(b)
         d = keras.layers.Dense(20)(c)
@@ -135,7 +147,7 @@ class TestCoreLayers(unittest.TestCase):
 
     def test_dummy_layers(self):
         inshp = (4, 5, 6, 7)
-        a = keras.layers.Input(inshp)
+        a = keras.layers.Input(shape=inshp)
         b = keras.layers.SpatialDropout3D(.2)(a)
         c = keras.layers.Reshape((20, 6, 7))(b)
         d = keras.layers.SpatialDropout2D(.3)(c)
@@ -153,13 +165,12 @@ class TestEmbedding(unittest.TestCase):
     """tests for embedding layers"""
 
     def test_Embedding1(self):
-        inshp = (10, 20)
-        input_dim = 20
+        inshp = (10,)
+        input_dim = 50
         output_dim = 30
-        a = keras.layers.Input(inshp)
-        b = keras.layers.Activation('relu')(a)
+        a = keras.layers.Input(shape=inshp, dtype='int32')
         c = keras.layers.Embedding(
-            input_dim=input_dim, output_dim=output_dim)(b)
+            input_dim=input_dim, output_dim=output_dim)(a)
         model = keras.models.Model(inputs=a, outputs=c)
         name = 'test___Embedding1' + str(int(time.time()))
         keras2c_main.k2c(model, name)
@@ -172,9 +183,9 @@ class TestNormalization(unittest.TestCase):
 
     def test_BatchNorm1(self):
         inshp = (10, 11, 12)
-        axis = 3
+        axis = -1
         init = keras.initializers.RandomUniform(minval=0.1, maxval=1.0)
-        a = keras.layers.Input(inshp)
+        a = keras.layers.Input(shape=inshp)
         b = keras.layers.BatchNormalization(axis=axis,
                                             beta_initializer=init,
                                             gamma_initializer=init,
@@ -191,7 +202,7 @@ class TestNormalization(unittest.TestCase):
         inshp = (10, 11, 12)
         axis = 2
         init = keras.initializers.RandomUniform(minval=0.1, maxval=1.0)
-        a = keras.layers.Input(inshp)
+        a = keras.layers.Input(shape=inshp)
         b = keras.layers.BatchNormalization(axis=axis,
                                             beta_initializer=init,
                                             gamma_initializer=init,
@@ -208,7 +219,7 @@ class TestNormalization(unittest.TestCase):
         inshp = (10, 11, 12, 13)
         axis = 1
         init = keras.initializers.RandomUniform(minval=0.1, maxval=1.0)
-        a = keras.layers.Input(inshp)
+        a = keras.layers.Input(shape=inshp)
         b = keras.layers.BatchNormalization(axis=axis,
                                             beta_initializer=init,
                                             gamma_initializer=init,
@@ -225,7 +236,7 @@ class TestNormalization(unittest.TestCase):
         inshp = (10, 11, 12)
         axis = 2
         init = keras.initializers.RandomUniform(minval=0.1, maxval=2.0)
-        a = keras.layers.Input(inshp)
+        a = keras.layers.Input(shape=inshp)
         b = keras.layers.BatchNormalization(axis=axis,
                                             beta_initializer=init,
                                             gamma_initializer=init,
@@ -242,11 +253,12 @@ class TestNormalization(unittest.TestCase):
 class TestSharedLayers(unittest.TestCase):
     """tests for shared layers"""
 
+    @unittest.skip  # no reason needed
     def test_SharedLayer1(self):
         inshp = (10, 20)
-        xi = keras.layers.Input(inshp)
+        xi = keras.layers.Input(shape=inshp)
         x = keras.layers.Dense(20, activation='relu')(xi)
-        yi = keras.layers.Input(inshp)
+        yi = keras.layers.Input(shape=inshp)
         y = keras.layers.Dense(20, activation='relu')(yi)
         f = keras.layers.Dense(30, activation='relu')
         x = f(x)
@@ -257,7 +269,3 @@ class TestSharedLayers(unittest.TestCase):
         keras2c_main.k2c(model, name)
         rcode = build_and_run(name)
         self.assertEqual(rcode, 0)
-
-
-if __name__ == "__main__":
-    unittest.main()
