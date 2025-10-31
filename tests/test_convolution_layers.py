@@ -6,14 +6,11 @@ Implements tests for convolution layers
 #!/usr/bin/env python3
 
 import unittest
-import tensorflow.keras as keras
+import keras
 from keras2c import keras2c_main
-import subprocess
 import time
-import os
 from test_core_layers import build_and_run
-import tensorflow as tf
-tf.compat.v1.disable_eager_execution()
+
 
 # Original author
 # __author__ = "Rory Conlin"
@@ -226,7 +223,10 @@ class TestPadding(unittest.TestCase):
         pad_back = 4
         a = keras.layers.Input(inshp)
         b = keras.layers.ZeroPadding3D(
-            padding=((pad_top, pad_bottom), (pad_left, pad_right), (pad_front, pad_back)))(a)
+            padding=((pad_top, pad_bottom),
+                     (pad_left, pad_right),
+                     (pad_front, pad_back))
+        )(a)
         model = keras.models.Model(inputs=a, outputs=b)
         name = 'test___ZeroPad3D' + str(int(time.time()))
         keras2c_main.k2c(model, name)
@@ -273,7 +273,10 @@ class TestCropping(unittest.TestCase):
         crop_back = 0
         a = keras.layers.Input(inshp)
         b = keras.layers.Cropping3D(
-            cropping=((crop_top, crop_bottom), (crop_left, crop_right), (crop_front, crop_back)))(a)
+            cropping=((crop_top, crop_bottom),
+                      (crop_left, crop_right),
+                      (crop_front, crop_back))
+        )(a)
         model = keras.models.Model(inputs=a, outputs=b)
         name = 'test___Cropping3D' + str(int(time.time()))
         keras2c_main.k2c(model, name)
@@ -312,6 +315,3 @@ class TestUpSampling(unittest.TestCase):
         keras2c_main.k2c(model, name)
         rcode = build_and_run(name)
         self.assertEqual(rcode, 0)
-
-if __name__ == "__main__":
-    unittest.main()

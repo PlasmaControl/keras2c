@@ -6,14 +6,11 @@ Implements tests for advanced activation layers
 #!/usr/bin/env python3
 
 import unittest
-import tensorflow.keras as keras
+import keras
 from keras2c import keras2c_main
-import subprocess
 import time
-import os
 from test_core_layers import build_and_run
-import tensorflow as tf
-tf.compat.v1.disable_eager_execution()
+
 
 __author__ = "Rory Conlin"
 __copyright__ = "Copyright 2020, Rory Conlin"
@@ -61,7 +58,7 @@ class TestAdvancedActivation(unittest.TestCase):
         inshp = (3, 6, 19, 11)
         theta = 0.3
         a = keras.layers.Input(inshp)
-        b = keras.layers.ThresholdedReLU(theta=theta)(a)
+        b = keras.layers.ReLU(threshold=theta)(a)
         model = keras.models.Model(inputs=a, outputs=b)
         name = 'test___ThresholdedReLU' + str(int(time.time()))
         keras2c_main.k2c(model, name)

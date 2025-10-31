@@ -16,9 +16,7 @@ from keras2c.check_model import check_model
 from keras2c.make_test_suite import make_test_suite
 import numpy as np
 import subprocess
-import tensorflow.keras as keras
-import tensorflow as tf
-tf.compat.v1.disable_eager_execution()
+import keras
 
 
 # Original author

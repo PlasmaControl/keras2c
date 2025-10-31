@@ -12,8 +12,7 @@ import numpy as np
 from keras2c.io_parsing import layer_type, flatten
 from keras2c.weights2c import Weights2C
 from keras2c.layer2c import Layers2C
-import tensorflow as tf
-tf.compat.v1.disable_eager_execution()
+
 
 __author__ = "Rory Conlin"
 __copyright__ = "Copyright 2020, Rory Conlin"
@@ -176,11 +175,19 @@ def config_supported_check(model):
                    "' is not supported at this time. \n"
         if config.get('shared_axes'):
             valid = False
-            log += "shared axes option for layer '" + layer.name + \
-                   "' is not supported at this time. \n"
-        if layer_type(layer) in ['Add', 'Subtract', 'Multiply', 'Average',
-                                 'Maximum', 'Minimum']:
-            inshps = layer.input_shape
+            log += (
+                "shared axes option for layer '"
+                + layer.name
+                + "' is not supported at this time. \n"
+            )
+        if layer_type(layer) in ["Add", "Subtract", "Multiply", "Average", "Maximum",
+                                 "Minimum",]:
+            inshps = []
+            # Collect shapes from all inbound nodes
+            for node in getattr(layer, "_inbound_nodes", []):
+                for tensor in node.input_tensors:
+                    inshps.append(tensor.shape)
+
             insize = [np.prod(inp[1:]) for inp in inshps]
             if len(set(insize)) > 1:
                 valid = False

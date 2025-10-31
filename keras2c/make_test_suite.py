@@ -11,9 +11,8 @@ Generates automatic test suite for converted code
 import numpy as np
 from keras2c.io_parsing import get_model_io_names
 from keras2c.weights2c import Weights2C
-import tensorflow as tf
 import subprocess
-tf.compat.v1.disable_eager_execution()
+
 
 # Original author
 # __author__ = "Rory Conlin"
@@ -79,8 +78,10 @@ def make_test_suite(model, function_name, malloc_vars, num_tests=10, stateful=Fa
     s += 'struct timeval GetTimeStamp(); \n \n'
     file.write(s)
     for i in range(num_tests):
-        if i == num_tests//2 and stateful:
-            model.reset_states()
+        if i == num_tests // 2 and stateful:
+            for layer in model.layers:
+                if hasattr(layer, 'reset_states'):
+                    layer.reset_states()
         # generate random input and write to file
         ct = 0
         while True:

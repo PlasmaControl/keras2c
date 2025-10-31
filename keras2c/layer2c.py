@@ -9,8 +9,7 @@ Writes individual layers to C code
 
 # imports
 from keras2c.io_parsing import layer_type, get_model_io_names, get_all_io_names, get_layer_io_names, flatten
-import tensorflow as tf
-tf.compat.v1.disable_eager_execution()
+
 
 # Original author
 # __author__ = "Rory Conlin"
@@ -35,72 +34,132 @@ class Layers2C():
     def __init__(self, model, malloc):
         self.model = model
         self.model_inputs, self.model_outputs = get_model_io_names(self.model)
-        self.layers = ''
+        self.layers = ""
         self.malloc = malloc
 
     def write_layers(self, verbose=True):
-        """Writes layers in the correct graph order.
-
-        Args:
-            verbose (bool): whether to print progress
-
-        Returns:
-            layers (str): C code for calling layer functions in correct order
-
-        """
+        """Writes layers in the correct graph order."""
         written_io = set(self.model_inputs)
-        unwritten_io = set(get_all_io_names(self.model)) - written_io
+        all_io = set(flatten(get_all_io_names(self.model)))
+        unwritten_io = all_io - written_io
+
         while len(unwritten_io) > 0:
+            progress = False
+
             for layer in self.model.layers:
                 layer_inputs, layer_outputs = get_layer_io_names(layer)
-                for i, (inp, outp) in enumerate(zip(layer_inputs, layer_outputs)):
-                    if (set(flatten(inp)).issubset(written_io) and
-                            set(flatten(outp)).issubset(unwritten_io))or \
-                            layer_type(layer) == 'InputLayer':
-                        if verbose:
-                            print('Writing layer ', outp)
-                        method = getattr(
-                            self, '_write_layer_' + layer_type(layer))
-                        method(layer, inp, outp, i)
-                        written_io |= set(flatten(inp))
-                        written_io |= set(flatten(outp))
-                        unwritten_io -= set(flatten(inp))
-                        unwritten_io -= set(flatten(outp))
+
+                # Check if this layer has multiple nodes (shared layer)
+                if isinstance(layer_inputs, list) and len(layer_inputs) > 0:
+                    # Process each node separately
+                    for i, (inp, outp) in enumerate(zip(layer_inputs, layer_outputs)):
+                        # Handle nested lists from merge layers
+                        if isinstance(inp, list):
+                            flat_inputs = set(flatten([inp]))
+                        else:
+                            flat_inputs = set([inp]) if inp else set()
+
+                        if isinstance(outp, list):
+                            flat_outputs = set(flatten([outp]))
+                        else:
+                            flat_outputs = set([outp]) if outp else set()
+
+                        if flat_inputs.issubset(written_io) and (
+                            flat_outputs & unwritten_io
+                        ):
+                            if verbose:
+                                print(
+                                    f"Writing layer {layer.name} node {i}: {inp} -> {outp}"
+                                )
+
+                            # dispatch to the proper layer writer
+                            method = getattr(self, "_write_layer_" + layer_type(layer))
+                            method(
+                                layer, inp, outp, i
+                            )  # Pass node index as last parameter
+
+                            # mark inputs and outputs as written
+                            written_io |= flat_inputs
+                            written_io |= flat_outputs
+                            unwritten_io -= flat_outputs
+
+                            progress = True
+                else:
+                    # Handle layers with no nodes (shouldn't happen but just in case)
+                    if verbose:
+                        print(f"Warning: Layer {layer.name} has no nodes")
+
+            if not progress:
+                raise RuntimeError(
+                    "Could not write any layer in this iteration. "
+                    "Check for cycles or disconnected layers in the model."
+                )
+
         return self.layers
 
     def _format_io_names(self, layer, inp, outp, model_io=False):
-        nm = layer.name.replace('.', '_')
-        pnm = '&' + nm
+        """
+        Normalize and format input/output tensor names for code generation.
+
+        Works with Keras 3 (where inp/outp can be strings, lists, or nested lists).
+
+        Returns:
+            nm, pnm, inp_nm, outp_nm
+            (+ is_model_input, is_model_output if model_io=True)
+        """
+
+        def ensure_list(x):
+            """Wrap strings or non-iterables into a list."""
+            if isinstance(x, str):
+                return [x]
+            if isinstance(x, (list, tuple)):
+                return list(x)
+            return [x]
+
+        def flatten_any(x):
+            """Recursively flatten lists/tuples."""
+            if isinstance(x, (list, tuple)):
+                res = []
+                for xi in x:
+                    res.extend(flatten_any(xi))
+                return res
+            else:
+                return [x]
+
+        nm = layer.name.replace(".", "_")
+        pnm = "&" + nm
+
+        # Normalize inputs / outputs to flat lists of strings
+        in_list = flatten_any(ensure_list(inp))
+        out_list = flatten_any(ensure_list(outp))
+
+        inp_nm = []
+        outp_nm = []
         is_model_input = False
         is_model_output = False
-        if isinstance(inp, list):
-            inp_nm = []
-            for j in inp:
-                if j in self.model_inputs or 'timeslice' in j:
-                    inp_nm.append(j + '_input')
-                    is_model_input = True
-                else:
-                    inp_nm.append('&' + j + '_output')
-        else:
-            if inp in self.model_inputs or 'timeslice' in inp:
-                inp_nm = inp + '_input'
+
+        # --- Format inputs ---
+        for j in in_list:
+            if j in self.model_inputs or "timeslice" in j:
+                inp_nm.append(j + "_input")
                 is_model_input = True
             else:
-                inp_nm = '&' + inp + '_output'
-        if isinstance(outp, list):
-            outp_nm = []
-            for o in outp:
-                if o in self.model_outputs or 'timeslice' in o:
-                    outp_nm.append(o + '_output')
-                    is_model_output = True
-                else:
-                    outp_nm.append('&' + o + '_output')
-        else:
-            if outp in self.model_outputs or 'timeslice' in outp:
-                outp_nm = outp + '_output'
+                inp_nm.append("&" + j + "_output")
+
+        # --- Format outputs ---
+        for o in out_list:
+            if o in self.model_outputs or "timeslice" in o:
+                outp_nm.append(o + "_output")
                 is_model_output = True
             else:
-                outp_nm = '&' + outp + '_output'
+                outp_nm.append("&" + o + "_output")
+
+        # Collapse back to string if only one element (for consistency with old behavior)
+        if len(inp_nm) == 1:
+            inp_nm = inp_nm[0]
+        if len(outp_nm) == 1:
+            outp_nm = outp_nm[0]
+
         if model_io:
             return nm, pnm, inp_nm, outp_nm, is_model_input, is_model_output
         else:
@@ -130,25 +189,24 @@ class Layers2C():
         self.layers += '\n } \n'
 
     def _write_layer_Bidirectional(self, layer, inputs, outputs, i):
-        subname = layer.layer.name
-        method = getattr(self, '_write_layer_' + layer_type(layer.layer))
-        method(layer.forward_layer, inputs,
-               'forward_' + subname, i)
-        method(layer.backward_layer, inputs,
-               'backward_' + subname, i)
+        subname = layer.forward_layer.name
+        method = getattr(self, '_write_layer_' + layer_type(layer.forward_layer))
+        method(layer.forward_layer, inputs, subname, i)
+        subname = layer.backward_layer.name
+        method = getattr(self, '_write_layer_' + layer_type(layer.backward_layer))
+        method(layer.backward_layer, inputs, subname, i)
         mode = layer.merge_mode
-        inputs = ['forward_' + subname,
-                  'backward_' + subname]
-        if layer.layer.return_sequences:
-            self.layers += 'k2c_flip(&backward_' + subname + '_output,0); \n'
+        inputs = [layer.forward_layer.name, layer.backward_layer.name]
+        if layer.return_sequences:
+            self.layers += 'k2c_flip(&' + subname + '_output,0); \n'
         if mode == 'sum':
-            self._write_layer_Merge(layer, inputs, outputs, i, 'Add')
+            self._write_layer_Merge(layer, inputs, outputs, 0, 'Add')
         elif mode == 'mul':
-            self._write_layer_Merge(layer, inputs, outputs, i, 'Multiply')
+            self._write_layer_Merge(layer, inputs, outputs, 0, 'Multiply')
         elif mode == 'ave':
-            self._write_layer_Merge(layer, inputs, outputs, i, 'Average')
+            self._write_layer_Merge(layer, inputs, outputs, 0, 'Average')
         elif mode == 'concat':
-            self._write_layer_Concatenate(layer, inputs, outputs, i)
+            self._write_layer_Concatenate(layer, inputs, outputs, 0)
 
     def _write_layer_LSTM(self, layer, inputs, outputs, i):
         nm, pnm, inputs, outputs = self._format_io_names(

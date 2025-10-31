@@ -6,15 +6,11 @@ Implements tests for layer wrappers
 #!/usr/bin/env python3
 
 from test_core_layers import build_and_run
-import numpy as np
-import os
 import time
-import subprocess
 from keras2c import keras2c_main
 import unittest
-import tensorflow.keras as keras
-from tensorflow.python.framework.ops import disable_eager_execution
-disable_eager_execution()
+import keras
+
 
 # Original author
 # __author__ = "Rory Conlin"
@@ -32,10 +28,13 @@ class TestWrappers(unittest.TestCase):
 
     def test_Bidirectional1(self):
         model = keras.models.Sequential()
-        model.add(keras.layers.Bidirectional(keras.layers.LSTM(10, return_sequences=True),
-                                             input_shape=(5, 10), merge_mode='concat'))
-        model.add(keras.layers.Bidirectional(keras.layers.LSTM(10, return_sequences=True),
-                                             merge_mode='mul'))
+        model.add(keras.layers.Bidirectional(
+            keras.layers.LSTM(10, return_sequences=True),
+            input_shape=(5, 10), merge_mode='concat')
+        )
+        model.add(keras.layers.Bidirectional(
+            keras.layers.LSTM(10, return_sequences=True), merge_mode='mul')
+        )
         model.add(keras.layers.Dense(5))
         model.build()
         name = 'test___Bidirectional1' + str(int(time.time()))
@@ -46,10 +45,12 @@ class TestWrappers(unittest.TestCase):
     def test_Bidirectional2(self):
         model = keras.models.Sequential()
         model.add(keras.layers.Dense(5, input_shape=(5, 10)))
-        model.add(keras.layers.Bidirectional(keras.layers.LSTM(10, return_sequences=True),
-                                             merge_mode='ave'))
-        model.add(keras.layers.Bidirectional(keras.layers.LSTM(10, return_sequences=True),
-                                             merge_mode='concat'))
+        model.add(keras.layers.Bidirectional(
+            keras.layers.LSTM(10, return_sequences=True), merge_mode='ave')
+        )
+        model.add(keras.layers.Bidirectional(
+            keras.layers.LSTM(10, return_sequences=True), merge_mode='concat')
+        )
         model.add(keras.layers.Dense(5))
         model.build()
         name = 'test___Bidirectional2' + str(int(time.time()))
@@ -58,7 +59,6 @@ class TestWrappers(unittest.TestCase):
         self.assertEqual(rcode, 0)
 
     def test_TimeDistributed1(self):
-
         inputs = keras.layers.Input(shape=(8, 5))
         outputs = keras.layers.TimeDistributed(
             keras.layers.Dense(7, use_bias=True,))(inputs)
@@ -126,6 +126,3 @@ class TestWrappers(unittest.TestCase):
         keras2c_main.k2c(model, name)
         rcode = build_and_run(name)
         self.assertEqual(rcode, 0)
-
-if __name__ == '__main__':
-    unittest.main()
