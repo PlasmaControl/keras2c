@@ -1,4 +1,3 @@
-
 CC=gcc
 
 ifeq ($(CC), gcc)
@@ -19,13 +18,15 @@ endif
 OBJ = \
 	k2c_activations.o \
 	k2c_convolution_layers.o \
+	k2c_conv_transpose_layers.o \
 	k2c_core_layers.o \
 	k2c_embedding_layers.o \
 	k2c_helper_functions.o \
 	k2c_merge_layers.o \
 	k2c_normalization_layers.o \
 	k2c_pooling_layers.o \
-	k2c_recurrent_layers.o
+	k2c_recurrent_layers.o \
+	k2c_split_layers.o \
 
 DEPS = \
 	k2c_include.h \

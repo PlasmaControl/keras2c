@@ -13,6 +13,8 @@ It is designed to be as simple as possible for real time applications.
 Quickstart
 **********
 
+For windows, make sure that you have gcc installed. We recommend CYGWIN with make and gcc
+
 After cloning the repo, install the necessary packages with ``pip install -r requirements.txt``.
 
 keras2c can be used from the command line:
@@ -53,7 +55,7 @@ Supported Layers
 - **Recurrent Layers**: SimpleRNN, GRU, LSTM, SimpleRNNCell, GRUCell, LSTMCell
 - **Embedding Layers**: Embedding
 - **Merge Layers**: Add, Subtract, Multiply, Average, Maximum, Minimum, Concatenate, Dot
-- **Advanced Activation Layers**: LeakyReLU, PReLU, ELU, ThresholdedReLU, Softmax, ReLU
+- **Advanced Activation Layers**: LeakyReLU, PReLU, ELU, Softmax, ReLU
 - **Normalization Layers**: BatchNormalization
 - **Noise Layers**: GaussianNoise, GaussianDropout, AlphaDropout
 - **Layer Wrappers**: TimeDistributed, Bidirectional

@@ -12,43 +12,63 @@ import subprocess
 import time
 import os
 import tensorflow as tf
+import shutil
+import platform
 tf.compat.v1.disable_eager_execution()
 
-__author__ = "Rory Conlin"
-__copyright__ = "Copyright 2020, Rory Conlin"
-__license__ = "MIT"
-__maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
-__email__ = "wconlin@princeton.edu"
+# Original author
+# __author__ = "Rory Conlin"
+# __copyright__ = "Copyright 2020, Rory Conlin"
+# __license__ = "MIT"
+# __maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
+# __email__ = "wconlin@princeton.edu"
 
-
-CC = 'gcc'
-
+# Modified by
+__author__ = "Anchal Gupta"
+__email__ = "guptaa@fusion.gat.com"
 
 def build_and_run(name, return_output=False):
 
-    cwd = os.getcwd()
-    os.chdir(os.path.abspath('./include/'))
-    lib_code = subprocess.run(['make']).returncode
-    os.chdir(os.path.abspath(cwd))
-    if lib_code != 0:
-        return 'lib build failed'
+    CC = 'gcc'
+
+    repo_path = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../'))
+    include_path = os.path.join(repo_path, './include/')
 
     if os.environ.get('CI'):
-        ccflags = '-g -Og -std=c99 --coverage -I./include/'
+        ccflags = '-g -Og -std=c99 --coverage '
     else:
-        ccflags = '-Ofast -std=c99 -I./include/'
+        ccflags = '-Ofast -std=c99 '
 
-    cc = CC + ' ' + ccflags + ' -o ' + name + ' ' + name + '.c ' + \
+    cwd = os.getcwd()
+    in_repo_root = cwd == repo_path
+    if not in_repo_root:
+        shutil.copytree(include_path, './include')
+        include_path = os.path.abspath('./include/')
+
+    if platform.system() == 'Linux':
+        cwd = os.getcwd()
+        os.chdir('./include')
+        lib_code = subprocess.run(['make']).returncode
+        os.chdir(os.path.abspath(cwd))
+        if lib_code != 0:
+            return 'lib build failed'
+
+        cc = CC + ' ' + ccflags + ' -o ' + name + ' ' + name + '.c ' + \
         name + '_test_suite.c -L./include/ -l:libkeras2c.a -lm'
+    elif platform.system() == 'Darwin':
+        inc_files = ' '.join([os.path.join(include_path, f) for f in os.listdir(include_path) if f.endswith('.c')])
+        cc = CC + ' ' + ccflags + ' -o ' + name + ' ' + name + '.c ' + \
+            name + '_test_suite.c ' + inc_files
     build_code = subprocess.run(cc.split()).returncode
     if build_code != 0:
         return 'build failed'
     proc_output = subprocess.run(['./' + name])
     rcode = proc_output.returncode
     if rcode == 0:
-        if not os.environ.get('CI'):
-            subprocess.run('rm ' + name + '*', shell=True)
-            return (rcode, proc_output.stdout) if return_output else rcode
+        subprocess.run('rm ' + name + '*', shell=True)
+        if not in_repo_root:
+            shutil.rmtree('./include')
+        return (rcode, proc_output.stdout) if return_output else rcode
     return rcode
 
 

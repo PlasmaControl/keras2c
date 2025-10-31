@@ -25,7 +25,7 @@ Supported Layers
 - **Merge Layers**: Add, Subtract, Multiply, Average, Maximum, Minimum, Concatenate, Dot
 - **Normalization Layers**: BatchNormalization
 - **Layer Wrappers**: TimeDistributed, Bidirectional
-- **Activations**: ReLU, tanh, sigmoid, hard sigmoid, exponential, softplus, softmax, softsign, LeakyReLU, PReLU, ELU, ThresholdedReLU
+- **Activations**: ReLU, tanh, sigmoid, hard sigmoid, exponential, softplus, softmax, softsign, LeakyReLU, PReLU, ELU
 
 
 .. figure:: flow_graph.png
