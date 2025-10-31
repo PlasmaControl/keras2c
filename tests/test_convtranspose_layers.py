@@ -6,12 +6,11 @@ Implements tests for convolution layers
 #!/usr/bin/env python3
 
 import unittest
-import tensorflow.keras as keras
+import keras
 from keras2c import keras2c_main
 import time
 from test_core_layers import build_and_run
-import tensorflow as tf
-tf.compat.v1.disable_eager_execution()
+
 import numpy as np
 
 __author__ = "Anchal Gupta"
@@ -40,17 +39,14 @@ class TestConvolutionTransposeLayers(unittest.TestCase):
             activation = None # 'relu'
             a = keras.layers.Input(inshp)
             b = keras.layers.Conv1DTranspose(filters=nf,
-                                            kernel_size=nk,
-                                            strides=strides,
-                                            padding=padding,
-                                            dilation_rate=dilation_rate,
-                                            activation=activation,
-                                            use_bias=False)(a)
+                                             kernel_size=nk,
+                                             strides=strides,
+                                             padding=padding,
+                                             dilation_rate=dilation_rate,
+                                             activation=activation,
+                                             use_bias=False)(a)
             model = keras.models.Model(inputs=a, outputs=b)
             name = 'test___Conv1DTranspose1' + str(int(time.time()))
             keras2c_main.k2c(model, name)
             rcode = build_and_run(name)
             self.assertEqual(rcode, 0)
-
-if __name__ == "__main__":
-    unittest.main()

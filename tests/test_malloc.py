@@ -10,7 +10,6 @@ import keras
 from keras2c import keras2c_main
 import time
 from test_core_layers import build_and_run
-import tensorflow as tf
 
 
 __author__ = "Rory Conlin"
@@ -34,7 +33,6 @@ class TestMalloc(unittest.TestCase):
         rcode = build_and_run(name)
         self.assertEqual(rcode, 0)
 
-    @unittest.skip  # no reason needed
     def test_Malloc2(self):
         model = keras.models.Sequential()
         model.add(keras.layers.Conv2D(8, (3, 3), padding='same',
@@ -60,7 +58,3 @@ class TestMalloc(unittest.TestCase):
         keras2c_main.k2c(model, name, malloc=True)
         rcode = build_and_run(name)
         self.assertEqual(rcode, 0)
-
-
-if __name__ == "__main__":
-    unittest.main()

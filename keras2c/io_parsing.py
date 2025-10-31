@@ -67,23 +67,25 @@ def get_layer_num_io(layer):
         num_outputs (int): number of output nodes from the layer
     """
 
-    num_inputs = 0
-    error = False
-    while not error:
-        try:
-            layer.get_input_at(num_inputs)
-            num_inputs += 1
-        except ValueError:
-            error = True
+    if hasattr(layer, "inputs"):
+        if isinstance(layer.inputs, list):
+            num_inputs = len(layer.inputs)
+        else:
+            num_inputs = 1
+    else:
+        # fallback: count inbound nodes
+        num_inputs = len(getattr(layer, "_inbound_nodes", []))
 
-    num_outputs = 0
-    error = False
-    while not error:
-        try:
-            layer.get_output_at(num_outputs)
-            num_outputs += 1
-        except ValueError:
-            error = True
+    # If outputs attribute is present, count actual tensor outputs
+    if hasattr(layer, "outputs"):
+        outs = layer.outputs
+        if isinstance(outs, list):
+            num_outputs = len(outs)
+        else:
+            num_outputs = 1
+    else:
+        # Fallback: count graph nodes that produce outputs
+        num_outputs = len(getattr(layer, "_inbound_nodes", []))
     return num_inputs, num_outputs
 
 
@@ -98,43 +100,38 @@ def get_layer_io_names(layer):
         outputs (list): names of all the output nodes from the layer
     """
 
-    num_inputs, num_outputs = get_layer_num_io(layer)
-    inputs = []
-    # num_inputs>1 -> shared layer
-    for i in range(num_inputs):
-        # is the input a list?
-        if isinstance(layer.get_input_at(i), list):
-            temp_list = []
-            list_length = len(layer.get_input_at(i))
-            for j in range(list_length):
-                name = parse_io_name(layer.get_input_at(i)[j].name)
-                # name = layer.get_input_at(i)[j].name.replace(':', '_').replace('/', '_').replace('.', '_')
-                temp_list.append(name)
-            inputs.insert(i, temp_list)
-        else:
-            name = parse_io_name(layer.get_input_at(i).name)
-            # name = layer.get_input_at(i).name.replace(':', '_').replace('/', '_').replace('.', '_')
-            inputs.insert(i, name)
+    num_nodes = len(getattr(layer, "_inbound_nodes", []))
 
+    inputs = []
     outputs = []
-    for i in range(num_outputs):
-        # is the output a list?
-        if isinstance(layer.get_output_at(i), list):
-            temp_list = []
-            list_length = len(layer.get_output_at(i))
-            for j in range(list_length):
-                name = parse_io_name(layer.get_output_at(i)[j].name)
-                # name = layer.get_output_at(i)[j].name.replace(':', '_').replace('/', '_').replace('.', '_')
-                temp_list.append(name)
-            outputs.insert(i, temp_list)
+
+    for node_index in range(num_nodes):
+        node = layer._inbound_nodes[node_index]
+        # is the input a list?
+        node_inputs = node.input_tensors
+        if node_inputs is None:
+            inputs.append([])
         else:
-            name = layer.get_output_at(i).name
-            name = parse_io_name(name)
-            # if 'bidirectional' in name.lower():
-            #     name = name.replace(':', '_').replace('/', '_').replace('.', '_')
-            # else:
-            #     name = name.replace(':', '_').replace('/', '_').replace('.', '_')
-            outputs.insert(i, name)
+            if isinstance(node_inputs, (list, tuple)):
+                if len(node_inputs) == 1:
+                    inputs.append(parse_io_name(node_inputs[0].name))
+                else:
+                    inputs.append([parse_io_name(t.name) for t in node_inputs])
+            else:
+                # single tensor
+                inputs.append(parse_io_name(node_inputs.name))
+
+        node_outputs = getattr(node, "output_tensors", None)
+        if node_outputs is None:
+            outputs.append([])
+        else:
+            if isinstance(node_outputs, (list, tuple)):
+                if len(node_outputs) == 1:
+                    outputs.append(parse_io_name(node_outputs[0].name))
+                else:
+                    outputs.append([parse_io_name(t.name) for t in node_outputs])
+            else:
+                outputs.append(parse_io_name(node_outputs.name))
 
     return inputs, outputs
 

@@ -6,15 +6,14 @@ Implements tests for core layers
 #!/usr/bin/env python3
 
 import unittest
-import tensorflow.keras as keras
+import keras
 from keras2c import keras2c_main
 import subprocess
 import time
 import os
-import tensorflow as tf
 import shutil
 import platform
-tf.compat.v1.disable_eager_execution()
+
 
 # Original author
 # __author__ = "Rory Conlin"
@@ -31,7 +30,9 @@ def build_and_run(name, return_output=False):
 
     CC = 'gcc'
 
-    repo_path = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../'))
+    repo_path = os.path.abspath(
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), '../')
+    )
     include_path = os.path.join(repo_path, './include/')
 
     if os.environ.get('CI'):
@@ -56,9 +57,21 @@ def build_and_run(name, return_output=False):
         cc = CC + ' ' + ccflags + ' -o ' + name + ' ' + name + '.c ' + \
         name + '_test_suite.c -L./include/ -l:libkeras2c.a -lm'
     elif platform.system() == 'Darwin':
-        inc_files = ' '.join([os.path.join(include_path, f) for f in os.listdir(include_path) if f.endswith('.c')])
+        inc_files = ' '.join(
+            [os.path.join(include_path, f)
+             for f in os.listdir(include_path) if f.endswith('.c')])
         cc = CC + ' ' + ccflags + ' -o ' + name + ' ' + name + '.c ' + \
             name + '_test_suite.c ' + inc_files
+
+    elif platform.system() == 'Windows':
+        if shutil.which('gcc'):
+            exe_name = f"{name}.exe"
+            inc_files = ' '.join(
+                os.path.join(include_path, f)
+                for f in os.listdir(include_path) if f.endswith('.c'))
+            cc = f"{CC} {ccflags} -o {exe_name} {name}.c {name}_test_suite.c {inc_files}"
+        else:
+            return 'gcc not found'
     build_code = subprocess.run(cc.split()).returncode
     if build_code != 0:
         return 'build failed'
@@ -257,7 +270,3 @@ class TestSharedLayers(unittest.TestCase):
         keras2c_main.k2c(model, name)
         rcode = build_and_run(name)
         self.assertEqual(rcode, 0)
-
-
-if __name__ == "__main__":
-    unittest.main()

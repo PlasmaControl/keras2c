@@ -10,31 +10,44 @@ https://github.com/rmwkwok/transposed_convolution_in_numpy/tree/main
 """
 
 import numpy as np
-import tensorflow.keras as keras
+import keras
 import traceback
 import time
 
-"""
-def out_shape(input_shape, kernel, strides=1, padding='valid', mode='normal')
 
-Returns the output shape of the convolution operation.
+def out_shape(input_shape: tuple[int, int],
+              kernel: np.ndarray,
+              strides: int = 1,
+              padding: str = "valid",
+              mode: str = "normal"
+              ) -> tuple[int, int]:
+    """
+    Compute the output shape of the convolution operation.
 
-Args:
-    input_shape (tuple of 2 int): shape of the input tensor without batch size. (height, channels)
-    kernel (numpy.ndarray): kernel of the convolution operation. Returned by model.layer[i].get_weights()[0] for a keras model.
-    strides (int): strides of the convolution operation
-    padding (str): padding of the convolution operation. 'valid' or 'same' are supported.
-    mode (str): mode of the convolution operation. 'normal' means normal convolution and 'transposed' means transposed convolution.
+    Parameters
+    ----------
+    input_shape : tuple[int, int]
+        Shape of the input tensor without batch size. (height, channels)
+    kernel: numpy.ndarray
+        Kernel of the convolution operation.
+        Returned by model.layer[i].get_weights()[0] for a keras model.
+    strides : int
+        Strides of the convolution operation
+    padding : str
+        Padding of the convolution operation. 'valid' or 'same' are supported.
+    mode : str
+    Mode of the convolution operation.
+    'normal' means normal convolution and 'transposed' means transposed convolution.
 
-Returns:
-    tuple of 2 int: shape of the output tensor without batch size. (no of convolutions, no of filters)
-"""
-
-
-def out_shape(input_shape, kernel, strides=1, padding="valid", mode="normal"):
+    Returns
+    -------
+    Tuple[int, int]
+    Shape of the output tensor without batch size.
+    (no of convolutions, no of filters)
+    """
     ih, ic = input_shape
     if mode == "normal":
-        ksize, kc, nfilters = kernel.shape
+        ksize, kc, n_filters = kernel.shape
         assert ic == kc
         if padding == "valid":
             p_2 = 0
@@ -42,7 +55,7 @@ def out_shape(input_shape, kernel, strides=1, padding="valid", mode="normal"):
             p_2 = ksize - 1
         nconv = (ih + p_2 - ksize) // strides + 1
     elif mode == "transposed":
-        ksize, nfilters, kc = kernel.shape
+        ksize, n_filters, kc = kernel.shape
         assert ic == kc
         if padding == "valid":
             p_2 = 0
@@ -53,28 +66,41 @@ def out_shape(input_shape, kernel, strides=1, padding="valid", mode="normal"):
         #     nconv = ih + ksize - 1 + ((ih - 1) * (strides - 1))
         # elif padding == 'same':
         #     nconv = ih + (ih * (strides - 1))
-    return (nconv, nfilters)
+    return nconv, n_filters
 
 
-"""
-def padding1d(inputs, kernel, strides=1, padding='valid', mode='normal')
+def padding1d(inputs : np.ndarray,
+              kernel: np.ndarray,
+              strides: int = 1,
+              padding: str = "valid",
+              mode: str = "normal"
+              ) -> np.ndarray:
+    """
+    Compute the padded input tensor for the convolution operation and crops the output
+    tensor for the transposed convolution operation.
 
-Returns the padded input tensor for the convolution operation and crops the output
-tensor for the transposed convolution operation.
+    Parameters
+    ----------
+    inputs : numpy.ndarray
+        Input tensor with batch size. (batch size, height, channels)
+    kernel : numpy.ndarray
+        Kernel of the convolution operation.
+        Returned by model.layer[i].get_weights()[0] for a keras model.
+    strides : int
+        Strides of the convolution operation
+    padding : str
+        Padding of the convolution operation. 'valid' or 'same' are supported.
+    mode : str
+        Mode of the convolution operation.
+        'normal' means normal convolution and 'transposed' means transposed convolution.
 
-Args:
-    inputs (numpy.ndarray): input tensor with batch size. (batch size, height, channels)
-    kernel (numpy.ndarray): kernel of the convolution operation. Returned by model.layer[i].get_weights()[0] for a keras model.
-    strides (int): strides of the convolution operation
-    padding (str): padding of the convolution operation. 'valid' or 'same' are supported.
-    mode (str): mode of the convolution operation. 'normal' means normal convolution and 'transposed' means transposed convolution.
-
-Returns:
-    numpy.ndarray: padded input tensor with batch size. (batch size, height, channels) or cropped output tensor with batch size. (batch size, convolutions, filters)
-"""
-
-
-def padding1d(inputs, kernel, strides=1, padding="valid", mode="normal"):
+    Returns
+    -------
+    numpy.ndarray
+    Padded input tensor with batch size.
+    (batch size, height, channels) or cropped output tensor with batch size.
+    (batch size, convolutions, filters)
+    """
     ksize = kernel.shape[0]
     if padding == "valid":
         return inputs
@@ -96,24 +122,37 @@ def padding1d(inputs, kernel, strides=1, padding="valid", mode="normal"):
     return outputs
 
 
-"""
-def stride1d(inputs, kernel, strides=1, padding='valid', mode='normal')
+def stride1d(inputs: np.ndarray,
+             kernel: np.ndarray,
+             strides: int = 1,
+             padding: str = "valid",
+             mode: str = "normal"
+             ) -> np.ndarray:
+    """
+    Compute the strided output tensor for the convolution operation
+    or zeros inserted (unstrided) input tensor for the transposed convolution operation.
 
-Returns the strided output tensor for the convolution operation or zeros inserted (unstrided) input tensor for the transposed convolution operation.
+    Parameters
+    ----------
+    inputs : numpy.ndarray
+        Input tensor with batch size. (batch size, height, channels)
+    kernel : numpy.ndarray
+        Kernel of the convolution operation.
+        Returned by model.layer[i].get_weights()[0] for a keras model.
+    strides  : int
+        Strides of the convolution operation
+    padding : str
+        Padding of the convolution operation. 'valid' or 'same' are supported.
+    mode : str
+        Mode of the convolution operation.
+        'normal' means normal convolution and 'transposed' means transposed convolution.
 
-Args:
-    inputs (numpy.ndarray): input tensor with batch size. (batch size, height, channels)
-    kernel (numpy.ndarray): kernel of the convolution operation. Returned by model.layer[i].get_weights()[0] for a keras model.
-    strides (int): strides of the convolution operation
-    padding (str): padding of the convolution operation. 'valid' or 'same' are supported.
-    mode (str): mode of the convolution operation. 'normal' means normal convolution and 'transposed' means transposed convolution.
-
-Returns:
-    numpy.ndarray: strided output tensor with batch size. (batch size, convolutions, filters) or unstrided input tensor with batch size. (batch size, height, channels)
-"""
-
-
-def stride1d(inputs, kernel, strides=1, padding="valid", mode="normal"):
+    Returns
+    -------
+    numpy.ndarray
+        Strided output tensor with batch size. (batch size, convolutions, filters)
+        or unstrided input tensor with batch size. (batch size, height, channels).
+    """
     # if strides == 1:
     #     return inputs
     ksize = kernel.shape[0]
@@ -139,33 +178,50 @@ def stride1d(inputs, kernel, strides=1, padding="valid", mode="normal"):
     return outputs
 
 
-"""
-def unroll_kernel1d(input_shape, kernel, strides=1, padding='valid', mode='normal')
+def unroll_kernel1d(input_shape: tuple[int, int],
+                    kernel: np.ndarray,
+                    strides: int = 1,
+                    padding: str = "valid",
+                    mode: str = "normal"
+                    ) -> np.ndarray:
+    """
+    Get the unrolled kernel for the convolution or transposed convolution operations.
 
-Returns the unrolled kernel for the convolution or transposed convolution operations.
+    Parameters
+    ----------
+    input_shape : tuple[int, int]
+        Shape of the input tensor without batch size. (height, channels)
+    kernel : numpy.ndarray
+        Kernel of the convolution operation.
+        Returned by model.layer[i].get_weights()[0] for a keras model.
+    strides : int
+        Strides of the convolution operation
+    padding : str
+        Padding of the convolution operation. 'valid' or 'same' are supported.
+    mode : str
+        Mode of the convolution operation. 'normal' means normal convolution and
+        'transposed' means transposed convolution.
 
-Args:
-    input_shape (tuple of 2 int): shape of the input tensor without batch size. (height, channels)
-    kernel (numpy.ndarray): kernel of the convolution operation. Returned by model.layer[i].get_weights()[0] for a keras model.
-    strides (int): strides of the convolution operation
-    padding (str): padding of the convolution operation. 'valid' or 'same' are supported.
-    mode (str): mode of the convolution operation. 'normal' means normal convolution and 'transposed' means transposed convolution.
+    Returns
+    -------
+    numpy.npdarray
+        In normal mode: unrolled kernel for the convolution operation.
+            (channels, no of convolutions, filters, padded input size)
+        In transposed mode: unrolled kernel for the transposed convolution operation.
+            (channels, zero inserted input size + kernel size - 1, filters,
+             zero inserted input size)
 
-Returns:
-    In normal mode:
-        numpy.ndarray: unrolled kernel for the convolution operation. (channels, no of convolutions, filters, padded input size)
-        Note: In current implmentation, the unrolled kernel in normal mode would only work for strides=1 case and it is assumed that
-              the striding is done after the convolution operation.
-    In transposed mode:
-        numpy.ndarray: unrolled kernel for the transposed convolution operation.
-                       (channels, zero inserted input size + kernel size - 1, filters, zero inserted input size)
-        Note: In current implmentation, the unrolled kernel in transposed mode would only work for padding='valid' case and it is assumed that
-              any cropping for padding='same' is done after the transposed convolution operation.
+    Note
+    ----
+    In current implementation, the unrolled kernel in normal mode would only work for
+    strides=1 case and it is assumed that the striding is done after the convolution
+    operation.
 
-"""
+    In current implementation, the unrolled kernel in transposed mode would only work
+    for padding='valid' case and it is assumed that any cropping for padding='same'
+    is done after the transposed convolution operation.
 
-
-def unroll_kernel1d(input_shape, kernel, strides=1, padding="valid", mode="normal"):
+    """
     nconv, nfilters = out_shape(
         input_shape, kernel, strides=strides, padding=padding, mode=mode
     )
@@ -219,42 +275,45 @@ def unroll_kernel1d(input_shape, kernel, strides=1, padding="valid", mode="norma
     return unrolled_kernel
 
 
-"""
-def conv1d(inputs, kernel, strides=1, padding='valid')
+def conv1d(inputs: np.ndarray,
+           kernel: np.ndarray,
+           strides: int = 1,
+           padding: str = "valid"
+           ) -> np.ndarray:
+    """
+    Compute the output tensor of the convolution operation.
 
-Returns the output tensor of the convolution operation.
+    Parameters
+    ----------
+    inputs : numpy.ndarray
+        Input tensor with batch size. (batch size, height, channels)
+    kernel : numpy.ndarray
+        Kernel of the convolution operation.
+        Returned by model.layer[i].get_weights()[0] for a keras model.
+    strides : int
+        Strides of the convolution operation
+    padding : str
+        Padding of the convolution operation. 'valid' or 'same' are supported.
 
-Args:
-    inputs (numpy.ndarray): input tensor with batch size. (batch size, height, channels)
-    kernel (numpy.ndarray): kernel of the convolution operation. Returned by model.layer[i].get_weights()[0] for a keras model.
-    strides (int): strides of the convolution operation
-    padding (str): padding of the convolution operation. 'valid' or 'same' are supported.
-
-Returns:
-    numpy.ndarray: output tensor with batch size. (batch size, convolutions, filters)
-"""
-
-
-def conv1d(inputs, kernel, strides=1, padding="valid"):
+    Returns
+    -------
+    numpy.ndarray
+        Output tensor with batch size. (batch size, convolutions, filters)
+    """
     n_batches, n_height, n_channels = inputs.shape
     outputs = np.zeros(
-        (
-            n_batches,
-            *out_shape(
-                (n_height, n_channels),
-                kernel,
-                strides=strides,
-                padding=padding,
-                mode="normal",
-            ),
-        )
+        (n_batches, *out_shape(
+            (n_height, n_channels),
+             kernel,
+             strides=strides,
+             padding=padding,
+             mode="normal"),
+         )
     )
-    padded_input = padding1d(
-        inputs, kernel, strides=strides, padding=padding, mode="normal"
-    )
-    unrolled_kernel = unroll_kernel1d(
-        (n_height, n_channels), kernel, strides=strides, padding=padding, mode="normal"
-    )
+    padded_input = padding1d(inputs, kernel, strides=strides, padding=padding,
+                             mode="normal")
+    unrolled_kernel = unroll_kernel1d((n_height, n_channels), kernel,
+                                      strides=strides, padding=padding, mode="normal")
     _, n_convs, _, n_padded_inp = unrolled_kernel.shape
     assert n_padded_inp == padded_input.shape[1]
     for batch in range(n_batches):
@@ -267,26 +326,35 @@ def conv1d(inputs, kernel, strides=1, padding="valid"):
                 ).flatten()
     return outputs
     # return stride1d(outputs, kernel, strides=strides, padding=padding, mode='normal')
-    # This output striding is needed when unrolled kernel is first calculated with strides=1
+    # Needed when unrolled kernel is first calculated with strides=1
 
 
-"""
-def conv1d_transpose(inputs, kernel, strides=1, padding='valid')
+def conv1d_transpose(inputs: np.ndarray,
+                     kernel: np.ndarray,
+                     strides: int = 1,
+                     padding: str = "valid"
+                     ) -> np.ndarray:
+    """
+    Compute the output tensor of the transposed convolution operation.
 
-Returns the output tensor of the transposed convolution operation.
+    Parameters
+    ----------
+    inputs : numpy.ndarray
+        Input tensor with batch size. (batch size, height, channels)
+    kernel : numpy.ndarray
+        Kernel of the transposed convolution operation.
+        Returned by model.layer[i].get_weights()[0] for a keras model.
+    strides : int
+        Strides of the transposed convolution operation
+    padding : str
+        Padding of the transposed convolution operation.
+        'valid' or 'same' are supported.
 
-Args:
-    inputs (numpy.ndarray): input tensor with batch size. (batch size, height, channels)
-    kernel (numpy.ndarray): kernel of the transposed convolution operation. Returned by model.layer[i].get_weights()[0] for a keras model.
-    strides (int): strides of the transposed convolution operation
-    padding (str): padding of the transposed convolution operation. 'valid' or 'same' are supported.
-
-Returns:
-    numpy.ndarray: output tensor with batch size. (batch size, height, channels)
-"""
-
-
-def conv1d_transpose(inputs, kernel, strides=1, padding="valid"):
+    Returns
+    -------
+    numpy.ndarray:
+        Output tensor with batch size. (batch size, height, channels)
+    """
     n_batches, n_height, n_channels = inputs.shape
     outputs = np.zeros(
         (
@@ -321,28 +389,38 @@ def conv1d_transpose(inputs, kernel, strides=1, padding="valid"):
                     unrolled_kernel[ch, :, f, :], flat_inp
                 ).flatten()
     return outputs
-    # return padding1d(outputs, kernel, strides=strides, padding=padding, mode='transposed')
-    # This padding is needed when unrolled kernel is first calculated with padding='valid'
+    # padding1d(outputs, kernel, strides=strides, padding=padding, mode='transposed')
+    # Needed when unrolled kernel is first calculated with padding='valid'
 
 
-"""
-def conv1d_transpose_direct(inputs, kernel, strides=1, padding='valid')
+def conv1d_transpose_direct(inputs: np.ndarray,
+                            kernel: np.ndarray,
+                            strides: int = 1,
+                            padding: str = "valid"
+                            ) -> np.ndarray:
+    """
+    True flat array based direct implementation of transposed convolution operation.
+    This function can be converted to C code directly.
 
-True flat array based direct implementation of transposed convolution operation. This
-function can be converted to C code directly.
+    Parameters
+    ----------
+    inputs :numpy.ndarray
+        Input tensor with batch size. (batch size, height, channels)
+    kernel : numpy.ndarray
+        Kernel of the transposed convolution operation.
+        Returned by model.layer[i].get_weights()[0] for a keras model.
+    strides : int
+        Strides of the transposed convolution operation
+    padding : str
+        Padding of the transposed convolution operation.
+        'valid' or 'same' are supported.
 
-Args:
-    inputs (numpy.ndarray): input tensor with batch size. (batch size, height, channels)
-    kernel (numpy.ndarray): kernel of the transposed convolution operation. Returned by model.layer[i].get_weights()[0] for a keras model.
-    strides (int): strides of the transposed convolution operation
-    padding (str): padding of the transposed convolution operation. 'valid' or 'same' are supported.
-
-Returns:
-    numpy.ndarray: output tensor with batch size. (batch size, number of convolutions, number of filters)
-"""
-
-
-def conv1d_transpose_direct(inputs, kernel, strides=1, padding="valid"):
+    Returns
+    -------
+    numpy.ndarray
+        Output tensor with batch size.
+        (batch size, number of convolutions, number of filters)
+    """
     n_batches, n_height, n_channels = inputs.shape
     ksize, n_filters, kc = kernel.shape
     outputs = np.zeros(
@@ -386,7 +464,6 @@ def conv1d_transpose_direct(inputs, kernel, strides=1, padding="valid"):
                             k_flat[(i + ks) * n_filters * kc + f * kc + ch]
                             * i_flat[b * n_height * n_channels + t * n_channels + ch]
                         )
-                        # outputs[b, i + cs, f] += kernel[i + ks, f, ch] * inputs[b, t, ch]
     return output_flat.reshape((n_batches, n_conv, n_filters))
     # return outputs
 
@@ -396,7 +473,7 @@ if __name__ == "__main__":
     mt = 0
     pv = 0
     ps = 0
-    for _ in range(100):
+    for _ in range(50):
         nb = np.random.randint(1, 10)
         nh = np.random.randint(2, 50)
         nc = np.random.randint(1, 50)

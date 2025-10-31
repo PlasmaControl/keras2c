@@ -7,7 +7,7 @@ https://github.com/f0uriest/keras2c
 Checks a model before conversion to flag unsupported features
 """
 
-# Imports
+# imports
 import numpy as np
 from keras2c.io_parsing import layer_type, flatten
 from keras2c.weights2c import Weights2C
@@ -43,7 +43,7 @@ def name_check(model):
     """Checks if all layer names in a model are valid C names.
 
     Args:
-       model (keras.Model): model to check
+       model (keras Model): model to check
 
     Returns:
         valid (bool): 'True' if all names are valid, 'False' otherwise
@@ -55,7 +55,7 @@ def name_check(model):
     for layer in model.layers:
         if not is_valid_c_name(layer.name.replace('.', '_')):
             valid = False
-            log += f"Layer name '{layer.name}' is not a valid C name.\n"
+            log += "layer name '" + layer.name + "' is not a valid C name. \n"
     return valid, log
 
 
@@ -63,7 +63,7 @@ def layers_supported_check(model):
     """Checks if all layers in the model are supported
 
     Args:
-       model (keras.Model): model to check
+       model (keras Model): model to check
 
     Returns:
         valid (bool): 'True' if all layers are supported, 'False' otherwise
@@ -77,10 +77,10 @@ def layers_supported_check(model):
             flag, templog = check_layer(layer.layer)
             valid = valid and flag
             log += templog
-        if not hasattr(Weights2C, f'_write_weights_{layer_type(layer)}') \
-           or not hasattr(Layers2C, f'_write_layer_{layer_type(layer)}'):
+        if not hasattr(Weights2C, '_write_weights_' + layer_type(layer)) \
+           or not hasattr(Layers2C, '_write_layer_' + layer_type(layer)):
             valid = False
-            log += f"Layer type '{layer_type(layer)}' is not supported at this time.\n"
+            log += layer_type(layer) + "' is not supported at this time. \n"
         return valid, log
 
     valid = True
@@ -96,18 +96,16 @@ def activation_supported_check(model):
     """Checks if all activation functions in the model are supported
 
     Args:
-       model (keras.Model): model to check
+       model (keras Model): model to check
 
     Returns:
         valid (bool): 'True' if all activations are supported, 'False' otherwise
         log (str): log of unsupported activation functions
     """
 
-    supported_activations = [
-        'linear', 'relu', 'softmax', 'softplus',
-        'softsign', 'tanh', 'sigmoid',
-        'hard_sigmoid', 'exponential', 'selu', 'elu', 'gelu', 'swish'
-    ]
+    supported_activations = ['linear', 'relu', 'softmax', 'softplus',
+                             'softsign', 'relu', 'tanh', 'sigmoid',
+                             'hard_sigmoid', 'exponential']
 
     def check_layer(layer):
         valid = True
@@ -116,15 +114,20 @@ def activation_supported_check(model):
             flag, templog = check_layer(layer.layer)
             valid = valid and flag
             log += templog
-        config = layer.get_config()
-        activation = config.get('activation')
-        recurrent_activation = config.get('recurrent_activation')
+        activation = layer.get_config().get('activation')
+        recurrent_activation = layer.get_config().get('recurrent_activation')
         if activation not in supported_activations and activation is not None:
             valid = False
-            log += f"Activation type '{activation}' for layer '{layer.name}' is not supported at this time.\n"
-        if recurrent_activation not in supported_activations and recurrent_activation is not None:
+            log += "activation type '" + layer.get_config()['activation'] + \
+                   "' for layer '" + layer.name + \
+                   "' is not supported at this time. \n"
+        if recurrent_activation not in supported_activations and \
+           recurrent_activation is not None:
             valid = False
-            log += f"Recurrent activation type '{recurrent_activation}' for layer '{layer.name}' is not supported at this time.\n"
+            log += "recurrent activation type '" + \
+                   layer.get_config()['recurrent_activation'] + \
+                   "' for layer '" + layer.name + \
+                   "' is not supported at this time. \n"
         return valid, log
 
     valid = True
@@ -135,13 +138,14 @@ def activation_supported_check(model):
         log += templog
     return valid, log
 
-# Add check for masking if necessary
+# add check for masking
+
 
 def config_supported_check(model):
     """Checks if all layer features in the model are supported
 
     Args:
-       model (keras.Model): model to check
+       model (keras Model): model to check
 
     Returns:
         valid (bool): 'True' if all features are supported, 'False' otherwise
@@ -158,32 +162,43 @@ def config_supported_check(model):
         config = layer.get_config()
         if config.get('merge_mode', 'foo') is None:
             valid = False
-            log += f"Merge mode of 'None' for Bidirectional layers is not supported. Try using two separate RNNs instead.\n"
+            log += "merge mode of 'None' for Bidirectional layers is not " +\
+                   "supported. Try using two seperate RNNs instead"
         if config.get('data_format') not in ['channels_last', None]:
             valid = False
-            log += f"Data format '{config.get('data_format')}' for layer '{layer.name}' is not supported at this time.\n"
+            log += "data format '" + layer.get_config()['data_format'] +\
+                   "' for layer '" + layer.name + \
+                   "' is not supported at this time. \n"
         if config.get('return_state'):
             valid = False
-            log += f"'return_state' option for layer '{layer.name}' is not supported at this time.\n"
+            log += "'return_state' option for layer '" + layer.name + \
+                   "' is not supported at this time. \n"
         if config.get('shared_axes'):
             valid = False
-            log += f"'shared_axes' option for layer '{layer.name}' is not supported at this time.\n"
-        if layer_type(layer) in ['Add', 'Subtract', 'Multiply', 'Average',
-                                 'Maximum', 'Minimum']:
-            inshps = [tensor.shape for tensor in layer.input]
-            if isinstance(inshps, list):
-                insize = []
-                for inp in inshps:
-                    # Exclude batch dimension and replace None with 1
-                    shape = [dim if dim is not None else 1 for dim in inp[1:]]
-                    insize.append(np.prod(shape))
-                if len(set(insize)) > 1:
-                    valid = False
-                    log += f"Broadcasting merge functions between tensors of different shapes for layer '{layer.name}' is not currently supported.\n"
-        if layer_type(layer) in ['BatchNormalization']:
-            if isinstance(config.get('axis'), (list, tuple)) and len(flatten(config.get('axis'))) > 1:
+            log += (
+                "shared axes option for layer '"
+                + layer.name
+                + "' is not supported at this time. \n"
+            )
+        if layer_type(layer) in ["Add", "Subtract", "Multiply", "Average", "Maximum",
+                                 "Minimum",]:
+            inshps = []
+            # Collect shapes from all inbound nodes
+            for node in getattr(layer, "_inbound_nodes", []):
+                for tensor in node.input_tensors:
+                    inshps.append(tensor.shape)
+
+            insize = [np.prod(inp[1:]) for inp in inshps]
+            if len(set(insize)) > 1:
                 valid = False
-                log += 'Batch normalization along multiple axes is not currently supported.\n'
+                log += "broadcasting merge functions between tensors" + \
+                       " of different shapes for layer '" + \
+                       layer.name + "' is not currently supported. \n"
+        if layer_type(layer) in ['BatchNormalizationV1', 'BatchNormalization']:
+            if len(flatten(config.get('axis'))) > 1:
+                valid = False
+                log += 'batch normalization along multiple axes is' + \
+                       ' not currently supported. \n'
         return valid, log
 
     valid = True
@@ -199,7 +214,7 @@ def check_model(model, function_name):
     """Checks if all names are valid and all features are supported
 
     Args:
-        model (keras.Model): model to check
+        model (keras Model): model to check
         function_name (str): name of the function being created
 
     Raises:
@@ -207,10 +222,10 @@ def check_model(model, function_name):
     """
 
     valid_fname = True
-    log = 'The following errors were found:\n'
+    log = 'The following errors were found: \n'
     if not is_valid_c_name(function_name):
         valid_fname = False
-        log += f"Function name '{function_name}' is not a valid C name.\n"
+        log += "function name '" + function_name + "' is not a valid C name. \n"
     valid_lname, name_log = name_check(model)
     log += name_log
     valid_layer, layer_log = layers_supported_check(model)
