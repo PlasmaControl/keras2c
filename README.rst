@@ -75,9 +75,9 @@ ToDo
 Contribute
 **********
 
-- Documentation: `<https://f0uriest.github.io/keras2c/>`_
-- Issue Tracker: `<https://github.com/f0uriest/keras2c/issues>`_
-- Source Code: `<https://github.com/f0uriest/keras2c/>`_
+- Documentation: `<https://keras2.readthedocs.io/en/latest/>`_
+- Issue Tracker: `<https://github.com/PlasmaControl/keras2c/issues>`_
+- Source Code: `<https://github.com/PlasmaControl/keras2c/>`_
   
 License
 *******
