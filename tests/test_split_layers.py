@@ -13,17 +13,28 @@ class TestSplitLayers(unittest.TestCase):
     """tests for split layers"""
 
     def test_split_layers(self):
-        for tno in range (10):
+        for tno in range(10):
             n_splits = np.random.randint(2, 10)
             in_dim = np.random.randint(1 * n_splits, 10 * n_splits)
-            split_sizes = []
-            for i in range(n_splits - 1):
-                split_sizes.append(
-                    np.random.randint(1, in_dim - sum(split_sizes) - n_splits + i + 2))
-            split_sizes.append(in_dim - sum(split_sizes))
-            a = keras.layers.Input((in_dim, ))
-            # TODO support lambda layers
-            b = keras.layers.Lambda(lambda x: tf.split(x, split_sizes, axis=1))(a)
+
+            # Method 1: Random distribution that guarantees validity
+            split_sizes = [1] * n_splits  # Start with minimum size of 1 for each split
+            remaining = in_dim - n_splits  # Distribute the remaining dimensions
+
+            # Randomly distribute the remaining dimensions
+            for _ in range(remaining):
+                idx = np.random.randint(0, n_splits)
+                split_sizes[idx] += 1
+
+            # Convert to list of integers (sometimes numpy types cause issues)
+            split_sizes = [int(s) for s in split_sizes]
+
+            # Create model with these pre-computed split sizes
+            a = keras.layers.Input((in_dim,))
+
+            cumsum = np.cumsum(split_sizes[:-1]).tolist()  # Don't include the last one
+            b = keras.ops.split(a, indices_or_sections=cumsum, axis=1)
+
             model = keras.models.Model(inputs=a, outputs=b)
             name = 'test___SplitLayer' + str(int(time.time()))
             keras2c_main.k2c(model, name)
