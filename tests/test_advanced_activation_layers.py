@@ -22,6 +22,16 @@ __email__ = "wconlin@princeton.edu"
 class TestAdvancedActivation(unittest.TestCase):
     """tests for advanced activation layers"""
 
+    def test_SILU(self):
+        inshp = (9, 7, 6, 3)
+        a = keras.layers.Input(inshp)
+        b = keras.layers.Activation('silu')(a)
+        model = keras.models.Model(inputs=a, outputs=b)
+        name = 'test___SILU' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)
+
     def test_LeakyReLU(self):
         inshp = (9, 7, 6, 3)
         alpha = 0.5

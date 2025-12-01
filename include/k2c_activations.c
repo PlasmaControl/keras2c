@@ -116,6 +116,21 @@ void k2c_sigmoid_func(float * x, const size_t size) {
 }
 k2c_activationType * k2c_sigmoid = k2c_sigmoid_func;
 
+/**
+ * Silu activation function.
+ *   y = x * (1/(1+exp(-x)))
+ *
+ * :param x: array of input values. Gets overwritten by output.
+ * :param size: length of input array.
+ */
+void k2c_silu_func(float * x, const size_t size) {
+
+    for (size_t i=0; i < size; ++i) {
+        x[i] = x[i]/(1+expf(-x[i]));
+    }
+}
+k2c_activationType * k2c_silu = k2c_silu_func;
+
 
 /**
  * Soft max activation function.
