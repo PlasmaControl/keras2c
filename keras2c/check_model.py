@@ -104,7 +104,7 @@ def activation_supported_check(model):
     """
 
     supported_activations = ['linear', 'relu', 'softmax', 'softplus',
-                             'softsign', 'relu', 'tanh', 'sigmoid', 'silu',
+                             'softsign', 'relu', 'tanh', 'sigmoid', 'swish',
                              'hard_sigmoid', 'exponential']
 
     def check_layer(layer):

@@ -27,7 +27,7 @@ typedef void k2c_activationType(float *x, const size_t size);
 extern k2c_activationType *k2c_linear;
 extern k2c_activationType *k2c_exponential;
 extern k2c_activationType *k2c_relu;
-extern k2c_activationType *k2c_silu;
+extern k2c_activationType *k2c_swish;
 extern k2c_activationType *k2c_hard_sigmoid;
 extern k2c_activationType *k2c_tanh;
 extern k2c_activationType *k2c_sigmoid;
