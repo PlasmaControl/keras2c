@@ -42,7 +42,7 @@ It can also be used with a python environment in the following manner:
     from keras2c import k2c
     k2c(model, function_name, malloc=False, num_tests=10, verbose=True)
 
-For more information, see `Installation <https://f0uriest.github.io/keras2c/installation.html>`_ and  `Usage <https://f0uriest.github.io/keras2c/usage.html>`_
+For more information, see `Installation <https://plasmacontrol.github.io/keras2c/installation.html>`_ and  `Usage <https://plasmacontrol.github.io/keras2c/usage.html>`_
 
 
 Supported Layers
@@ -73,9 +73,9 @@ ToDo
 Contribute
 **********
 
-- Documentation: `<https://f0uriest.github.io/keras2c/>`_
-- Issue Tracker: `<https://github.com/f0uriest/keras2c/issues>`_
-- Source Code: `<https://github.com/f0uriest/keras2c/>`_
+- Documentation: `<https://plasmacontrol.github.io/keras2c/>`_
+- Issue Tracker: `<https://github.com/plasmacontrol/keras2c/issues>`_
+- Source Code: `<https://github.com/plasmacontrol/keras2c/>`_
   
 License
 *******
@@ -83,14 +83,14 @@ License
 The project is licensed under the LGPLv3 license.
 
 
-.. |Build-Status| image:: https://travis-ci.org/f0uriest/keras2c.svg?branch=master
-    :target: https://travis-ci.org/f0uriest/keras2c
+.. |Build-Status| image:: https://travis-ci.org/plasmacontrol/keras2c.svg?branch=master
+    :target: https://travis-ci.org/plasmacontrol/keras2c
     :alt: Build Status
-.. |Codecov| image:: https://codecov.io/gh/f0uriest/keras2c/branch/master/graph/badge.svg
-    :target: https://codecov.io/gh/f0uriest/keras2c
+.. |Codecov| image:: https://codecov.io/gh/plasmacontrol/keras2c/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/plasmacontrol/keras2c
     :alt: Code Coverage
-.. |License| image:: https://img.shields.io/github/license/f0uriest/keras2c
-    :target: https://github.com/f0uriest/keras2c/blob/master/LICENSE
+.. |License| image:: https://img.shields.io/github/license/plasmacontrol/keras2c
+    :target: https://github.com/plasmacontrol/keras2c/blob/master/LICENSE
     :alt: License: LGPLv3
 .. |DOI| image:: https://zenodo.org/badge/193152058.svg
     :target: https://zenodo.org/badge/latestdoi/193152058
