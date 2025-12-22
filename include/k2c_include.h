@@ -69,8 +69,8 @@ void k2c_conv1d_transpose(k2c_tensor *output, const k2c_tensor *input, const k2c
                           const k2c_tensor *bias, const size_t stride, const size_t start_crop,
                           k2c_activationType *activation);
 void k2c_conv2d_transpose(k2c_tensor *output, const k2c_tensor *input, const k2c_tensor *kernel,
-                          const k2c_tensor *bias, const size_t stride, const size_t start_crop,
-                          k2c_activationType *activation);
+                          const k2c_tensor *bias, const size_t *stride, const size_t *dilation,
+                          const size_t *padding, k2c_activationType *activation);
 
 // Core Layers
 void k2c_dense(k2c_tensor *output, const k2c_tensor *input, const k2c_tensor *kernel,

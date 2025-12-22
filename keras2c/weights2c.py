@@ -9,9 +9,9 @@ Gets weights and other parameters from each layer and writes to C file
 
 # imports
 import numpy as np
-from keras2c.io_parsing import layer_type, get_layer_io_names, get_model_io_names
 import tensorflow as tf
 
+from keras2c.io_parsing import get_layer_io_names, get_model_io_names, layer_type
 
 maxndim = 5
 
@@ -27,7 +27,7 @@ __author__ = "Anchal Gupta"
 __email__ = "guptaa@fusion.gat.com"
 
 
-class Weights2C():
+class Weights2C:
     """Creates an object to extract and write weights and other model parameters
 
     Args:
@@ -37,12 +37,11 @@ class Weights2C():
     """
 
     def __init__(self, model, function_name, malloc=False):
-
         self.model = model
         self.function_name = function_name
         self.model_io = get_model_io_names(self.model)
         self.malloc = malloc
-        self.stack_vars = ''
+        self.stack_vars = ""
         self.malloc_vars = {}
         self.static_vars = {}
 
@@ -58,41 +57,59 @@ class Weights2C():
         Returns:
             arr (str): generated code for the array as a k2c_tensor
         """
-        temp = array.flatten(order='C')
+        temp = array.flatten(order="C")
         size = array.size
         shp = array.shape
         ndim = len(shp)
-        shp = np.concatenate((shp, np.ones(maxndim-ndim)))
+        shp = np.concatenate((shp, np.ones(maxndim - ndim)))
         if malloc:
             to_malloc = {}
-            s = 'k2c_tensor ' + name + ' = {' + name + \
-                '_array,' + str(int(ndim)) + ',' + str(int(size)) + ',{' + \
-                np.array2string(shp.astype(int), separator=',')[
-                    1:-1] + '}}; \n'
-            to_malloc.update({name + '_array': temp})
+            s = (
+                "k2c_tensor "
+                + name
+                + " = {"
+                + name
+                + "_array,"
+                + str(int(ndim))
+                + ","
+                + str(int(size))
+                + ",{"
+                + np.array2string(shp.astype(int), separator=",")[1:-1]
+                + "}}; \n"
+            )
+            to_malloc.update({name + "_array": temp})
             return s, to_malloc
         else:
             count = 0
-            s = 'float ' + name + '_array[' + str(size) + '] = '
+            s = "float " + name + "_array[" + str(size) + "] = "
             if np.max(np.abs(temp)) < 1e-16:
-                s += '{' + str(0) + '}; \n'
+                s += "{" + str(0) + "}; \n"
             else:
-                s += '{\n'
+                s += "{\n"
                 for i in range(size):
                     if temp[i] == np.inf:
                         s += "HUGE_VALF,"
                     elif temp[i] == -np.inf:
                         s += "-HUGE_VALF,"
                     else:
-                        s += "{:+.8e}f".format(temp[i]) + ','
+                        s += "{:+.8e}f".format(temp[i]) + ","
                     count += 1
                     if (count) % 5 == 0:
-                        s += '\n'
-                s += '}; \n'
-            s += 'k2c_tensor ' + name + ' = {&' + name + \
-                '_array[0],' + str(int(ndim)) + ',' + str(int(size)) + ',{' + \
-                np.array2string(shp.astype(int), separator=',')[
-                    1:-1] + '}}; \n'
+                        s += "\n"
+                s += "}; \n"
+            s += (
+                "k2c_tensor "
+                + name
+                + " = {&"
+                + name
+                + "_array[0],"
+                + str(int(ndim))
+                + ","
+                + str(int(size))
+                + ",{"
+                + np.array2string(shp.astype(int), separator=",")[1:-1]
+                + "}}; \n"
+            )
             return s
 
     def _write_weights_array2c(self, array, name):
@@ -104,7 +121,7 @@ class Weights2C():
             self.stack_vars += temp
 
     def _write_weights_layer(self, layer, **kwargs):
-        method = getattr(self, '_write_weights_' + layer_type(layer))
+        method = getattr(self, "_write_weights_" + layer_type(layer))
         return method(layer, **kwargs)
 
     def write_weights(self, verbose=True):
@@ -123,19 +140,19 @@ class Weights2C():
                     (eg, states of a stateful RNN)
         """
         for layer in self.model.layers:
-            method = getattr(self, '_write_weights_' + layer_type(layer))
+            method = getattr(self, "_write_weights_" + layer_type(layer))
             method(layer)
         return self.stack_vars, self.malloc_vars, self._write_static_vars()
 
     def _write_static_vars(self):
         if len(self.static_vars) > 0:
-            s = 'static struct ' + self.function_name + '_static_vars \n'
-            s += '{ \n'
+            s = "static struct " + self.function_name + "_static_vars \n"
+            s += "{ \n"
             for k, v in self.static_vars.items():
-                s += 'float ' + k + '[' + str(v) + ']; \n'
-            s += '} ' + self.function_name + '_states; \n'
+                s += "float " + k + "[" + str(v) + "]; \n"
+            s += "} " + self.function_name + "_states; \n"
         else:
-            s = ''
+            s = ""
         return s
 
     def _write_outputs(self, layer):
@@ -147,19 +164,18 @@ class Weights2C():
                         outshp = layer.get_output_at(i)[j].shape[1:]
                         if outpp not in self.model_io[1]:
                             self._write_weights_array2c(
-                                np.zeros(outshp), outpp + '_output')
+                                np.zeros(outshp), outpp + "_output"
+                            )
                 else:
                     outshp = layer.output.shape[1:]
                     if outp not in self.model_io[1]:
-                        self._write_weights_array2c(
-                            np.zeros(outshp), outp + '_output')
+                        self._write_weights_array2c(np.zeros(outshp), outp + "_output")
         else:
             outshp = layer.output_shape[1:]
             if outputs[0] not in self.model_io[1]:
                 # self._write_weights_array2c(
                 #     np.zeros(outshp), outputs[0] + '_output')
-                self._write_weights_array2c(
-                    np.zeros(outshp), layer.name + '_output')
+                self._write_weights_array2c(np.zeros(outshp), layer.name + "_output")
 
     def _write_weights_Bidirectional(self, layer):
         try:
@@ -191,31 +207,45 @@ class Weights2C():
 
         self._write_weights_layer(layer.backward_layer, skip_outputs=True)
         outshp = layer.backward_layer.output.shape[1:]
-        self._write_weights_array2c(np.zeros(outshp), layer.backward_layer.name + '_output')
+        self._write_weights_array2c(
+            np.zeros(outshp), layer.backward_layer.name + "_output"
+        )
 
         self._write_weights_layer(layer.forward_layer, skip_outputs=True)
         outshp = layer.forward_layer.output.shape[1:]
-        self._write_weights_array2c(np.zeros(outshp), layer.forward_layer.name + '_output')
+        self._write_weights_array2c(
+            np.zeros(outshp), layer.forward_layer.name + "_output"
+        )
         if layer.merge_mode:
             self._write_outputs(layer)
-            self.stack_vars += 'size_t ' + layer.name + '_num_tensors' + str(0) + \
-                ' = ' + str(2) + '; \n'
-            if layer.merge_mode == 'concat':
+            self.stack_vars += (
+                "size_t "
+                + layer.name
+                + "_num_tensors"
+                + str(0)
+                + " = "
+                + str(2)
+                + "; \n"
+            )
+            if layer.merge_mode == "concat":
                 if layer.return_sequences:
                     ax = 1
                 else:
                     ax = 0
-                self.stack_vars += 'size_t ' + layer.name + '_axis = ' +\
-                    str(ax) + '; \n'
+                self.stack_vars += (
+                    "size_t " + layer.name + "_axis = " + str(ax) + "; \n"
+                )
 
         else:
             output_names = get_layer_io_names(layer)[1][0]
             subname = layer.forward_layer.name
-            self.stack_vars += 'k2c_tensor * ' + \
-                output_names[0] + ' = ' + subname + '_output; \n'
+            self.stack_vars += (
+                "k2c_tensor * " + output_names[0] + " = " + subname + "_output; \n"
+            )
             subname = layer.backward_layer.name
-            self.stack_vars += 'k2c_tensor * ' + \
-                output_names[1] + ' = ' + subname + '_output; \n'
+            self.stack_vars += (
+                "k2c_tensor * " + output_names[1] + " = " + subname + "_output; \n"
+            )
 
     def _write_weights_TimeDistributed(self, layer, skip_outputs=False):
         if not skip_outputs:
@@ -223,41 +253,55 @@ class Weights2C():
         try:
             foo = layer.layer.input.shape
         except:
-            temp_input = tf.keras.layers.Input(
-                layer.input.shape[2:], batch_size=1)
+            temp_input = tf.keras.layers.Input(layer.input.shape[2:], batch_size=1)
             foo = layer.layer.__call__(temp_input)
         self._write_weights_layer(layer.layer)
         timeslice_input = np.squeeze(np.zeros(layer.layer.input.shape[1:]))
         timeslice_output = np.squeeze(np.zeros(layer.layer.output.shape[1:]))
         self._write_weights_array2c(
-            timeslice_input, layer.layer.name + '_timeslice_input')
+            timeslice_input, layer.layer.name + "_timeslice_input"
+        )
         self._write_weights_array2c(
-            timeslice_output, layer.layer.name + '_timeslice_output')
-        self.stack_vars += 'const size_t ' + layer.name +\
-                           '_timesteps = ' + str(layer.input.shape[1]) + '; \n'
-        self.stack_vars += 'const size_t ' + layer.name +\
-                           '_in_offset = ' + \
-            str(np.prod(layer.input.shape[2:])) + '; \n'
-        self.stack_vars += 'const size_t ' + layer.name +\
-                           '_out_offset = ' + \
-            str(np.prod(layer.output.shape[2:])) + '; \n'
+            timeslice_output, layer.layer.name + "_timeslice_output"
+        )
+        self.stack_vars += (
+            "const size_t "
+            + layer.name
+            + "_timesteps = "
+            + str(layer.input.shape[1])
+            + "; \n"
+        )
+        self.stack_vars += (
+            "const size_t "
+            + layer.name
+            + "_in_offset = "
+            + str(np.prod(layer.input.shape[2:]))
+            + "; \n"
+        )
+        self.stack_vars += (
+            "const size_t "
+            + layer.name
+            + "_out_offset = "
+            + str(np.prod(layer.output.shape[2:]))
+            + "; \n"
+        )
 
     def _write_weights_Input(self, layer):
-        self.stack_vars += ''
+        self.stack_vars += ""
 
     def _write_weights_InputLayer(self, layer):
-        self.stack_vars += ''
+        self.stack_vars += ""
 
     def _write_weights_BatchNormalization(self, layer, skip_outputs=False):
         cfg = layer.get_config()
-        center = cfg['center']
-        scale = cfg['scale']
-        if isinstance(cfg['axis'], (list, tuple, np.ndarray)):
-            axis = cfg['axis'][0]-1
+        center = cfg["center"]
+        scale = cfg["scale"]
+        if isinstance(cfg["axis"], (list, tuple, np.ndarray)):
+            axis = cfg["axis"][0] - 1
         else:
-            axis = cfg['axis']-1
+            axis = cfg["axis"] - 1
 
-        epsilon = cfg['epsilon']
+        epsilon = cfg["epsilon"]
 
         if center and scale:
             gamma = layer.get_weights()[0]
@@ -283,128 +327,185 @@ class Weights2C():
         stdev = np.sqrt(variance + epsilon)
         if not skip_outputs:
             self._write_outputs(layer)
-        self.stack_vars += 'size_t ' + layer.name + \
-            '_axis = ' + str(axis) + '; \n'
-        self._write_weights_array2c(mean, layer.name + '_mean')
-        self._write_weights_array2c(stdev, layer.name + '_stdev')
-        self._write_weights_array2c(gamma, layer.name + '_gamma')
-        self._write_weights_array2c(beta, layer.name + '_beta')
-        self.stack_vars += '\n\n'
+        self.stack_vars += "size_t " + layer.name + "_axis = " + str(axis) + "; \n"
+        self._write_weights_array2c(mean, layer.name + "_mean")
+        self._write_weights_array2c(stdev, layer.name + "_stdev")
+        self._write_weights_array2c(gamma, layer.name + "_gamma")
+        self._write_weights_array2c(beta, layer.name + "_beta")
+        self.stack_vars += "\n\n"
 
     def _write_weights_LSTM(self, layer, skip_outputs=False):
         cfg = layer.get_config()
-        units = cfg['units']
+        units = cfg["units"]
         if not skip_outputs:
             self._write_outputs(layer)
-        self.stack_vars += 'float ' + layer.name + \
-                           '_fwork[' + str(8*units) + '] = {0}; \n'
-        self.stack_vars += 'int ' + layer.name + '_go_backwards = ' + \
-            str(int(cfg['go_backwards'])) + ';\n'
-        self.stack_vars += 'int ' + layer.name + '_return_sequences = ' + \
-            str(int(cfg['return_sequences'])) + ';\n'
-        if cfg['stateful']:
-            self.static_vars.update({layer.name + '_state': 2*units})
-            self.stack_vars += 'float * ' + layer.name + '_state = ' + \
-                self.function_name + '_states.' + \
-                layer.name + '_state; \n'
+        self.stack_vars += (
+            "float " + layer.name + "_fwork[" + str(8 * units) + "] = {0}; \n"
+        )
+        self.stack_vars += (
+            "int "
+            + layer.name
+            + "_go_backwards = "
+            + str(int(cfg["go_backwards"]))
+            + ";\n"
+        )
+        self.stack_vars += (
+            "int "
+            + layer.name
+            + "_return_sequences = "
+            + str(int(cfg["return_sequences"]))
+            + ";\n"
+        )
+        if cfg["stateful"]:
+            self.static_vars.update({layer.name + "_state": 2 * units})
+            self.stack_vars += (
+                "float * "
+                + layer.name
+                + "_state = "
+                + self.function_name
+                + "_states."
+                + layer.name
+                + "_state; \n"
+            )
         else:
-            self.stack_vars += 'float ' + layer.name + \
-                               '_state[' + str(2*units) + '] = {0}; \n'
+            self.stack_vars += (
+                "float " + layer.name + "_state[" + str(2 * units) + "] = {0}; \n"
+            )
 
         weights = layer.get_weights()
         kernel = weights[0]
         recurrent_kernel = weights[1]
-        if cfg['use_bias']:
+        if cfg["use_bias"]:
             bias = weights[2]
         else:
-            bias = np.zeros(4*units)
+            bias = np.zeros(4 * units)
         ckernel = np.concatenate(np.split(kernel, 4, axis=1), axis=0)
         crecurrent_kernel = np.concatenate(
-            np.split(recurrent_kernel, 4, axis=1), axis=0)
-        self._write_weights_array2c(ckernel, layer.name + '_kernel')
-        self._write_weights_array2c(
-            crecurrent_kernel, layer.name + '_recurrent_kernel')
-        self._write_weights_array2c(bias, layer.name + '_bias')
-        self.stack_vars += '\n \n'
+            np.split(recurrent_kernel, 4, axis=1), axis=0
+        )
+        self._write_weights_array2c(ckernel, layer.name + "_kernel")
+        self._write_weights_array2c(crecurrent_kernel, layer.name + "_recurrent_kernel")
+        self._write_weights_array2c(bias, layer.name + "_bias")
+        self.stack_vars += "\n \n"
 
     def _write_weights_GRU(self, layer, skip_outputs=False):
         cfg = layer.get_config()
-        units = cfg['units']
+        units = cfg["units"]
         if not skip_outputs:
             self._write_outputs(layer)
-        self.stack_vars += 'float ' + layer.name + \
-            '_fwork[' + str(6*units) + '] = {0}; \n'
-        self.stack_vars += 'int ' + layer.name + '_reset_after = ' + \
-            str(int(cfg['reset_after'])) + ';\n'
-        self.stack_vars += 'int ' + layer.name + '_go_backwards = ' + \
-            str(int(cfg['go_backwards'])) + ';\n'
-        self.stack_vars += 'int ' + layer.name + '_return_sequences = ' + \
-            str(int(cfg['return_sequences'])) + ';\n'
-        if cfg['stateful']:
-            self.static_vars.update({layer.name + '_state': units})
-            self.stack_vars += 'float * ' + layer.name + '_state = ' + \
-                self.function_name + '_states.' + \
-                layer.name + '_state; \n'
+        self.stack_vars += (
+            "float " + layer.name + "_fwork[" + str(6 * units) + "] = {0}; \n"
+        )
+        self.stack_vars += (
+            "int "
+            + layer.name
+            + "_reset_after = "
+            + str(int(cfg["reset_after"]))
+            + ";\n"
+        )
+        self.stack_vars += (
+            "int "
+            + layer.name
+            + "_go_backwards = "
+            + str(int(cfg["go_backwards"]))
+            + ";\n"
+        )
+        self.stack_vars += (
+            "int "
+            + layer.name
+            + "_return_sequences = "
+            + str(int(cfg["return_sequences"]))
+            + ";\n"
+        )
+        if cfg["stateful"]:
+            self.static_vars.update({layer.name + "_state": units})
+            self.stack_vars += (
+                "float * "
+                + layer.name
+                + "_state = "
+                + self.function_name
+                + "_states."
+                + layer.name
+                + "_state; \n"
+            )
         else:
-            self.stack_vars += 'float ' + layer.name + \
-                '_state[' + str(units) + '] = {0}; \n'
+            self.stack_vars += (
+                "float " + layer.name + "_state[" + str(units) + "] = {0}; \n"
+            )
 
         weights = layer.get_weights()
         kernel = weights[0]
         recurrent_kernel = weights[1]
-        if cfg['use_bias']:
+        if cfg["use_bias"]:
             bias = weights[2]
-            if cfg['reset_after']:
+            if cfg["reset_after"]:
                 rbias = bias[1]
                 bias = bias[0]
             else:
                 bias = bias
-                rbias = np.zeros(3*units)
+                rbias = np.zeros(3 * units)
         else:
-            bias = np.zeros(3*units)
-            rbias = np.zeros(3*units)
+            bias = np.zeros(3 * units)
+            rbias = np.zeros(3 * units)
         cbias = np.concatenate([bias, rbias], axis=0)
         ckernel = np.concatenate(np.split(kernel, 3, axis=1), axis=0)
         crecurrent_kernel = np.concatenate(
-            np.split(recurrent_kernel, 3, axis=1), axis=0)
-        self._write_weights_array2c(ckernel, layer.name + '_kernel')
-        self._write_weights_array2c(crecurrent_kernel, layer.name +
-                                    '_recurrent_kernel')
-        self._write_weights_array2c(cbias, layer.name + '_bias')
-        self.stack_vars += '\n \n'
+            np.split(recurrent_kernel, 3, axis=1), axis=0
+        )
+        self._write_weights_array2c(ckernel, layer.name + "_kernel")
+        self._write_weights_array2c(crecurrent_kernel, layer.name + "_recurrent_kernel")
+        self._write_weights_array2c(cbias, layer.name + "_bias")
+        self.stack_vars += "\n \n"
 
     def _write_weights_SimpleRNN(self, layer, skip_outputs=False):
         cfg = layer.get_config()
-        units = cfg['units']
+        units = cfg["units"]
         if not skip_outputs:
             self._write_outputs(layer)
-        self.stack_vars += 'int ' + layer.name + '_go_backwards = ' + \
-            str(int(cfg['go_backwards'])) + ';\n'
-        self.stack_vars += 'int ' + layer.name + '_return_sequences = ' + \
-            str(int(cfg['return_sequences'])) + ';\n'
-        self.stack_vars += 'float ' + layer.name + \
-            '_fwork[' + str(2*units) + '] = {0}; \n'
-        if cfg['stateful']:
-            self.static_vars.update({layer.name + '_state': units})
-            self.stack_vars += 'float * ' + layer.name + '_state = ' + \
-                self.function_name + '_states.' + \
-                layer.name + '_state; \n'
+        self.stack_vars += (
+            "int "
+            + layer.name
+            + "_go_backwards = "
+            + str(int(cfg["go_backwards"]))
+            + ";\n"
+        )
+        self.stack_vars += (
+            "int "
+            + layer.name
+            + "_return_sequences = "
+            + str(int(cfg["return_sequences"]))
+            + ";\n"
+        )
+        self.stack_vars += (
+            "float " + layer.name + "_fwork[" + str(2 * units) + "] = {0}; \n"
+        )
+        if cfg["stateful"]:
+            self.static_vars.update({layer.name + "_state": units})
+            self.stack_vars += (
+                "float * "
+                + layer.name
+                + "_state = "
+                + self.function_name
+                + "_states."
+                + layer.name
+                + "_state; \n"
+            )
         else:
-            self.stack_vars += 'float ' + layer.name + \
-                '_state[' + str(units) + '] = {0}; \n'
+            self.stack_vars += (
+                "float " + layer.name + "_state[" + str(units) + "] = {0}; \n"
+            )
 
         weights = layer.get_weights()
         kernel = weights[0]
         recurrent_kernel = weights[1]
-        if cfg['use_bias']:
+        if cfg["use_bias"]:
             bias = weights[2]
         else:
             bias = np.zeros(units)
-        self._write_weights_array2c(kernel, layer.name + '_kernel')
-        self._write_weights_array2c(recurrent_kernel, layer.name +
-                                    '_recurrent_kernel')
-        self._write_weights_array2c(bias, layer.name + '_bias')
-        self.stack_vars += '\n \n'
+        self._write_weights_array2c(kernel, layer.name + "_kernel")
+        self._write_weights_array2c(recurrent_kernel, layer.name + "_recurrent_kernel")
+        self._write_weights_array2c(bias, layer.name + "_bias")
+        self.stack_vars += "\n \n"
 
     def _write_weights_Dense(self, layer, skip_outputs=False):
         cfg = layer.get_config()
@@ -412,168 +513,218 @@ class Weights2C():
             self._write_outputs(layer)
         weights = layer.get_weights()
         A = weights[0]
-        if cfg['use_bias']:
+        if cfg["use_bias"]:
             b = weights[1]
         else:
             b = np.zeros(A.shape[1])
 
-        self._write_weights_array2c(A, layer.name + '_kernel')
-        self._write_weights_array2c(b, layer.name + '_bias')
-        self.stack_vars += 'float ' + layer.name + \
-            '_fwork[' + str(np.prod(layer.input.shape[1:]) +
-                            np.prod(A.shape)) + '] = {0}; \n'
-        self.stack_vars += '\n \n'
+        self._write_weights_array2c(A, layer.name + "_kernel")
+        self._write_weights_array2c(b, layer.name + "_bias")
+        self.stack_vars += (
+            "float "
+            + layer.name
+            + "_fwork["
+            + str(np.prod(layer.input.shape[1:]) + np.prod(A.shape))
+            + "] = {0}; \n"
+        )
+        self.stack_vars += "\n \n"
 
     def _write_weights_Conv1D(self, layer, skip_outputs=False):
         cfg = layer.get_config()
-        padding = cfg['padding']
-        stride = cfg['strides'][0]
-        dilation = cfg['dilation_rate'][0]
-        kernel_size = cfg['kernel_size'][0]
-        self.stack_vars += 'size_t ' + layer.name + \
-            '_stride = ' + str(stride) + '; \n'
-        self.stack_vars += 'size_t ' + layer.name + \
-            '_dilation = ' + str(dilation) + '; \n'
+        padding = cfg["padding"]
+        stride = cfg["strides"][0]
+        dilation = cfg["dilation_rate"][0]
+        kernel_size = cfg["kernel_size"][0]
+        self.stack_vars += "size_t " + layer.name + "_stride = " + str(stride) + "; \n"
+        self.stack_vars += (
+            "size_t " + layer.name + "_dilation = " + str(dilation) + "; \n"
+        )
         if not skip_outputs:
             self._write_outputs(layer)
         inshp = layer.input.shape[1:]
-        if padding == 'causal':
-            pad_along_height = dilation*(kernel_size-1)
+        if padding == "causal":
+            pad_along_height = dilation * (kernel_size - 1)
             pad_top = pad_along_height
             pad_bottom = 0
-            self._write_weights_array2c(np.zeros((inshp[0]+pad_top+pad_bottom, inshp[1])),
-                                        layer.name + '_padded_input')
-            self.stack_vars += 'size_t ' + layer.name + '_pad[2] = {' + str(pad_top) + ','\
-                + str(pad_bottom) + '}; \n'
-            self.stack_vars += 'float ' + layer.name + '_fill = 0.0f; \n'
-        elif padding == 'same':
-            pad_along_height = dilation*(kernel_size-1)
+            self._write_weights_array2c(
+                np.zeros((inshp[0] + pad_top + pad_bottom, inshp[1])),
+                layer.name + "_padded_input",
+            )
+            self.stack_vars += (
+                "size_t "
+                + layer.name
+                + "_pad[2] = {"
+                + str(pad_top)
+                + ","
+                + str(pad_bottom)
+                + "}; \n"
+            )
+            self.stack_vars += "float " + layer.name + "_fill = 0.0f; \n"
+        elif padding == "same":
+            pad_along_height = dilation * (kernel_size - 1)
             pad_top = int(pad_along_height // 2)
             pad_bottom = int(pad_along_height - pad_top)
-            self._write_weights_array2c(np.zeros((inshp[0]+pad_top+pad_bottom, inshp[1])),
-                                        layer.name + '_padded_input')
-            self.stack_vars += 'size_t ' + layer.name + '_pad[2] = {' + str(pad_top) + ','\
-                + str(pad_bottom) + '}; \n'
+            self._write_weights_array2c(
+                np.zeros((inshp[0] + pad_top + pad_bottom, inshp[1])),
+                layer.name + "_padded_input",
+            )
+            self.stack_vars += (
+                "size_t "
+                + layer.name
+                + "_pad[2] = {"
+                + str(pad_top)
+                + ","
+                + str(pad_bottom)
+                + "}; \n"
+            )
             self.stack_vars += "float " + layer.name + "_fill = 0.0f; \n"
 
         weights = layer.get_weights()
         kernel = weights[0]
-        if cfg['use_bias']:
+        if cfg["use_bias"]:
             bias = weights[1]
         else:
             bias = np.zeros(kernel.shape[2])
-        self._write_weights_array2c(kernel, layer.name + '_kernel')
-        self._write_weights_array2c(bias, layer.name + '_bias')
-        self.stack_vars += '\n \n'
+        self._write_weights_array2c(kernel, layer.name + "_kernel")
+        self._write_weights_array2c(bias, layer.name + "_bias")
+        self.stack_vars += "\n \n"
 
     def _write_weights_Conv2D(self, layer, skip_outputs=False):
         cfg = layer.get_config()
-        padding = cfg['padding']
-        stride = cfg['strides']
-        dilation = cfg['dilation_rate']
-        kernel_size = cfg['kernel_size']
-        self.stack_vars += 'size_t ' + layer.name + \
-            '_stride[2] = {' + ','.join([str(i) for i in stride]) + '}; \n'
-        self.stack_vars += 'size_t ' + layer.name + \
-            '_dilation[2] = {' + ','.join([str(i)
-                                           for i in dilation]) + '}; \n'
+        padding = cfg["padding"]
+        stride = cfg["strides"]
+        dilation = cfg["dilation_rate"]
+        kernel_size = cfg["kernel_size"]
+        self.stack_vars += (
+            "size_t "
+            + layer.name
+            + "_stride[2] = {"
+            + ",".join([str(i) for i in stride])
+            + "}; \n"
+        )
+        self.stack_vars += (
+            "size_t "
+            + layer.name
+            + "_dilation[2] = {"
+            + ",".join([str(i) for i in dilation])
+            + "}; \n"
+        )
         if not skip_outputs:
             self._write_outputs(layer)
-        if padding == 'same':
+        if padding == "same":
             inshp = layer.input.shape[1:]
-            pad_along_height = dilation[0]*(kernel_size[0]-1)
+            pad_along_height = dilation[0] * (kernel_size[0] - 1)
             pad_top = int(pad_along_height // 2)
             pad_bottom = int(pad_along_height - pad_top)
-            pad_along_width = dilation[1]*(kernel_size[1]-1)
-            pad_left = pad_along_width//2
+            pad_along_width = dilation[1] * (kernel_size[1] - 1)
+            pad_left = pad_along_width // 2
             pad_right = pad_along_width - pad_left
-            padshp = (inshp[0]+pad_along_height,
-                      inshp[1]+pad_along_width, inshp[2])
+            padshp = (inshp[0] + pad_along_height, inshp[1] + pad_along_width, inshp[2])
             pad = [pad_top, pad_bottom, pad_left, pad_right]
-            self._write_weights_array2c(np.zeros(padshp), layer.name +
-                                        '_padded_input')
-            self.stack_vars += 'size_t ' + layer.name + \
-                '_pad[4] = {' + ','.join([str(i) for i in pad]) + '}; \n'
-            self.stack_vars += 'float ' + layer.name + '_fill = 0.0f; \n'
+            self._write_weights_array2c(np.zeros(padshp), layer.name + "_padded_input")
+            self.stack_vars += (
+                "size_t "
+                + layer.name
+                + "_pad[4] = {"
+                + ",".join([str(i) for i in pad])
+                + "}; \n"
+            )
+            self.stack_vars += "float " + layer.name + "_fill = 0.0f; \n"
 
         weights = layer.get_weights()
         kernel = weights[0]
-        if cfg['use_bias']:
+        if cfg["use_bias"]:
             bias = weights[1]
         else:
             bias = np.zeros(kernel.shape[3])
-        self._write_weights_array2c(kernel, layer.name + '_kernel')
-        self._write_weights_array2c(bias, layer.name + '_bias')
-        self.stack_vars += '\n \n'
+        self._write_weights_array2c(kernel, layer.name + "_kernel")
+        self._write_weights_array2c(bias, layer.name + "_bias")
+        self.stack_vars += "\n \n"
 
     def _write_weights_Conv3D(self, layer, skip_outputs=False):
         cfg = layer.get_config()
-        padding = cfg['padding']
-        stride = cfg['strides']
-        dilation = cfg['dilation_rate']
-        kernel_size = cfg['kernel_size']
-        self.stack_vars += 'size_t ' + layer.name + \
-            '_stride[3] = {' + ','.join([str(i) for i in stride]) + '}; \n'
-        self.stack_vars += 'size_t ' + layer.name + \
-            '_dilation[3] = {' + ','.join([str(i)
-                                           for i in dilation]) + '}; \n'
+        padding = cfg["padding"]
+        stride = cfg["strides"]
+        dilation = cfg["dilation_rate"]
+        kernel_size = cfg["kernel_size"]
+        self.stack_vars += (
+            "size_t "
+            + layer.name
+            + "_stride[3] = {"
+            + ",".join([str(i) for i in stride])
+            + "}; \n"
+        )
+        self.stack_vars += (
+            "size_t "
+            + layer.name
+            + "_dilation[3] = {"
+            + ",".join([str(i) for i in dilation])
+            + "}; \n"
+        )
         if not skip_outputs:
             self._write_outputs(layer)
-        if padding == 'same':
+        if padding == "same":
             inshp = layer.input.shape[1:]
-            pad_along_height = dilation[0]*(kernel_size[0]-1)
+            pad_along_height = dilation[0] * (kernel_size[0] - 1)
             pad_top = int(pad_along_height // 2)
             pad_bottom = int(pad_along_height - pad_top)
-            pad_along_width = dilation[1]*(kernel_size[1]-1)
-            pad_left = pad_along_width//2
+            pad_along_width = dilation[1] * (kernel_size[1] - 1)
+            pad_left = pad_along_width // 2
             pad_right = pad_along_width - pad_left
-            pad_along_depth = dilation[1]*(kernel_size[1]-1)
-            pad_front = pad_along_depth//2
+            pad_along_depth = dilation[1] * (kernel_size[1] - 1)
+            pad_front = pad_along_depth // 2
             pad_back = pad_along_depth - pad_front
-            padshp = (inshp[0]+pad_along_height,
-                      inshp[1]+pad_along_width,
-                      inshp[2]+pad_along_depth,
-                      inshp[3])
-            pad = [pad_top, pad_bottom, pad_left,
-                   pad_right, pad_front, pad_back]
-            self._write_weights_array2c(np.zeros(padshp), layer.name +
-                                        '_padded_input')
-            self.stack_vars += 'size_t ' + layer.name + \
-                '_pad[6] = {' + ','.join([str(i) for i in pad]) + '}; \n'
-            self.stack_vars += 'float ' + layer.name + '_fill = 0.0f; \n'
+            padshp = (
+                inshp[0] + pad_along_height,
+                inshp[1] + pad_along_width,
+                inshp[2] + pad_along_depth,
+                inshp[3],
+            )
+            pad = [pad_top, pad_bottom, pad_left, pad_right, pad_front, pad_back]
+            self._write_weights_array2c(np.zeros(padshp), layer.name + "_padded_input")
+            self.stack_vars += (
+                "size_t "
+                + layer.name
+                + "_pad[6] = {"
+                + ",".join([str(i) for i in pad])
+                + "}; \n"
+            )
+            self.stack_vars += "float " + layer.name + "_fill = 0.0f; \n"
 
         weights = layer.get_weights()
         kernel = weights[0]
-        if cfg['use_bias']:
+        if cfg["use_bias"]:
             bias = weights[1]
         else:
             bias = np.zeros(kernel.shape[3])
-        self._write_weights_array2c(kernel, layer.name + '_kernel')
-        self._write_weights_array2c(bias, layer.name + '_bias')
-        self.stack_vars += '\n \n'
+        self._write_weights_array2c(kernel, layer.name + "_kernel")
+        self._write_weights_array2c(bias, layer.name + "_bias")
+        self.stack_vars += "\n \n"
 
     def _write_weights_Conv1DTranspose(self, layer, skip_outputs=False):
         cfg = layer.get_config()
-        padding = cfg['padding']
-        stride = cfg['strides'][0]
-        dilation = cfg['dilation_rate'][0]
+        padding = cfg["padding"]
+        stride = cfg["strides"][0]
+        dilation = cfg["dilation_rate"][0]
         if dilation != 1:
-            raise ValueError('Dilation not supported for Conv1DTranspose')
-        kernel_size = cfg['kernel_size'][0]
+            raise ValueError("Dilation not supported for Conv1DTranspose")
+        kernel_size = cfg["kernel_size"][0]
 
         # Write stride to C
-        self.stack_vars += 'size_t ' + layer.name + \
-            '_stride = ' + str(stride) + '; \n'
+        self.stack_vars += "size_t " + layer.name + "_stride = " + str(stride) + "; \n"
 
-        if padding == 'valid':
+        if padding == "valid":
             start_crop = 0
-        elif padding == 'same':
+        elif padding == "same":
             start_crop = (kernel_size - stride) // 2
         else:
-            raise ValueError('Only same and valid padding supported for Conv1DTranspose')
+            raise ValueError(
+                "Only same and valid padding supported for Conv1DTranspose"
+            )
         # Write start_crop to C
-        self.stack_vars += 'size_t ' + layer.name + \
-            '_start_crop = ' + str(start_crop) + '; \n'
+        self.stack_vars += (
+            "size_t " + layer.name + "_start_crop = " + str(start_crop) + "; \n"
+        )
 
         # Initialize layer.name + '_output'
         if not skip_outputs:
@@ -582,13 +733,82 @@ class Weights2C():
         # Write kernel and bias to C
         weights = layer.get_weights()
         kernel = weights[0]
-        if cfg['use_bias']:
+        if cfg["use_bias"]:
             bias = weights[1]
         else:
             bias = np.zeros(kernel.shape[1])
-        self._write_weights_array2c(kernel, layer.name + '_kernel')
-        self._write_weights_array2c(bias, layer.name + '_bias')
-        self.stack_vars += '\n \n'
+        self._write_weights_array2c(kernel, layer.name + "_kernel")
+        self._write_weights_array2c(bias, layer.name + "_bias")
+        self.stack_vars += "\n \n"
+
+    def _write_weights_Conv2DTranspose(self, layer, skip_outputs=False):
+        cfg = layer.get_config()
+        padding = cfg["padding"]
+        stride = cfg["strides"]
+        dilation = cfg["dilation_rate"]
+        if dilation[0] != 1 or dilation[1] != 1:
+            raise ValueError("Dilation not supported for Conv2DTranspose")
+        kernel_size = cfg["kernel_size"]
+
+        # Write stride to C
+        self.stack_vars += (
+            "size_t "
+            + layer.name
+            + "_stride[2] = {"
+            + ",".join([str(i) for i in stride])
+            + "}; \n"
+        )
+
+        # Write dilation to C
+        self.stack_vars += (
+            "size_t "
+            + layer.name
+            + "_dilation[2] = {"
+            + ",".join([str(i) for i in dilation])
+            + "}; \n"
+        )
+
+        # Calculate padding (crop amounts) based on padding mode
+        if padding == "valid":
+            crop_h = 0
+            crop_w = 0
+        elif padding == "same":
+            crop_h = (kernel_size[0] - stride[0]) // 2
+            crop_w = (kernel_size[1] - stride[1]) // 2
+        else:
+            raise ValueError(
+                "Only same and valid padding supported for Conv2DTranspose"
+            )
+
+        # Write padding (crop) to C
+        self.stack_vars += (
+            "size_t "
+            + layer.name
+            + "_padding[2] = {"
+            + str(crop_h)
+            + ","
+            + str(crop_w)
+            + "}; \n"
+        )
+
+        # Initialize layer.name + '_output'
+        if not skip_outputs:
+            self._write_outputs(layer)
+
+        # Write kernel and bias to C
+        # Keras stores kernel as (rows, cols, out_channels, in_channels)
+        # C code expects (rows, cols, in_channels, out_channels)
+        # So we need to transpose the last two dimensions
+        weights = layer.get_weights()
+        kernel = weights[0]
+        kernel = np.transpose(kernel, (0, 1, 3, 2))
+        if cfg["use_bias"]:
+            bias = weights[1]
+        else:
+            bias = np.zeros(kernel.shape[3])
+        self._write_weights_array2c(kernel, layer.name + "_kernel")
+        self._write_weights_array2c(bias, layer.name + "_bias")
+        self.stack_vars += "\n \n"
 
     def _write_weights_MaxPooling1D(self, layer, **kwargs):
         return self._write_weights_Pooling1D(layer, **kwargs)
@@ -598,28 +818,36 @@ class Weights2C():
 
     def _write_weights_Pooling1D(self, layer, skip_outputs=False):
         cfg = layer.get_config()
-        pad = cfg['padding']
-        stride = cfg['strides'][0]
-        pool_size = cfg['pool_size'][0]
-        self.stack_vars += 'size_t ' + layer.name + \
-            '_stride = ' + str(stride) + '; \n'
-        self.stack_vars += 'size_t ' + layer.name + \
-            '_pool_size = ' + str(pool_size) + '; \n'
+        pad = cfg["padding"]
+        stride = cfg["strides"][0]
+        pool_size = cfg["pool_size"][0]
+        self.stack_vars += "size_t " + layer.name + "_stride = " + str(stride) + "; \n"
+        self.stack_vars += (
+            "size_t " + layer.name + "_pool_size = " + str(pool_size) + "; \n"
+        )
         if not skip_outputs:
             self._write_outputs(layer)
         inshp = layer.input.shape[1:]
         outshp = layer.output.shape[1:]
-        if pad == 'same':
-            pad_along_height = max((outshp[0] - 1) * stride +
-                                   pool_size - inshp[0], 0)
+        if pad == "same":
+            pad_along_height = max((outshp[0] - 1) * stride + pool_size - inshp[0], 0)
             pad_top = int(pad_along_height // 2)
             pad_bottom = int(pad_along_height - pad_top)
-            self._write_weights_array2c(np.zeros((inshp[0]+pad_top+pad_bottom, inshp[1])),
-                                        layer.name + '_padded_input')
-            self.stack_vars += 'size_t ' + layer.name + '_pad[2] = {' + str(pad_top) + ','\
-                + str(pad_bottom) + '}; \n'
-            self.stack_vars += 'float ' + layer.name + '_fill = -HUGE_VALF; \n'
-        self.stack_vars += '\n\n'
+            self._write_weights_array2c(
+                np.zeros((inshp[0] + pad_top + pad_bottom, inshp[1])),
+                layer.name + "_padded_input",
+            )
+            self.stack_vars += (
+                "size_t "
+                + layer.name
+                + "_pad[2] = {"
+                + str(pad_top)
+                + ","
+                + str(pad_bottom)
+                + "}; \n"
+            )
+            self.stack_vars += "float " + layer.name + "_fill = -HUGE_VALF; \n"
+        self.stack_vars += "\n\n"
 
     def _write_weights_MaxPooling2D(self, layer, **kwargs):
         return self._write_weights_Pooling2D(layer, **kwargs)
@@ -629,36 +857,50 @@ class Weights2C():
 
     def _write_weights_Pooling2D(self, layer, skip_outputs=False):
         cfg = layer.get_config()
-        padding = cfg['padding']
-        stride = cfg['strides']
-        pool_size = cfg['pool_size']
-        self.stack_vars += 'size_t ' + layer.name + \
-            '_stride[2] = {' + ','.join([str(i) for i in stride]) + '}; \n'
-        self.stack_vars += 'size_t ' + layer.name + \
-            '_pool_size[2] = {' + ','.join([str(i)
-                                            for i in pool_size]) + '}; \n'
+        padding = cfg["padding"]
+        stride = cfg["strides"]
+        pool_size = cfg["pool_size"]
+        self.stack_vars += (
+            "size_t "
+            + layer.name
+            + "_stride[2] = {"
+            + ",".join([str(i) for i in stride])
+            + "}; \n"
+        )
+        self.stack_vars += (
+            "size_t "
+            + layer.name
+            + "_pool_size[2] = {"
+            + ",".join([str(i) for i in pool_size])
+            + "}; \n"
+        )
         if not skip_outputs:
             self._write_outputs(layer)
-        if padding == 'same':
+        if padding == "same":
             inshp = layer.input.shape[1:]
             outshp = layer.output.shape[1:]
-            pad_along_height = max((outshp[0] - 1) * stride[0] +
-                                   pool_size[0] - inshp[0], 0)
+            pad_along_height = max(
+                (outshp[0] - 1) * stride[0] + pool_size[0] - inshp[0], 0
+            )
             pad_top = int(pad_along_height // 2)
             pad_bottom = int(pad_along_height - pad_top)
-            pad_along_width = max((outshp[1] - 1) * stride[1] +
-                                  pool_size[1] - inshp[1], 0)
-            pad_left = pad_along_width//2
+            pad_along_width = max(
+                (outshp[1] - 1) * stride[1] + pool_size[1] - inshp[1], 0
+            )
+            pad_left = pad_along_width // 2
             pad_right = pad_along_width - pad_left
-            padshp = (inshp[0]+pad_along_height,
-                      inshp[1]+pad_along_width, inshp[2])
+            padshp = (inshp[0] + pad_along_height, inshp[1] + pad_along_width, inshp[2])
             pad = [pad_top, pad_bottom, pad_left, pad_right]
-            self._write_weights_array2c(np.zeros(padshp), layer.name +
-                                        '_padded_input')
-            self.stack_vars += 'size_t ' + layer.name + \
-                '_pad[4] = {' + ','.join([str(i) for i in pad]) + '}; \n'
-            self.stack_vars += 'float ' + layer.name + '_fill = -HUGE_VALF; \n'
-        self.stack_vars += '\n\n'
+            self._write_weights_array2c(np.zeros(padshp), layer.name + "_padded_input")
+            self.stack_vars += (
+                "size_t "
+                + layer.name
+                + "_pad[4] = {"
+                + ",".join([str(i) for i in pad])
+                + "}; \n"
+            )
+            self.stack_vars += "float " + layer.name + "_fill = -HUGE_VALF; \n"
+        self.stack_vars += "\n\n"
 
     def _write_weights_GlobalMaxPooling1D(self, layer, **kwargs):
         return self._write_weights_GlobalPooling(layer, **kwargs)
@@ -681,7 +923,7 @@ class Weights2C():
     def _write_weights_GlobalPooling(self, layer, skip_outputs=False):
         if not skip_outputs:
             self._write_outputs(layer)
-        self.stack_vars += '\n\n'
+        self.stack_vars += "\n\n"
 
     def _write_weights_Add(self, layer, **kwargs):
         return self._write_weights_Merge(layer, **kwargs)
@@ -707,245 +949,347 @@ class Weights2C():
         inputs, outputs = get_layer_io_names(layer)
         for i, (inp, outp) in enumerate(zip(inputs, outputs)):
             num_tensors = len(inp)
-            self.stack_vars += 'size_t ' + layer.name + '_num_tensors' + str(i) + \
-                ' = ' + str(num_tensors) + '; \n'
-        self.stack_vars += '\n\n'
+            self.stack_vars += (
+                "size_t "
+                + layer.name
+                + "_num_tensors"
+                + str(i)
+                + " = "
+                + str(num_tensors)
+                + "; \n"
+            )
+        self.stack_vars += "\n\n"
 
-    def _write_weights_Concatenate(self, layer, ):
+    def _write_weights_Concatenate(
+        self,
+        layer,
+    ):
         cfg = layer.get_config()
         inputs, outputs = get_layer_io_names(layer)
         for i, (inp, outp) in enumerate(zip(inputs, outputs)):
             outshp = layer.output.shape[1:]
             num_tensors = len(inp)
-            self.stack_vars += 'size_t ' + layer.name + '_num_tensors' + str(i) + \
-                ' = ' + str(num_tensors) + '; \n'
-            ax = cfg['axis']
+            self.stack_vars += (
+                "size_t "
+                + layer.name
+                + "_num_tensors"
+                + str(i)
+                + " = "
+                + str(num_tensors)
+                + "; \n"
+            )
+            ax = cfg["axis"]
             if ax < 0:
                 ax += len(layer.input[0].shape)
-            self.stack_vars += 'size_t ' + layer.name + '_axis = ' +\
-                str(ax-1) + '; \n'
+            self.stack_vars += (
+                "size_t " + layer.name + "_axis = " + str(ax - 1) + "; \n"
+            )
         if outp not in self.model_io[1]:
-            self._write_weights_array2c(np.zeros(outshp),
-                                        outp + '_output')
-        self.stack_vars += '\n\n'
+            self._write_weights_array2c(np.zeros(outshp), outp + "_output")
+        self.stack_vars += "\n\n"
 
     def _write_weights_ELU(self, layer):
         cfg = layer.get_config()
-        alpha = cfg['alpha']
-        self.stack_vars += 'float ' + layer.name + \
-            '_alpha = ' + str(alpha) + '; \n'
-        self.stack_vars += '\n\n'
+        alpha = cfg["alpha"]
+        self.stack_vars += "float " + layer.name + "_alpha = " + str(alpha) + "; \n"
+        self.stack_vars += "\n\n"
 
     def _write_weights_LeakyReLU(self, layer):
         cfg = layer.get_config()
         try:
-            alpha = cfg['alpha']
+            alpha = cfg["alpha"]
         except KeyError:
-            alpha = cfg['negative_slope']
-        self.stack_vars += 'float ' + layer.name + \
-            '_alpha = ' + str(alpha) + '; \n'
-        self.stack_vars += '\n\n'
+            alpha = cfg["negative_slope"]
+        self.stack_vars += "float " + layer.name + "_alpha = " + str(alpha) + "; \n"
+        self.stack_vars += "\n\n"
 
     def _write_weights_ThresholdedReLU(self, layer):
         cfg = layer.get_config()
-        theta = cfg['theta']
-        self.stack_vars = 'float ' + layer.name + \
-            '_theta = ' + str(theta) + '; \n'
-        self.stack_vars += '\n\n'
+        theta = cfg["theta"]
+        self.stack_vars = "float " + layer.name + "_theta = " + str(theta) + "; \n"
+        self.stack_vars += "\n\n"
 
     def _write_weights_ReLU(self, layer):
         cfg = layer.get_config()
-        max_value = cfg['max_value']
-        negative_slope = cfg['negative_slope']
-        threshold = cfg['threshold']
+        max_value = cfg["max_value"]
+        negative_slope = cfg["negative_slope"]
+        threshold = cfg["threshold"]
         if max_value is None:
-            max_value = 'HUGE_VALF'
-        self.stack_vars += 'float ' + layer.name + \
-            '_max_value = ' + str(max_value) + '; \n'
-        self.stack_vars += 'float ' + layer.name + '_negative_slope = ' + \
-            str(negative_slope) + '; \n'
-        self.stack_vars += 'float ' + layer.name + \
-            '_threshold = ' + str(threshold) + '; \n'
-        self.stack_vars += '\n\n'
+            max_value = "HUGE_VALF"
+        self.stack_vars += (
+            "float " + layer.name + "_max_value = " + str(max_value) + "; \n"
+        )
+        self.stack_vars += (
+            "float " + layer.name + "_negative_slope = " + str(negative_slope) + "; \n"
+        )
+        self.stack_vars += (
+            "float " + layer.name + "_threshold = " + str(threshold) + "; \n"
+        )
+        self.stack_vars += "\n\n"
 
     def _write_weights_PReLU(self, layer):
-        self._write_weights_array2c(
-            layer.get_weights()[0], layer.name + '_alpha')
-        self.stack_vars += '\n\n'
+        self._write_weights_array2c(layer.get_weights()[0], layer.name + "_alpha")
+        self.stack_vars += "\n\n"
 
     def _write_weights_Reshape(self, layer, skip_outputs=False):
         cfg = layer.get_config()
         nm = layer.name
         if not skip_outputs:
             self._write_outputs(layer)
-        newshp = cfg['target_shape']
+        newshp = cfg["target_shape"]
         newndim = len(newshp)
-        newshp = np.concatenate((newshp, np.ones(maxndim-newndim)))
-        self.stack_vars += 'size_t ' + nm + \
-            '_newndim = ' + str(newndim) + '; \n'
-        self.stack_vars += 'size_t ' + nm + '_newshp[K2C_MAX_NDIM] = {' + \
-            str(np.array2string(newshp.astype(int),
-                                separator=',')[1:-1]) + '}; \n'
-        self.stack_vars += '\n\n'
+        newshp = np.concatenate((newshp, np.ones(maxndim - newndim)))
+        self.stack_vars += "size_t " + nm + "_newndim = " + str(newndim) + "; \n"
+        self.stack_vars += (
+            "size_t "
+            + nm
+            + "_newshp[K2C_MAX_NDIM] = {"
+            + str(np.array2string(newshp.astype(int), separator=",")[1:-1])
+            + "}; \n"
+        )
+        self.stack_vars += "\n\n"
 
     def _write_weights_Permute(self, layer, skip_outputs=False):
         cfg = layer.get_config()
         if not skip_outputs:
             self._write_outputs(layer)
-        permute = np.array(cfg['dims']).astype(int) - 1
-        self.stack_vars += 'size_t ' + layer.name + '_permute[' + str(permute.size) + '] = {' +\
-            str(np.array2string(permute.astype(int),
-                                separator=',')[1:-1]) + '}; \n'
-        self.stack_vars += '\n\n'
+        permute = np.array(cfg["dims"]).astype(int) - 1
+        self.stack_vars += (
+            "size_t "
+            + layer.name
+            + "_permute["
+            + str(permute.size)
+            + "] = {"
+            + str(np.array2string(permute.astype(int), separator=",")[1:-1])
+            + "}; \n"
+        )
+        self.stack_vars += "\n\n"
 
     def _write_weights_RepeatVector(self, layer, skip_outputs=False):
         cfg = layer.get_config()
         if not skip_outputs:
             self._write_outputs(layer)
-        n = cfg['n']
-        self.stack_vars += 'size_t ' + layer.name + '_n = ' + str(n) + '; \n'
-        self.stack_vars += '\n\n'
+        n = cfg["n"]
+        self.stack_vars += "size_t " + layer.name + "_n = " + str(n) + "; \n"
+        self.stack_vars += "\n\n"
 
     def _write_weights_Dot(self, layer, skip_outputs=False):
         cfg = layer.get_config()
         nm = layer.name
         if not skip_outputs:
             self._write_outputs(layer)
-        work_size = np.prod(layer.input[0].shape[1:]) + \
-            np.prod(layer.input[1].shape[1:])
-        axes = np.array(cfg['axes']) - 1
-        self.stack_vars += 'size_t ' + nm + \
-            '_axesA[1] = {' + str(axes[0]) + '}; \n'
-        self.stack_vars += 'size_t ' + nm + \
-            '_axesB[1] = {' + str(axes[1]) + '}; \n'
-        self.stack_vars += 'size_t ' + nm + '_naxes = 1; \n'
-        self.stack_vars += 'float ' + nm + \
-            '_fwork[' + str(work_size) + '] = {0}; \n'
-        self.stack_vars += 'int ' + nm + '_normalize = ' + \
-            str(int(cfg['normalize'])) + '; \n'
-        self.stack_vars += '\n\n'
+        work_size = np.prod(layer.input[0].shape[1:]) + np.prod(
+            layer.input[1].shape[1:]
+        )
+        axes = np.array(cfg["axes"]) - 1
+        self.stack_vars += "size_t " + nm + "_axesA[1] = {" + str(axes[0]) + "}; \n"
+        self.stack_vars += "size_t " + nm + "_axesB[1] = {" + str(axes[1]) + "}; \n"
+        self.stack_vars += "size_t " + nm + "_naxes = 1; \n"
+        self.stack_vars += "float " + nm + "_fwork[" + str(work_size) + "] = {0}; \n"
+        self.stack_vars += (
+            "int " + nm + "_normalize = " + str(int(cfg["normalize"])) + "; \n"
+        )
+        self.stack_vars += "\n\n"
 
     def _write_weights_Embedding(self, layer, skip_outputs=False):
         nm = layer.name
         if not skip_outputs:
             self._write_outputs(layer)
         kernel = layer.get_weights()[0]
-        self._write_weights_array2c(kernel, nm+'_kernel')
-        self.stack_vars += '\n\n'
+        self._write_weights_array2c(kernel, nm + "_kernel")
+        self.stack_vars += "\n\n"
 
     def _write_weights_UpSampling1D(self, layer, skip_outputs=False):
         cfg = layer.get_config()
         nm = layer.name
         if not skip_outputs:
             self._write_outputs(layer)
-        size = cfg['size']
-        self.stack_vars += 'size_t ' + nm + '_size = ' + str(size) + '; \n'
-        self.stack_vars += '\n\n'
+        size = cfg["size"]
+        self.stack_vars += "size_t " + nm + "_size = " + str(size) + "; \n"
+        self.stack_vars += "\n\n"
 
     def _write_weights_UpSampling2D(self, layer, skip_outputs=False):
         cfg = layer.get_config()
         nm = layer.name
         if not skip_outputs:
             self._write_outputs(layer)
-        size = cfg['size']
-        self.stack_vars += 'size_t ' + nm + '_size[2] = {' + str(size[0]) + \
-            ',' + str(size[1]) + '}; \n'
-        self.stack_vars += '\n\n'
+        size = cfg["size"]
+        self.stack_vars += (
+            "size_t "
+            + nm
+            + "_size[2] = {"
+            + str(size[0])
+            + ","
+            + str(size[1])
+            + "}; \n"
+        )
+        self.stack_vars += "\n\n"
 
     def _write_weights_UpSampling3D(self, layer, skip_outputs=False):
         cfg = layer.get_config()
         nm = layer.name
         if not skip_outputs:
             self._write_outputs(layer)
-        size = cfg['size']
-        self.stack_vars += 'size_t ' + nm + '_size[3] = {' + str(size[0]) + \
-            ',' + str(size[1]) + ',' + str(size[2]) + '}; \n'
-        self.stack_vars += '\n\n'
+        size = cfg["size"]
+        self.stack_vars += (
+            "size_t "
+            + nm
+            + "_size[3] = {"
+            + str(size[0])
+            + ","
+            + str(size[1])
+            + ","
+            + str(size[2])
+            + "}; \n"
+        )
+        self.stack_vars += "\n\n"
 
     def _write_weights_Cropping1D(self, layer, skip_outputs=False):
         nm = layer.name
         if not skip_outputs:
             self._write_outputs(layer)
         cfg = layer.get_config()
-        crop_top = cfg['cropping'][0]
-        crop_bottom = cfg['cropping'][1]
-        self.stack_vars += 'size_t ' + nm + '_crop[2] = {' + str(crop_top) + ','\
-            + str(crop_bottom) + '}; \n'
-        self.stack_vars += '\n\n'
+        crop_top = cfg["cropping"][0]
+        crop_bottom = cfg["cropping"][1]
+        self.stack_vars += (
+            "size_t "
+            + nm
+            + "_crop[2] = {"
+            + str(crop_top)
+            + ","
+            + str(crop_bottom)
+            + "}; \n"
+        )
+        self.stack_vars += "\n\n"
 
     def _write_weights_Cropping2D(self, layer, skip_outputs=False):
         nm = layer.name
         if not skip_outputs:
             self._write_outputs(layer)
         cfg = layer.get_config()
-        crop_top = cfg['cropping'][0][0]
-        crop_bottom = cfg['cropping'][0][1]
-        crop_left = cfg['cropping'][1][0]
-        crop_right = cfg['cropping'][1][1]
-        self.stack_vars += 'size_t ' + nm + '_crop[4] = {' + str(crop_top) + ','\
-            + str(crop_bottom) + ',' + str(crop_left) + \
-            ',' + str(crop_right) + '}; \n'
-        self.stack_vars += '\n\n'
+        crop_top = cfg["cropping"][0][0]
+        crop_bottom = cfg["cropping"][0][1]
+        crop_left = cfg["cropping"][1][0]
+        crop_right = cfg["cropping"][1][1]
+        self.stack_vars += (
+            "size_t "
+            + nm
+            + "_crop[4] = {"
+            + str(crop_top)
+            + ","
+            + str(crop_bottom)
+            + ","
+            + str(crop_left)
+            + ","
+            + str(crop_right)
+            + "}; \n"
+        )
+        self.stack_vars += "\n\n"
 
     def _write_weights_Cropping3D(self, layer, skip_outputs=False):
         nm = layer.name
         if not skip_outputs:
             self._write_outputs(layer)
         cfg = layer.get_config()
-        crop0 = cfg['cropping'][0][0]
-        crop1 = cfg['cropping'][0][1]
-        crop2 = cfg['cropping'][1][0]
-        crop3 = cfg['cropping'][1][1]
-        crop4 = cfg['cropping'][2][0]
-        crop5 = cfg['cropping'][2][1]
-        self.stack_vars += 'size_t ' + nm + '_crop[6] = {' + str(crop0) + ','\
-            + str(crop1) + ',' + str(crop2) + ',' + str(crop3) + \
-            ',' + str(crop4) + ',' + str(crop5) + '}; \n'
-        self.stack_vars += '\n\n'
+        crop0 = cfg["cropping"][0][0]
+        crop1 = cfg["cropping"][0][1]
+        crop2 = cfg["cropping"][1][0]
+        crop3 = cfg["cropping"][1][1]
+        crop4 = cfg["cropping"][2][0]
+        crop5 = cfg["cropping"][2][1]
+        self.stack_vars += (
+            "size_t "
+            + nm
+            + "_crop[6] = {"
+            + str(crop0)
+            + ","
+            + str(crop1)
+            + ","
+            + str(crop2)
+            + ","
+            + str(crop3)
+            + ","
+            + str(crop4)
+            + ","
+            + str(crop5)
+            + "}; \n"
+        )
+        self.stack_vars += "\n\n"
 
     def _write_weights_ZeroPadding1D(self, layer, skip_outputs=False):
         nm = layer.name
         if not skip_outputs:
             self._write_outputs(layer)
         cfg = layer.get_config()
-        pad_top = cfg['padding'][0]
-        pad_bottom = cfg['padding'][1]
-        self.stack_vars += 'size_t ' + nm + '_pad[2] = {' + str(pad_top) + ','\
-            + str(pad_bottom) + '}; \n'
-        self.stack_vars += 'float ' + nm + '_fill = 0.0f; \n'
-        self.stack_vars += '\n\n'
+        pad_top = cfg["padding"][0]
+        pad_bottom = cfg["padding"][1]
+        self.stack_vars += (
+            "size_t "
+            + nm
+            + "_pad[2] = {"
+            + str(pad_top)
+            + ","
+            + str(pad_bottom)
+            + "}; \n"
+        )
+        self.stack_vars += "float " + nm + "_fill = 0.0f; \n"
+        self.stack_vars += "\n\n"
 
     def _write_weights_ZeroPadding2D(self, layer, skip_outputs=False):
         nm = layer.name
         if not skip_outputs:
             self._write_outputs(layer)
         cfg = layer.get_config()
-        pad_top = cfg['padding'][0][0]
-        pad_bottom = cfg['padding'][0][1]
-        pad_left = cfg['padding'][1][0]
-        pad_right = cfg['padding'][1][1]
-        self.stack_vars += 'size_t ' + nm + '_pad[4] = {' + str(pad_top) + ','\
-            + str(pad_bottom) + ',' + str(pad_left) + \
-            ',' + str(pad_right) + '}; \n'
-        self.stack_vars += 'float ' + nm + '_fill = 0.0f; \n'
-        self.stack_vars += '\n\n'
+        pad_top = cfg["padding"][0][0]
+        pad_bottom = cfg["padding"][0][1]
+        pad_left = cfg["padding"][1][0]
+        pad_right = cfg["padding"][1][1]
+        self.stack_vars += (
+            "size_t "
+            + nm
+            + "_pad[4] = {"
+            + str(pad_top)
+            + ","
+            + str(pad_bottom)
+            + ","
+            + str(pad_left)
+            + ","
+            + str(pad_right)
+            + "}; \n"
+        )
+        self.stack_vars += "float " + nm + "_fill = 0.0f; \n"
+        self.stack_vars += "\n\n"
 
     def _write_weights_ZeroPadding3D(self, layer, skip_outputs=False):
         nm = layer.name
         if not skip_outputs:
             self._write_outputs(layer)
         cfg = layer.get_config()
-        pad0 = cfg['padding'][0][0]
-        pad1 = cfg['padding'][0][1]
-        pad2 = cfg['padding'][1][0]
-        pad3 = cfg['padding'][1][1]
-        pad4 = cfg['padding'][2][0]
-        pad5 = cfg['padding'][2][1]
-        self.stack_vars += 'size_t ' + nm + '_pad[6] = {' + str(pad0) + ','\
-            + str(pad1) + ',' + str(pad2) + ',' + str(pad3) + \
-            ',' + str(pad4) + ',' + str(pad5) + '}; \n'
-        self.stack_vars += 'float ' + nm + '_fill = 0.0f; \n'
-        self.stack_vars += '\n\n'
+        pad0 = cfg["padding"][0][0]
+        pad1 = cfg["padding"][0][1]
+        pad2 = cfg["padding"][1][0]
+        pad3 = cfg["padding"][1][1]
+        pad4 = cfg["padding"][2][0]
+        pad5 = cfg["padding"][2][1]
+        self.stack_vars += (
+            "size_t "
+            + nm
+            + "_pad[6] = {"
+            + str(pad0)
+            + ","
+            + str(pad1)
+            + ","
+            + str(pad2)
+            + ","
+            + str(pad3)
+            + ","
+            + str(pad4)
+            + ","
+            + str(pad5)
+            + "}; \n"
+        )
+        self.stack_vars += "float " + nm + "_fill = 0.0f; \n"
+        self.stack_vars += "\n\n"
 
     def _write_weights_ActivityRegularization(self, layer):
         # no weights needed
@@ -968,8 +1312,7 @@ class Weights2C():
         for i, outp in enumerate(outputs):
             inshp = layer.input.shape[1:]
             if outp not in self.model_io[1]:
-                self._write_weights_array2c(
-                    np.zeros(inshp).flatten(), outp + '_output')
+                self._write_weights_array2c(np.zeros(inshp).flatten(), outp + "_output")
 
     def _write_weights_Activation(self, layer):
         # no weights needed
@@ -985,9 +1328,13 @@ class Weights2C():
     def _write_weights_TensorFlowOpLayer(self, layer, skip_outputs=False):
         # Special case when tf.split is used
         # no weights needed
-        if 'split' in layer.name:
+        if "split" in layer.name:
             if not skip_outputs:
                 self._write_outputs(layer)
         else:
-            raise AssertionError('Unsupported TensorFlowOpLayer: ' + layer.name + '\n'
-                                 + 'Currently only split operation is supported.')
+            raise AssertionError(
+                "Unsupported TensorFlowOpLayer: "
+                + layer.name
+                + "\n"
+                + "Currently only split operation is supported."
+            )

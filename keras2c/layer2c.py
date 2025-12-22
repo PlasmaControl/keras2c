@@ -370,7 +370,6 @@ class Layers2C:
         activation = "k2c_" + layer.get_config()["activation"]
 
         # Write the conv2d_transpose layer
-        # Note: Keras uses 'crop' parameter for Conv2DTranspose instead of 'padding'
         self.layers += (
             "k2c_conv2d_transpose("
             + outputs
@@ -384,9 +383,9 @@ class Layers2C:
             + nm
             + "_stride,"
             + nm
-            + "_start_crop_height,"
+            + "_dilation,"
             + nm
-            + "_start_crop_width,"
+            + "_padding,"
             + activation
             + "); \n"
         )
