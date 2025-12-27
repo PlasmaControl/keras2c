@@ -8,8 +8,13 @@ Writes individual layers to C code
 """
 
 # imports
-from keras2c.io_parsing import layer_type, get_model_io_names, get_all_io_names, get_layer_io_names, flatten
-
+from keras2c.io_parsing import (
+    flatten,
+    get_all_io_names,
+    get_layer_io_names,
+    get_model_io_names,
+    layer_type,
+)
 
 # Original author
 # __author__ = "Rory Conlin"
@@ -23,7 +28,7 @@ __author__ = "Anchal Gupta"
 __email__ = "guptaa@fusion.gat.com"
 
 
-class Layers2C():
+class Layers2C:
     """Creates an object to parse and write layer functions.
 
     Args:
@@ -167,88 +172,166 @@ class Layers2C():
 
     def _write_layer_TimeDistributed(self, layer, inputs, outputs, i):
         # nm, pnm, inputs, outputs = self._format_io_names(layer, inputs, outputs)
-        self.layers += 'for(size_t i=0; i<' + layer.name + \
-            '_timesteps; ++i) { \n'
+        self.layers += "for(size_t i=0; i<" + layer.name + "_timesteps; ++i) { \n"
         if inputs in self.model_inputs:
-            self.layers += layer.layer.name + '_timeslice_input.array = &' + \
-                inputs + '_input->array[i*' + layer.name + '_in_offset]; \n'
+            self.layers += (
+                layer.layer.name
+                + "_timeslice_input.array = &"
+                + inputs
+                + "_input->array[i*"
+                + layer.name
+                + "_in_offset]; \n"
+            )
         else:
-            self.layers += layer.layer.name + '_timeslice_input.array = &' + \
-                inputs + '_output.array[i*' + layer.name + '_in_offset]; \n'
+            self.layers += (
+                layer.layer.name
+                + "_timeslice_input.array = &"
+                + inputs
+                + "_output.array[i*"
+                + layer.name
+                + "_in_offset]; \n"
+            )
         if outputs in self.model_outputs:
-            self.layers += layer.layer.name + '_timeslice_output.array = &' + \
-                outputs + '_output->array[i*' + layer.name + '_out_offset]; \n'
+            self.layers += (
+                layer.layer.name
+                + "_timeslice_output.array = &"
+                + outputs
+                + "_output->array[i*"
+                + layer.name
+                + "_out_offset]; \n"
+            )
         else:
-            self.layers += layer.layer.name + '_timeslice_output.array = &' + \
-                outputs + '_output.array[i*' + layer.name + '_out_offset]; \n'
+            self.layers += (
+                layer.layer.name
+                + "_timeslice_output.array = &"
+                + outputs
+                + "_output.array[i*"
+                + layer.name
+                + "_out_offset]; \n"
+            )
 
-        inp = '&' + layer.layer.name + '_timeslice'
-        outp = '&' + layer.layer.name + '_timeslice'
-        method = getattr(self, '_write_layer_' + layer_type(layer.layer))
+        inp = "&" + layer.layer.name + "_timeslice"
+        outp = "&" + layer.layer.name + "_timeslice"
+        method = getattr(self, "_write_layer_" + layer_type(layer.layer))
         method(layer.layer, inp, outp, i)
-        self.layers += '\n } \n'
+        self.layers += "\n } \n"
 
     def _write_layer_Bidirectional(self, layer, inputs, outputs, i):
         subname = layer.forward_layer.name
-        method = getattr(self, '_write_layer_' + layer_type(layer.forward_layer))
+        method = getattr(self, "_write_layer_" + layer_type(layer.forward_layer))
         method(layer.forward_layer, inputs, subname, i)
         subname = layer.backward_layer.name
-        method = getattr(self, '_write_layer_' + layer_type(layer.backward_layer))
+        method = getattr(self, "_write_layer_" + layer_type(layer.backward_layer))
         method(layer.backward_layer, inputs, subname, i)
         mode = layer.merge_mode
         inputs = [layer.forward_layer.name, layer.backward_layer.name]
         if layer.return_sequences:
-            self.layers += 'k2c_flip(&' + subname + '_output,0); \n'
-        if mode == 'sum':
-            self._write_layer_Merge(layer, inputs, outputs, 0, 'Add')
-        elif mode == 'mul':
-            self._write_layer_Merge(layer, inputs, outputs, 0, 'Multiply')
-        elif mode == 'ave':
-            self._write_layer_Merge(layer, inputs, outputs, 0, 'Average')
-        elif mode == 'concat':
+            self.layers += "k2c_flip(&" + subname + "_output,0); \n"
+        if mode == "sum":
+            self._write_layer_Merge(layer, inputs, outputs, 0, "Add")
+        elif mode == "mul":
+            self._write_layer_Merge(layer, inputs, outputs, 0, "Multiply")
+        elif mode == "ave":
+            self._write_layer_Merge(layer, inputs, outputs, 0, "Average")
+        elif mode == "concat":
             self._write_layer_Concatenate(layer, inputs, outputs, 0)
 
     def _write_layer_LSTM(self, layer, inputs, outputs, i):
-        nm, pnm, inputs, outputs = self._format_io_names(
-            layer, inputs, outputs)
-        self.layers += 'k2c_lstm(' + outputs + ',' + inputs + ',' + nm + \
-                       '_state,' + pnm + '_kernel, \n\t' + pnm + \
-                       '_recurrent_kernel,' + pnm + '_bias,' + nm + \
-                       '_fwork, \n\t' + nm + '_go_backwards,' + nm + \
-                       '_return_sequences, \n\t' + \
-                       'k2c_' + layer.get_config()['recurrent_activation'] + \
-                       ',' + 'k2c_' + \
-            layer.get_config()['activation'] + '); \n'
+        nm, pnm, inputs, outputs = self._format_io_names(layer, inputs, outputs)
+        self.layers += (
+            "k2c_lstm("
+            + outputs
+            + ","
+            + inputs
+            + ","
+            + nm
+            + "_state,"
+            + pnm
+            + "_kernel, \n\t"
+            + pnm
+            + "_recurrent_kernel,"
+            + pnm
+            + "_bias,"
+            + nm
+            + "_fwork, \n\t"
+            + nm
+            + "_go_backwards,"
+            + nm
+            + "_return_sequences, \n\t"
+            + "k2c_"
+            + layer.get_config()["recurrent_activation"]
+            + ","
+            + "k2c_"
+            + layer.get_config()["activation"]
+            + "); \n"
+        )
 
     def _write_layer_Dense(self, layer, inputs, outputs, i):
-        nm, pnm, inputs, outputs = self._format_io_names(
-            layer, inputs, outputs)
-        activation = 'k2c_' + layer.get_config()['activation']
+        nm, pnm, inputs, outputs = self._format_io_names(layer, inputs, outputs)
+        activation = "k2c_" + layer.get_config()["activation"]
 
-        self.layers += 'k2c_dense(' + outputs + ',' + inputs + ',' + pnm + \
-            '_kernel, \n\t' + pnm + '_bias,' + activation + ',' + \
-            nm + '_fwork); \n'
+        self.layers += (
+            "k2c_dense("
+            + outputs
+            + ","
+            + inputs
+            + ","
+            + pnm
+            + "_kernel, \n\t"
+            + pnm
+            + "_bias,"
+            + activation
+            + ","
+            + nm
+            + "_fwork); \n"
+        )
 
     def _write_layer_Conv(self, layer, inputs, outputs, i):
-        nm, pnm, inputs, outputs = self._format_io_names(
-            layer, inputs, outputs)
-        activation = 'k2c_' + layer.get_config()['activation']
-        if layer_type(layer)[-2:] == '1D':
-            fname = 'k2c_conv1d('
-        elif layer_type(layer)[-2:] == '2D':
-            fname = 'k2c_conv2d('
-        elif layer_type(layer)[-2:] == '3D':
-            fname = 'k2c_conv3d('
-        if layer.get_config()['padding'] == 'valid':
-            self.layers += fname + outputs + ',' + inputs + ',' + \
-                pnm + '_kernel, \n\t' + pnm + '_bias,' + nm + \
-                '_stride,' + nm + '_dilation,' + activation + '); \n'
+        nm, pnm, inputs, outputs = self._format_io_names(layer, inputs, outputs)
+        activation = "k2c_" + layer.get_config()["activation"]
+        if layer_type(layer)[-2:] == "1D":
+            fname = "k2c_conv1d("
+        elif layer_type(layer)[-2:] == "2D":
+            fname = "k2c_conv2d("
+        elif layer_type(layer)[-2:] == "3D":
+            fname = "k2c_conv3d("
+        if layer.get_config()["padding"] == "valid":
+            self.layers += (
+                fname
+                + outputs
+                + ","
+                + inputs
+                + ","
+                + pnm
+                + "_kernel, \n\t"
+                + pnm
+                + "_bias,"
+                + nm
+                + "_stride,"
+                + nm
+                + "_dilation,"
+                + activation
+                + "); \n"
+            )
         else:
-            self._write_layer_ZeroPad(layer, inputs, pnm +
-                                      '_padded_input', i)
-            self.layers += fname + outputs + ',' + pnm + \
-                '_padded_input,' + pnm + '_kernel, \n\t' + \
-                pnm + '_bias,' + nm + '_stride,' + nm + '_dilation,' + activation + '); \n'
+            self._write_layer_ZeroPad(layer, inputs, pnm + "_padded_input", i)
+            self.layers += (
+                fname
+                + outputs
+                + ","
+                + pnm
+                + "_padded_input,"
+                + pnm
+                + "_kernel, \n\t"
+                + pnm
+                + "_bias,"
+                + nm
+                + "_stride,"
+                + nm
+                + "_dilation,"
+                + activation
+                + "); \n"
+            )
 
     def _write_layer_Conv1D(self, layer, inputs, outputs, i):
         self._write_layer_Conv(layer, inputs, outputs, i)
@@ -260,14 +343,52 @@ class Layers2C():
         self._write_layer_Conv(layer, inputs, outputs, i)
 
     def _write_layer_Conv1DTranspose(self, layer, inputs, outputs, i):
-        nm, pnm, inputs, outputs = self._format_io_names(
-            layer, inputs, outputs)
-        activation = 'k2c_' + layer.get_config()['activation']
+        nm, pnm, inputs, outputs = self._format_io_names(layer, inputs, outputs)
+        activation = "k2c_" + layer.get_config()["activation"]
 
         # Write the conv1d_transpose layer
-        self.layers += 'k2c_conv1d_transpose(' + outputs + ',' + inputs + ',' + \
-            pnm + '_kernel, \n\t' + pnm + '_bias,' + nm + '_stride,' + \
-            nm + '_start_crop,' + activation + '); \n'
+        self.layers += (
+            "k2c_conv1d_transpose("
+            + outputs
+            + ","
+            + inputs
+            + ","
+            + pnm
+            + "_kernel, \n\t"
+            + pnm
+            + "_bias,"
+            + nm
+            + "_stride,"
+            + nm
+            + "_start_crop,"
+            + activation
+            + "); \n"
+        )
+
+    def _write_layer_Conv2DTranspose(self, layer, inputs, outputs, i):
+        nm, pnm, inputs, outputs = self._format_io_names(layer, inputs, outputs)
+        activation = "k2c_" + layer.get_config()["activation"]
+
+        # Write the conv2d_transpose layer
+        self.layers += (
+            "k2c_conv2d_transpose("
+            + outputs
+            + ","
+            + inputs
+            + ","
+            + pnm
+            + "_kernel, \n\t"
+            + pnm
+            + "_bias,"
+            + nm
+            + "_stride,"
+            + nm
+            + "_dilation,"
+            + nm
+            + "_padding,"
+            + activation
+            + "); \n"
+        )
 
     def _write_layer_MaxPooling1D(self, layer, inputs, outputs, i):
         self._write_layer_Pooling(layer, inputs, outputs, i)
@@ -276,25 +397,23 @@ class Layers2C():
         self._write_layer_Pooling(layer, inputs, outputs, i)
 
     def _write_layer_Pooling(self, layer, inputs, outputs, i):
-        nm, pnm, inputs, outputs = self._format_io_names(
-            layer, inputs, outputs)
-        if 'Max' in layer_type(layer):
-            s = 'k2c_maxpool'
+        nm, pnm, inputs, outputs = self._format_io_names(layer, inputs, outputs)
+        if "Max" in layer_type(layer):
+            s = "k2c_maxpool"
         else:
-            s = 'k2c_avgpool'
-        if layer_type(layer)[-2:] == '1D':
-            s += '1d(' + outputs + ','
-        elif layer_type(layer)[-2:] == '2D':
-            s += '2d(' + outputs + ','
+            s = "k2c_avgpool"
+        if layer_type(layer)[-2:] == "1D":
+            s += "1d(" + outputs + ","
+        elif layer_type(layer)[-2:] == "2D":
+            s += "2d(" + outputs + ","
 
-        if layer.get_config()['padding'] == 'valid':
-            s += inputs + ','
+        if layer.get_config()["padding"] == "valid":
+            s += inputs + ","
         else:
-            self._write_layer_ZeroPad(layer, inputs, pnm +
-                                      '_padded_input', i)
-            s += pnm + '_padded_input,'
+            self._write_layer_ZeroPad(layer, inputs, pnm + "_padded_input", i)
+            s += pnm + "_padded_input,"
 
-        s += nm + '_pool_size, \n\t' + nm + '_stride); \n'
+        s += nm + "_pool_size, \n\t" + nm + "_stride); \n"
         self.layers += s
 
     def _write_layer_MaxPooling2D(self, layer, inputs, outputs, i):
@@ -323,87 +442,137 @@ class Layers2C():
 
     def _write_layer_GlobalPooling(self, layer, inputs, outputs, i):
         _, _, inputs, outputs = self._format_io_names(layer, inputs, outputs)
-        if 'Max' in layer_type(layer):
-            self.layers += 'k2c_global_max_pooling('
+        if "Max" in layer_type(layer):
+            self.layers += "k2c_global_max_pooling("
         else:
-            self.layers += 'k2c_global_avg_pooling('
-        self.layers += outputs + ',' + inputs + '); \n'
+            self.layers += "k2c_global_avg_pooling("
+        self.layers += outputs + "," + inputs + "); \n"
 
     def _write_layer_Add(self, layer, inputs, outputs, i):
-        self._write_layer_Merge(layer, inputs, outputs, i, 'Add')
+        self._write_layer_Merge(layer, inputs, outputs, i, "Add")
 
     def _write_layer_Subtract(self, layer, inputs, outputs, i):
-        self._write_layer_Merge(layer, inputs, outputs, i, 'Subtract')
+        self._write_layer_Merge(layer, inputs, outputs, i, "Subtract")
 
     def _write_layer_Multiply(self, layer, inputs, outputs, i):
-        self._write_layer_Merge(layer, inputs, outputs, i, 'Multiply')
+        self._write_layer_Merge(layer, inputs, outputs, i, "Multiply")
 
     def _write_layer_Maximum(self, layer, inputs, outputs, i):
-        self._write_layer_Merge(layer, inputs, outputs, i, 'Maximum')
+        self._write_layer_Merge(layer, inputs, outputs, i, "Maximum")
 
     def _write_layer_Minimum(self, layer, inputs, outputs, i):
-        self._write_layer_Merge(layer, inputs, outputs, i, 'Minimum')
+        self._write_layer_Merge(layer, inputs, outputs, i, "Minimum")
 
     def _write_layer_Average(self, layer, inputs, outputs, i):
-        self._write_layer_Merge(layer, inputs, outputs, i, 'Average')
+        self._write_layer_Merge(layer, inputs, outputs, i, "Average")
 
     def _write_layer_Merge(self, layer, inputs, outputs, i, mode):
         nm, _, inputs, outputs = self._format_io_names(layer, inputs, outputs)
-        if mode == 'Subtract':
-            self.layers += 'k2c_subtract('
-        elif mode == 'Add':
-            self.layers += 'k2c_add('
-        elif mode == 'Multiply':
-            self.layers += 'k2c_multiply('
-        elif mode == 'Average':
-            self.layers += 'k2c_average('
-        elif mode == 'Maximum':
-            self.layers += 'k2c_max('
-        elif mode == 'Minimum':
-            self.layers += 'k2c_min('
-        self.layers += outputs + ',' + nm + '_num_tensors' + str(i) + ','
-        c = ','.join(inputs)
-        self.layers += c + '); \n'
+        if mode == "Subtract":
+            self.layers += "k2c_subtract("
+        elif mode == "Add":
+            self.layers += "k2c_add("
+        elif mode == "Multiply":
+            self.layers += "k2c_multiply("
+        elif mode == "Average":
+            self.layers += "k2c_average("
+        elif mode == "Maximum":
+            self.layers += "k2c_max("
+        elif mode == "Minimum":
+            self.layers += "k2c_min("
+        self.layers += outputs + "," + nm + "_num_tensors" + str(i) + ","
+        c = ",".join(inputs)
+        self.layers += c + "); \n"
 
     def _write_layer_Concatenate(self, layer, inputs, outputs, i):
         nm, _, inputs, outputs = self._format_io_names(layer, inputs, outputs)
-        self.layers += 'k2c_concatenate(' + outputs + ',' + nm + \
-                       '_axis' + ',' + nm + '_num_tensors' + str(i) + ','
-        c = ','.join(inputs)
-        self.layers += c + '); \n'
+        self.layers += (
+            "k2c_concatenate("
+            + outputs
+            + ","
+            + nm
+            + "_axis"
+            + ","
+            + nm
+            + "_num_tensors"
+            + str(i)
+            + ","
+        )
+        c = ",".join(inputs)
+        self.layers += c + "); \n"
 
     def _write_layer_GRU(self, layer, inputs, outputs, i):
-        nm, pnm, inputs, outputs = self._format_io_names(
-            layer, inputs, outputs)
-        self.layers += 'k2c_gru(' + outputs + ',' + inputs + ',' + \
-            nm + '_state,' + pnm + '_kernel, \n\t' + \
-            pnm + '_recurrent_kernel,' + pnm + '_bias,' + \
-            nm + '_fwork, \n\t' + nm + '_reset_after,' + \
-            nm + '_go_backwards,' + nm + '_return_sequences, \n\t' + \
-            'k2c_' + layer.get_config()['recurrent_activation'] + \
-            ',' + 'k2c_' + layer.get_config()['activation'] + '); \n'
+        nm, pnm, inputs, outputs = self._format_io_names(layer, inputs, outputs)
+        self.layers += (
+            "k2c_gru("
+            + outputs
+            + ","
+            + inputs
+            + ","
+            + nm
+            + "_state,"
+            + pnm
+            + "_kernel, \n\t"
+            + pnm
+            + "_recurrent_kernel,"
+            + pnm
+            + "_bias,"
+            + nm
+            + "_fwork, \n\t"
+            + nm
+            + "_reset_after,"
+            + nm
+            + "_go_backwards,"
+            + nm
+            + "_return_sequences, \n\t"
+            + "k2c_"
+            + layer.get_config()["recurrent_activation"]
+            + ","
+            + "k2c_"
+            + layer.get_config()["activation"]
+            + "); \n"
+        )
 
     def _write_layer_SimpleRNN(self, layer, inputs, outputs, i):
-        nm, pnm, inputs, outputs = self._format_io_names(
-            layer, inputs, outputs)
-        self.layers += 'k2c_simpleRNN(' + outputs + ',' + inputs + \
-            ',' + nm + '_state,' + pnm + '_kernel, \n\t' + \
-            pnm + '_recurrent_kernel,' + pnm + '_bias,' + \
-            nm + '_fwork, \n\t' + nm + '_go_backwards,' + \
-            nm + '_return_sequences,' + 'k2c_' + \
-            layer.get_config()['activation'] + '); \n'
+        nm, pnm, inputs, outputs = self._format_io_names(layer, inputs, outputs)
+        self.layers += (
+            "k2c_simpleRNN("
+            + outputs
+            + ","
+            + inputs
+            + ","
+            + nm
+            + "_state,"
+            + pnm
+            + "_kernel, \n\t"
+            + pnm
+            + "_recurrent_kernel,"
+            + pnm
+            + "_bias,"
+            + nm
+            + "_fwork, \n\t"
+            + nm
+            + "_go_backwards,"
+            + nm
+            + "_return_sequences,"
+            + "k2c_"
+            + layer.get_config()["activation"]
+            + "); \n"
+        )
 
     def _write_layer_Activation(self, layer, inputs, outputs, i):
         _, _, inputs, outputs, is_model_input, is_model_output = self._format_io_names(
-            layer, inputs, outputs, True)
-        activation = 'k2c_' + layer.get_config()['activation']
+            layer, inputs, outputs, True
+        )
+        activation = "k2c_" + layer.get_config()["activation"]
         if is_model_input:
-            inp = inputs + '->'
+            inp = inputs + "->"
         else:
-            inp = inputs[1:] + '.'
-        self.layers += activation + '(' + inp + 'array,' + inp + 'numel); \n'
-        self._write_dummy_layer(layer, inputs, outputs, i,
-                                is_model_input, is_model_output)
+            inp = inputs[1:] + "."
+        self.layers += activation + "(" + inp + "array," + inp + "numel); \n"
+        self._write_dummy_layer(
+            layer, inputs, outputs, i, is_model_input, is_model_output
+        )
 
     def _write_layer_LeakyReLU(self, layer, inputs, outputs, i):
         self._write_layer_AdvancedActivation(layer, inputs, outputs, i)
@@ -422,110 +591,237 @@ class Layers2C():
 
     def _write_layer_AdvancedActivation(self, layer, inputs, outputs, i):
         nm, _, inputs, outputs, is_model_input, is_model_output = self._format_io_names(
-            layer, inputs, outputs, True)
+            layer, inputs, outputs, True
+        )
         if is_model_input:
-            inp = inputs + '->'
+            inp = inputs + "->"
         else:
-            inp = inputs + '.'
+            inp = inputs + "."
 
-        if layer_type(layer) == 'LeakyReLU':
-            self.layers += 'k2c_LeakyReLU(' + inp + 'array,' + \
-                inp + 'numel,' + nm + '_alpha); \n'
-        if layer_type(layer) == 'PReLU':
-            self.layers += 'k2c_PReLU(' + inp + 'array,' + inp + \
-                'numel,' + nm + '_alpha.array); \n'
-        if layer_type(layer) == 'ELU':
-            self.layers += 'k2c_ELU(' + inp + 'array,' + inp + \
-                'numel,' + nm + '_alpha); \n'
-        if layer_type(layer) == 'ThresholdedReLU':
-            self.layers += 'k2c_ThresholdedReLU(' + inp + 'array,' + \
-                inp + 'numel,' + nm + '_theta); \n'
-        if layer_type(layer) == 'ReLU':
-            self.layers += 'k2c_ReLU(' + inp + 'array,' + inp + \
-                           'numel,' + nm + '_max_value, \n\t' + \
-                           nm + '_negative_slope,' + nm + '_threshold); \n'
-        self._write_dummy_layer(layer, inputs, outputs, i,
-                                is_model_input, is_model_output)
+        if layer_type(layer) == "LeakyReLU":
+            self.layers += (
+                "k2c_LeakyReLU(" + inp + "array," + inp + "numel," + nm + "_alpha); \n"
+            )
+        if layer_type(layer) == "PReLU":
+            self.layers += (
+                "k2c_PReLU("
+                + inp
+                + "array,"
+                + inp
+                + "numel,"
+                + nm
+                + "_alpha.array); \n"
+            )
+        if layer_type(layer) == "ELU":
+            self.layers += (
+                "k2c_ELU(" + inp + "array," + inp + "numel," + nm + "_alpha); \n"
+            )
+        if layer_type(layer) == "ThresholdedReLU":
+            self.layers += (
+                "k2c_ThresholdedReLU("
+                + inp
+                + "array,"
+                + inp
+                + "numel,"
+                + nm
+                + "_theta); \n"
+            )
+        if layer_type(layer) == "ReLU":
+            self.layers += (
+                "k2c_ReLU("
+                + inp
+                + "array,"
+                + inp
+                + "numel,"
+                + nm
+                + "_max_value, \n\t"
+                + nm
+                + "_negative_slope,"
+                + nm
+                + "_threshold); \n"
+            )
+        self._write_dummy_layer(
+            layer, inputs, outputs, i, is_model_input, is_model_output
+        )
 
-    def _write_dummy_layer(self, layer, inputs, outputs, i, is_model_input, is_model_output):
+    def _write_dummy_layer(
+        self, layer, inputs, outputs, i, is_model_input, is_model_output
+    ):
         outputs = outputs.replace("&", "")
         inputs = inputs.replace("&", "")
         if is_model_input and is_model_output:
-            self.layers += outputs + '->ndim = ' + \
-                inputs + '->ndim; // copy data into output struct \n'
-            self.layers += outputs + '->numel = ' + inputs + '->numel; \n'
-            self.layers += 'memcpy(&' + outputs + '->shape,&' + inputs + \
-                           '->shape,K2C_MAX_NDIM*sizeof(size_t));  \n'
-            self.layers += 'memcpy(' + outputs + '->array,' + inputs + '->array,' + \
-                           outputs + \
-                '->numel*sizeof(' + outputs + '->array[0])); \n'
+            self.layers += (
+                outputs
+                + "->ndim = "
+                + inputs
+                + "->ndim; // copy data into output struct \n"
+            )
+            self.layers += outputs + "->numel = " + inputs + "->numel; \n"
+            self.layers += (
+                "memcpy(&"
+                + outputs
+                + "->shape,&"
+                + inputs
+                + "->shape,K2C_MAX_NDIM*sizeof(size_t));  \n"
+            )
+            self.layers += (
+                "memcpy("
+                + outputs
+                + "->array,"
+                + inputs
+                + "->array,"
+                + outputs
+                + "->numel*sizeof("
+                + outputs
+                + "->array[0])); \n"
+            )
         elif is_model_input:
-            self.layers += 'k2c_tensor ' + outputs + '; \n'
-            self.layers += outputs + '.ndim = ' + \
-                inputs + '->ndim; // copy data into output struct \n'
-            self.layers += outputs + '.numel = ' + inputs + '->numel; \n'
-            self.layers += 'memcpy(' + outputs + '.shape,' + inputs + \
-                           '->shape,K2C_MAX_NDIM*sizeof(size_t));  \n'
-            self.layers += outputs + '.array = &' + inputs + \
-                '->array[0]; // rename for clarity \n'
+            self.layers += "k2c_tensor " + outputs + "; \n"
+            self.layers += (
+                outputs
+                + ".ndim = "
+                + inputs
+                + "->ndim; // copy data into output struct \n"
+            )
+            self.layers += outputs + ".numel = " + inputs + "->numel; \n"
+            self.layers += (
+                "memcpy("
+                + outputs
+                + ".shape,"
+                + inputs
+                + "->shape,K2C_MAX_NDIM*sizeof(size_t));  \n"
+            )
+            self.layers += (
+                outputs + ".array = &" + inputs + "->array[0]; // rename for clarity \n"
+            )
         elif is_model_output:
-            self.layers += outputs + '->ndim = ' + \
-                inputs + '.ndim; // copy data into output struct \n'
-            self.layers += outputs + '->numel = ' + inputs + '.numel; \n'
-            self.layers += 'memcpy(' + outputs + '->shape,' + inputs + \
-                           '.shape,K2C_MAX_NDIM*sizeof(size_t));  \n'
-            self.layers += 'memcpy(' + outputs + '->array,' + inputs + '.array,' + \
-                           outputs + \
-                '->numel*sizeof(' + outputs + '->array[0])); \n'
+            self.layers += (
+                outputs
+                + "->ndim = "
+                + inputs
+                + ".ndim; // copy data into output struct \n"
+            )
+            self.layers += outputs + "->numel = " + inputs + ".numel; \n"
+            self.layers += (
+                "memcpy("
+                + outputs
+                + "->shape,"
+                + inputs
+                + ".shape,K2C_MAX_NDIM*sizeof(size_t));  \n"
+            )
+            self.layers += (
+                "memcpy("
+                + outputs
+                + "->array,"
+                + inputs
+                + ".array,"
+                + outputs
+                + "->numel*sizeof("
+                + outputs
+                + "->array[0])); \n"
+            )
         else:
-            self.layers += 'k2c_tensor ' + outputs + '; \n'
-            self.layers += outputs + '.ndim = ' + \
-                inputs + '.ndim; // copy data into output struct \n'
-            self.layers += outputs + '.numel = ' + inputs + '.numel; \n'
-            self.layers += 'memcpy(' + outputs + '.shape,' + inputs + \
-                           '.shape,K2C_MAX_NDIM*sizeof(size_t));  \n'
-            self.layers += outputs + '.array = &' + inputs + \
-                '.array[0]; // rename for clarity \n'
+            self.layers += "k2c_tensor " + outputs + "; \n"
+            self.layers += (
+                outputs
+                + ".ndim = "
+                + inputs
+                + ".ndim; // copy data into output struct \n"
+            )
+            self.layers += outputs + ".numel = " + inputs + ".numel; \n"
+            self.layers += (
+                "memcpy("
+                + outputs
+                + ".shape,"
+                + inputs
+                + ".shape,K2C_MAX_NDIM*sizeof(size_t));  \n"
+            )
+            self.layers += (
+                outputs + ".array = &" + inputs + ".array[0]; // rename for clarity \n"
+            )
 
     def _write_layer_Reshape(self, layer, inputs, outputs, i):
         nm, _, inputs, outputs, is_model_input, is_model_output = self._format_io_names(
-            layer, inputs, outputs, True)
-        self.layers += 'k2c_reshape(' + outputs + ',' + inputs + ',' + nm + \
-            '_newshp,' + nm + '_newndim); \n'
+            layer, inputs, outputs, True
+        )
+        self.layers += (
+            "k2c_reshape("
+            + outputs
+            + ","
+            + inputs
+            + ","
+            + nm
+            + "_newshp,"
+            + nm
+            + "_newndim); \n"
+        )
 
     def _write_layer_Flatten(self, layer, inputs, outputs, i):
         _, _, inputs, outputs, is_model_input, is_model_output = self._format_io_names(
-            layer, inputs, outputs, True)
-        self.layers += 'k2c_flatten(' + outputs + ',' + inputs + '); \n'
+            layer, inputs, outputs, True
+        )
+        self.layers += "k2c_flatten(" + outputs + "," + inputs + "); \n"
 
     def _write_layer_Permute(self, layer, inputs, outputs, i):
         nm, _, inputs, outputs = self._format_io_names(layer, inputs, outputs)
-        self.layers += 'k2c_permute_dims(' + outputs + ',' + inputs + \
-            ',' + nm + '_permute); \n'
+        self.layers += (
+            "k2c_permute_dims(" + outputs + "," + inputs + "," + nm + "_permute); \n"
+        )
 
     def _write_layer_RepeatVector(self, layer, inputs, outputs, i):
         nm, _, inputs, outputs = self._format_io_names(layer, inputs, outputs)
-        self.layers += 'k2c_repeat_vector(' + outputs + ',' + inputs + \
-            ',' + nm + '_n); \n'
+        self.layers += (
+            "k2c_repeat_vector(" + outputs + "," + inputs + "," + nm + "_n); \n"
+        )
 
     def _write_layer_Dot(self, layer, inputs, outputs, i):
         nm, _, inputs, outputs = self._format_io_names(layer, inputs, outputs)
-        self.layers += 'k2c_dot(' + outputs + ',' + inputs[0] + \
-                       ',' + inputs[1] + ',' + nm + '_axesA,' + \
-                       '\n\t' + nm + '_axesB,' + nm + '_naxes,' + \
-                       nm + '_normalize,' + nm + '_fwork); \n'
+        self.layers += (
+            "k2c_dot("
+            + outputs
+            + ","
+            + inputs[0]
+            + ","
+            + inputs[1]
+            + ","
+            + nm
+            + "_axesA,"
+            + "\n\t"
+            + nm
+            + "_axesB,"
+            + nm
+            + "_naxes,"
+            + nm
+            + "_normalize,"
+            + nm
+            + "_fwork); \n"
+        )
 
     def _write_layer_BatchNormalization(self, layer, inputs, outputs, i):
-        nm, pnm, inputs, outputs = self._format_io_names(
-            layer, inputs, outputs)
-        self.layers += 'k2c_batch_norm(' + outputs + ',' + inputs + \
-                       ',' + pnm + '_mean,' + pnm + '_stdev,' + pnm + \
-                       '_gamma,' + pnm + '_beta,' + nm + '_axis); \n'
+        nm, pnm, inputs, outputs = self._format_io_names(layer, inputs, outputs)
+        self.layers += (
+            "k2c_batch_norm("
+            + outputs
+            + ","
+            + inputs
+            + ","
+            + pnm
+            + "_mean,"
+            + pnm
+            + "_stdev,"
+            + pnm
+            + "_gamma,"
+            + pnm
+            + "_beta,"
+            + nm
+            + "_axis); \n"
+        )
 
     def _write_layer_Embedding(self, layer, inputs, outputs, i):
         _, pnm, inputs, outputs = self._format_io_names(layer, inputs, outputs)
-        self.layers += 'k2c_embedding(' + outputs + ',' + inputs + \
-            ',' + pnm + '_kernel); \n'
+        self.layers += (
+            "k2c_embedding(" + outputs + "," + inputs + "," + pnm + "_kernel); \n"
+        )
 
     def _write_layer_UpSampling1D(self, layer, inputs, outputs, i):
         self._write_layer_UpSampling(layer, inputs, outputs, i)
@@ -537,15 +833,14 @@ class Layers2C():
         self._write_layer_UpSampling(layer, inputs, outputs, i)
 
     def _write_layer_UpSampling(self, layer, inputs, outputs, i):
-        nm, _, inputs, outputs = self._format_io_names(
-            layer, inputs, outputs)
-        if layer_type(layer)[-2:] == '1D':
-            self.layers += 'k2c_upsampling1d('
-        elif layer_type(layer)[-2:] == '2D':
-            self.layers += 'k2c_upsampling2d('
-        elif layer_type(layer)[-2:] == '3D':
-            self.layers += 'k2c_upsampling3d('
-        self.layers += outputs + ',' + inputs + ',' + nm + '_size); \n'
+        nm, _, inputs, outputs = self._format_io_names(layer, inputs, outputs)
+        if layer_type(layer)[-2:] == "1D":
+            self.layers += "k2c_upsampling1d("
+        elif layer_type(layer)[-2:] == "2D":
+            self.layers += "k2c_upsampling2d("
+        elif layer_type(layer)[-2:] == "3D":
+            self.layers += "k2c_upsampling3d("
+        self.layers += outputs + "," + inputs + "," + nm + "_size); \n"
 
     def _write_layer_Cropping1D(self, layer, inputs, outputs, i):
         self._write_layer_Cropping(layer, inputs, outputs, i)
@@ -557,15 +852,14 @@ class Layers2C():
         self._write_layer_Cropping(layer, inputs, outputs, i)
 
     def _write_layer_Cropping(self, layer, inputs, outputs, i):
-        nm, _, inputs, outputs = self._format_io_names(
-            layer, inputs, outputs)
-        if layer_type(layer)[-2:] == '1D':
-            self.layers += 'k2c_crop1d('
-        elif layer_type(layer)[-2:] == '2D':
-            self.layers += 'k2c_crop2d('
-        elif layer_type(layer)[-2:] == '3D':
-            self.layers += 'k2c_crop3d('
-        self.layers += outputs + ',' + inputs + ',' + nm + '_crop); \n'
+        nm, _, inputs, outputs = self._format_io_names(layer, inputs, outputs)
+        if layer_type(layer)[-2:] == "1D":
+            self.layers += "k2c_crop1d("
+        elif layer_type(layer)[-2:] == "2D":
+            self.layers += "k2c_crop2d("
+        elif layer_type(layer)[-2:] == "3D":
+            self.layers += "k2c_crop3d("
+        self.layers += outputs + "," + inputs + "," + nm + "_crop); \n"
 
     def _write_layer_ZeroPadding1D(self, layer, inputs, outputs, i):
         self._write_layer_ZeroPad(layer, inputs, outputs, i)
@@ -577,85 +871,106 @@ class Layers2C():
         self._write_layer_ZeroPad(layer, inputs, outputs, i)
 
     def _write_layer_ZeroPad(self, layer, inputs, outputs, i):
-        if 'Zero' in layer_type(layer):
-            nm, _, inputs, outputs = self._format_io_names(
-                layer, inputs, outputs)
+        if "Zero" in layer_type(layer):
+            nm, _, inputs, outputs = self._format_io_names(layer, inputs, outputs)
         else:
             nm = layer.name
-        if layer_type(layer)[-2:] == '1D':
-            self.layers += 'k2c_pad1d('
-        elif layer_type(layer)[-2:] == '2D':
-            self.layers += 'k2c_pad2d('
-        elif layer_type(layer)[-2:] == '3D':
-            self.layers += 'k2c_pad3d('
-        self.layers += outputs + ',' + inputs + ',' + nm + \
-            '_fill, \n\t' + nm + '_pad); \n'
+        if layer_type(layer)[-2:] == "1D":
+            self.layers += "k2c_pad1d("
+        elif layer_type(layer)[-2:] == "2D":
+            self.layers += "k2c_pad2d("
+        elif layer_type(layer)[-2:] == "3D":
+            self.layers += "k2c_pad3d("
+        self.layers += (
+            outputs + "," + inputs + "," + nm + "_fill, \n\t" + nm + "_pad); \n"
+        )
 
     def _write_layer_Dropout(self, layer, inputs, outputs, i):
         _, _, inputs, outputs, is_model_input, is_model_output = self._format_io_names(
-            layer, inputs, outputs, True)
-        self._write_dummy_layer(layer, inputs, outputs, i,
-                                is_model_input, is_model_output)
+            layer, inputs, outputs, True
+        )
+        self._write_dummy_layer(
+            layer, inputs, outputs, i, is_model_input, is_model_output
+        )
 
     def _write_layer_SpatialDropout1D(self, layer, inputs, outputs, i):
         _, _, inputs, outputs, is_model_input, is_model_output = self._format_io_names(
-            layer, inputs, outputs, True)
-        self._write_dummy_layer(layer, inputs, outputs, i,
-                                is_model_input, is_model_output)
+            layer, inputs, outputs, True
+        )
+        self._write_dummy_layer(
+            layer, inputs, outputs, i, is_model_input, is_model_output
+        )
 
     def _write_layer_SpatialDropout2D(self, layer, inputs, outputs, i):
         _, _, inputs, outputs, is_model_input, is_model_output = self._format_io_names(
-            layer, inputs, outputs, True)
-        self._write_dummy_layer(layer, inputs, outputs, i,
-                                is_model_input, is_model_output)
+            layer, inputs, outputs, True
+        )
+        self._write_dummy_layer(
+            layer, inputs, outputs, i, is_model_input, is_model_output
+        )
 
     def _write_layer_SpatialDropout3D(self, layer, inputs, outputs, i):
         _, _, inputs, outputs, is_model_input, is_model_output = self._format_io_names(
-            layer, inputs, outputs, True)
-        self._write_dummy_layer(layer, inputs, outputs, i,
-                                is_model_input, is_model_output)
+            layer, inputs, outputs, True
+        )
+        self._write_dummy_layer(
+            layer, inputs, outputs, i, is_model_input, is_model_output
+        )
 
     def _write_layer_ActivityRegularization(self, layer, inputs, outputs, i):
         _, _, inputs, outputs, is_model_input, is_model_output = self._format_io_names(
-            layer, inputs, outputs, True)
-        self._write_dummy_layer(layer, inputs, outputs, i,
-                                is_model_input, is_model_output)
+            layer, inputs, outputs, True
+        )
+        self._write_dummy_layer(
+            layer, inputs, outputs, i, is_model_input, is_model_output
+        )
 
     def _write_layer_GaussianNoise(self, layer, inputs, outputs, i):
         _, _, inputs, outputs, is_model_input, is_model_output = self._format_io_names(
-            layer, inputs, outputs, True)
-        self._write_dummy_layer(layer, inputs, outputs, i,
-                                is_model_input, is_model_output)
+            layer, inputs, outputs, True
+        )
+        self._write_dummy_layer(
+            layer, inputs, outputs, i, is_model_input, is_model_output
+        )
 
     def _write_layer_GaussianDropout(self, layer, inputs, outputs, i):
         _, _, inputs, outputs, is_model_input, is_model_output = self._format_io_names(
-            layer, inputs, outputs, True)
-        self._write_dummy_layer(layer, inputs, outputs, i,
-                                is_model_input, is_model_output)
+            layer, inputs, outputs, True
+        )
+        self._write_dummy_layer(
+            layer, inputs, outputs, i, is_model_input, is_model_output
+        )
 
     def _write_layer_AlphaDropout(self, layer, inputs, outputs, i):
         _, _, inputs, outputs, is_model_input, is_model_output = self._format_io_names(
-            layer, inputs, outputs, True)
-        self._write_dummy_layer(layer, inputs, outputs, i,
-                                is_model_input, is_model_output)
+            layer, inputs, outputs, True
+        )
+        self._write_dummy_layer(
+            layer, inputs, outputs, i, is_model_input, is_model_output
+        )
 
     def _write_layer_Input(self, layer, inputs, outputs, i):
-        self.layers += ''
+        self.layers += ""
 
     def _write_layer_InputLayer(self, layer, inputs, outputs, i):
-        self.layers += ''
+        self.layers += ""
 
     def _write_layer_TFOpLambda(self, layer, inputs, outputs, i):
         self._write_layer_TensorFlowOpLayer(layer, inputs, outputs, i)
 
     def _write_layer_TensorFlowOpLayer(self, layer, inputs, outputs, i):
-        if 'split' in layer.name:
-            _, _, inputs, outputs = self._format_io_names(
-                layer, inputs, outputs)
+        if "split" in layer.name:
+            _, _, inputs, outputs = self._format_io_names(layer, inputs, outputs)
             offset = 0
             for j, outp in enumerate(outputs):
-                self.layers += 'k2c_split(' + outp + ',' + inputs + ',' + str(offset) + '); \n'
+                self.layers += (
+                    "k2c_split(" + outp + "," + inputs + "," + str(offset) + "); \n"
+                )
                 offset += layer.get_output_at(i)[j].shape[-1]
         else:
-            raise AssertionError('Unsupported TensorFlowOpLayer: ' + layer.name + '\n'
-                                 + 'Currently only split operation is supported.')
+            raise AssertionError(
+                "Unsupported TensorFlowOpLayer: "
+                + layer.name
+                + "\n"
+                + "Currently only split operation is supported."
+            )
