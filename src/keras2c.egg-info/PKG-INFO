@@ -1,4 +1,4 @@
-Metadata-Version: 2.1
+Metadata-Version: 2.4
 Name: keras2c
 Version: 0.1
 Summary: A library for converting Keras neural networks to real-time compatible C.
@@ -26,6 +26,7 @@ Requires-Dist: tensorflow>=2.0
 Requires-Dist: keras
 Requires-Dist: numpy
 Requires-Dist: pydantic
+Dynamic: license-file
 
 #######
 keras2c
