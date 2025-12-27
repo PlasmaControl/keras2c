@@ -16,6 +16,6 @@ __copyright__ = "Copyright 2019, Rory Conlin"
 __license__ = "MIT"
 __maintainer__ = "Rory Conlin, https://github.com/f0uriest/keras2c"
 __email__ = "wconlin@princeton.edu"
-__version__ = "1.0"
+__version__ = "2.0"
 
 __all__ = ["k2c", "Keras2CConfig", "LayerIO"]
