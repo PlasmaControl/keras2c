@@ -2,7 +2,7 @@
 keras2c
 #######
 
-|Build-Status| |Codecov| |Python-Publish| |Python-Versions|
+|Python-Publish| |Python-Versions| |Codecov|
 
 |License| |DOI|
 
@@ -98,9 +98,6 @@ License
 The project is licensed under the LGPLv3 license.
 
 
-.. |Build-Status| image:: https://travis-ci.org/f0uriest/keras2c.svg?branch=master
-    :target: https://travis-ci.org/f0uriest/keras2c
-    :alt: Build Status
 .. |Codecov| image:: https://codecov.io/gh/f0uriest/keras2c/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/f0uriest/keras2c
     :alt: Code Coverage
