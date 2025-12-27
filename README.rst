@@ -2,14 +2,15 @@
 keras2c
 #######
 
-|Build-Status| |Codecov|
+|Build-Status| |Codecov| |Python-Publish| |Python-Versions|
 
 |License| |DOI|
 
 IMPORTANT: Keras2C has started updating to be compatible with newer versions of Python on July 9th, 2025. Changes may be breaking. To use the original/stable version, use the Release v1.0.2. https://github.com/PlasmaControl/keras2c/releases/tag/v1.0.2 with the command
+
 .. code-block:: bash
 
-    git clone  git@github.com:PlasmaControl/keras2c.git --branch v1.0.2
+    git clone git@github.com:PlasmaControl/keras2c.git --branch v1.0.2
 
 keras2c is a library for deploying keras neural networks in C99, using only standard libraries.
 It is designed to be as simple as possible for real time applications.
@@ -41,7 +42,7 @@ keras2c can be used from the command line:
     positional arguments:
       model_path         File path to saved keras .h5 model file
       function_name      What to name the resulting C function
-     
+      
     optional arguments:
       -h, --help         show this help message and exit
       -m, --malloc       Use dynamic memory for large arrays. Weights will be
@@ -103,10 +104,15 @@ The project is licensed under the LGPLv3 license.
 .. |Codecov| image:: https://codecov.io/gh/f0uriest/keras2c/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/f0uriest/keras2c
     :alt: Code Coverage
+.. |Python-Publish| image:: https://github.com/PlasmaControl/keras2c/actions/workflows/python-publish.yml/badge.svg
+    :target: https://github.com/PlasmaControl/keras2c/actions/workflows/python-publish.yml
+    :alt: Upload Python Package
+.. |Python-Versions| image:: https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue
+    :target: https://github.com/PlasmaControl/keras2c
+    :alt: Supported Python Versions
 .. |License| image:: https://img.shields.io/github/license/f0uriest/keras2c
     :target: https://github.com/f0uriest/keras2c/blob/master/LICENSE
     :alt: License: LGPLv3
 .. |DOI| image:: https://zenodo.org/badge/193152058.svg
     :target: https://zenodo.org/badge/latestdoi/193152058
     :alt: Please Cite Keras2c!
-
