@@ -32,7 +32,7 @@ jobs:
           install: >-
             mingw-w64-x86_64-gcc
             make
-      - name: Set up Python 3.10
+      - name: Set up Python
         uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
