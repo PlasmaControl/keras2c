@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name='keras2c',
-    version='0.1',
+    version='2.0',
     packages=['keras2c'],
     package_dir={'':'src'},
     install_requires=[
