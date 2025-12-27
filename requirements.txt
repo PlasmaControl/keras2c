@@ -4,4 +4,3 @@
 numpy >= 1.13.0
 tensorflow >= 2.0
 pydantic >= 1.10, <2
-

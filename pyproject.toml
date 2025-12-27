@@ -5,12 +5,12 @@ build-backend = "setuptools.build_meta"
 [project]
 dynamic = ["version"]
 name = "keras2c"
-requires-python = ">=3.7"
+requires-python = ">=3.7, <=3.12"
 dependencies = [
     "tensorflow>=2.0",
     "keras",
-    "numpy>=1.13.0",
-    "pydantic>=1.10,<2",
+    "numpy",
+    "pydantic",
 ]
 authors = [
   {name = "Rory Conlin", email = "wconlin@princeton.edu"},
@@ -19,7 +19,8 @@ authors = [
   {name = "Egemen Kolemen", email = "ekolemen@princeton.edu"},
 ]
 maintainers = [
-  {name = "Peter Steiner", email = "peter.steiner@princeton.edu"}
+  {name = "Peter Steiner", email = "peter.steiner@princeton.edu"},
+  {name = "Nathaniel Chen", email = "nathaniel@princeton.edu"}
 ]
 description = "A library for converting Keras neural networks to real-time compatible C."
 readme = "README.rst"
@@ -46,7 +47,6 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
-  "Programming Language :: Python :: 3.13",
 ]
 
 [project.urls]

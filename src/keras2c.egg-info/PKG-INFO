@@ -1,9 +1,9 @@
-Metadata-Version: 2.4
+Metadata-Version: 2.1
 Name: keras2c
 Version: 0.1
 Summary: A library for converting Keras neural networks to real-time compatible C.
 Author-email: Rory Conlin <wconlin@princeton.edu>, Keith Erickson <kerickso@pppl.gov>, Joseph Abbate <jabbate@princeton.edu>, Egemen Kolemen <ekolemen@princeton.edu>
-Maintainer-email: Peter Steiner <peter.steiner@princeton.edu>
+Maintainer-email: Peter Steiner <peter.steiner@princeton.edu>, Nathaniel Chen <nathaniel@princeton.edu>
 License: LGPLv3 License
 Project-URL: Documentation, https://f0uriest.github.io/keras2c/
 Project-URL: Repository, https://github.com/f0uriest/keras2c/
@@ -19,15 +19,13 @@ Classifier: Programming Language :: Python :: 3.9
 Classifier: Programming Language :: Python :: 3.10
 Classifier: Programming Language :: Python :: 3.11
 Classifier: Programming Language :: Python :: 3.12
-Classifier: Programming Language :: Python :: 3.13
-Requires-Python: >=3.7
+Requires-Python: <=3.12,>=3.7
 Description-Content-Type: text/x-rst
 License-File: LICENSE
 Requires-Dist: tensorflow>=2.0
 Requires-Dist: keras
-Requires-Dist: numpy>=1.13.0
-Requires-Dist: pydantic<2,>=1.10
-Dynamic: license-file
+Requires-Dist: numpy
+Requires-Dist: pydantic
 
 #######
 keras2c
@@ -37,6 +35,10 @@ keras2c
 
 |License| |DOI|
 
+IMPORTANT: Keras2C has started updating to be compatible with newer versions of Python on July 9th, 2025. Changes may be breaking. To use the original/stable version, use the Release v1.0.2. https://github.com/PlasmaControl/keras2c/releases/tag/v1.0.2 with the command
+.. code-block:: bash
+
+    git clone  git@github.com:PlasmaControl/keras2c.git --branch v1.0.2
 
 keras2c is a library for deploying keras neural networks in C99, using only standard libraries.
 It is designed to be as simple as possible for real time applications.

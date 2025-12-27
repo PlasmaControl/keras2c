@@ -1,4 +1,4 @@
 tensorflow>=2.0
 keras
-numpy>=1.13.0
-pydantic<2,>=1.10
+numpy
+pydantic
