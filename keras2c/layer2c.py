@@ -8,7 +8,17 @@ Writes individual layers to C code
 """
 
 # imports
-from keras2c.io_parsing import layer_type, get_model_io_names, get_all_io_names, get_layer_io_names, flatten
+from keras2c.io_parsing import layer_type, get_model_io_names, get_all_io_names, get_layer_io_names, flatten, get_model_layers, get_real_tensor_names
+
+# Keras 3 renames some activations; map them back to our C function names
+ACTIVATION_NAME_MAP = {
+    'silu': 'swish',
+}
+
+
+def _normalize_activation(name):
+    """Map Keras 3 activation names to keras2c C function names."""
+    return ACTIVATION_NAME_MAP.get(name, name)
 
 
 # Original author
@@ -36,6 +46,7 @@ class Layers2C():
         self.model_inputs, self.model_outputs = get_model_io_names(self.model)
         self.layers = ""
         self.malloc = malloc
+        self.valid_tensors = get_real_tensor_names(self.model)
 
     def write_layers(self, verbose=True):
         """Writes layers in the correct graph order."""
@@ -46,8 +57,8 @@ class Layers2C():
         while len(unwritten_io) > 0:
             progress = False
 
-            for layer in self.model.layers:
-                layer_inputs, layer_outputs = get_layer_io_names(layer)
+            for layer in get_model_layers(self.model):
+                layer_inputs, layer_outputs = get_layer_io_names(layer, self.valid_tensors)
 
                 # Check if this layer has multiple nodes (shared layer)
                 if isinstance(layer_inputs, list) and len(layer_inputs) > 0:
@@ -216,14 +227,14 @@ class Layers2C():
                        '_recurrent_kernel,' + pnm + '_bias,' + nm + \
                        '_fwork, \n\t' + nm + '_go_backwards,' + nm + \
                        '_return_sequences, \n\t' + \
-                       'k2c_' + layer.get_config()['recurrent_activation'] + \
+                       'k2c_' + _normalize_activation(layer.get_config()['recurrent_activation']) + \
                        ',' + 'k2c_' + \
-            layer.get_config()['activation'] + '); \n'
+            _normalize_activation(layer.get_config()['activation']) + '); \n'
 
     def _write_layer_Dense(self, layer, inputs, outputs, i):
         nm, pnm, inputs, outputs = self._format_io_names(
             layer, inputs, outputs)
-        activation = 'k2c_' + layer.get_config()['activation']
+        activation = 'k2c_' + _normalize_activation(layer.get_config()['activation'])
 
         self.layers += 'k2c_dense(' + outputs + ',' + inputs + ',' + pnm + \
             '_kernel, \n\t' + pnm + '_bias,' + activation + ',' + \
@@ -232,7 +243,7 @@ class Layers2C():
     def _write_layer_Conv(self, layer, inputs, outputs, i):
         nm, pnm, inputs, outputs = self._format_io_names(
             layer, inputs, outputs)
-        activation = 'k2c_' + layer.get_config()['activation']
+        activation = 'k2c_' + _normalize_activation(layer.get_config()['activation'])
         if layer_type(layer)[-2:] == '1D':
             fname = 'k2c_conv1d('
         elif layer_type(layer)[-2:] == '2D':
@@ -262,7 +273,7 @@ class Layers2C():
     def _write_layer_Conv1DTranspose(self, layer, inputs, outputs, i):
         nm, pnm, inputs, outputs = self._format_io_names(
             layer, inputs, outputs)
-        activation = 'k2c_' + layer.get_config()['activation']
+        activation = 'k2c_' + _normalize_activation(layer.get_config()['activation'])
 
         # Write the conv1d_transpose layer
         self.layers += 'k2c_conv1d_transpose(' + outputs + ',' + inputs + ',' + \
@@ -380,8 +391,8 @@ class Layers2C():
             pnm + '_recurrent_kernel,' + pnm + '_bias,' + \
             nm + '_fwork, \n\t' + nm + '_reset_after,' + \
             nm + '_go_backwards,' + nm + '_return_sequences, \n\t' + \
-            'k2c_' + layer.get_config()['recurrent_activation'] + \
-            ',' + 'k2c_' + layer.get_config()['activation'] + '); \n'
+            'k2c_' + _normalize_activation(layer.get_config()['recurrent_activation']) + \
+            ',' + 'k2c_' + _normalize_activation(layer.get_config()['activation']) + '); \n'
 
     def _write_layer_SimpleRNN(self, layer, inputs, outputs, i):
         nm, pnm, inputs, outputs = self._format_io_names(
@@ -391,12 +402,12 @@ class Layers2C():
             pnm + '_recurrent_kernel,' + pnm + '_bias,' + \
             nm + '_fwork, \n\t' + nm + '_go_backwards,' + \
             nm + '_return_sequences,' + 'k2c_' + \
-            layer.get_config()['activation'] + '); \n'
+            _normalize_activation(layer.get_config()['activation']) + '); \n'
 
     def _write_layer_Activation(self, layer, inputs, outputs, i):
         _, _, inputs, outputs, is_model_input, is_model_output = self._format_io_names(
             layer, inputs, outputs, True)
-        activation = 'k2c_' + layer.get_config()['activation']
+        activation = 'k2c_' + _normalize_activation(layer.get_config()['activation'])
         if is_model_input:
             inp = inputs + '->'
         else:
@@ -650,12 +661,24 @@ class Layers2C():
 
     def _write_layer_TensorFlowOpLayer(self, layer, inputs, outputs, i):
         if 'split' in layer.name:
-            _, _, inputs, outputs = self._format_io_names(
-                layer, inputs, outputs)
-            offset = 0
-            for j, outp in enumerate(outputs):
-                self.layers += 'k2c_split(' + outp + ',' + inputs + ',' + str(offset) + '); \n'
-                offset += layer.get_output_at(i)[j].shape[-1]
+            self._write_split(layer, inputs, outputs, i)
         else:
             raise AssertionError('Unsupported TensorFlowOpLayer: ' + layer.name + '\n'
                                  + 'Currently only split operation is supported.')
+
+    def _write_layer_Split(self, layer, inputs, outputs, i):
+        self._write_split(layer, inputs, outputs, i)
+
+    def _write_split(self, layer, inputs, outputs, i):
+        _, _, inputs, outputs = self._format_io_names(
+            layer, inputs, outputs)
+        node = layer._inbound_nodes[i]
+        out_tensors = getattr(node, 'output_tensors', None)
+        offset = 0
+        if isinstance(outputs, list):
+            for j, outp in enumerate(outputs):
+                self.layers += 'k2c_split(' + outp + ',' + inputs + ',' + str(offset) + '); \n'
+                if out_tensors is not None and isinstance(out_tensors, (list, tuple)):
+                    offset += int(out_tensors[j].shape[-1])
+                else:
+                    offset += layer.get_output_at(i)[j].shape[-1]

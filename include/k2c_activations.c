@@ -60,10 +60,8 @@ k2c_activationType * k2c_relu = k2c_relu_func;
 
 
 /**
- * ReLU activation function.
- *   y = {1          if      x> 2.5}
- *       {0.2*x+0.5  if -2.5<x< 2.5}
- *       {0          if      x<-2.5}
+ * Hard sigmoid activation function.
+ *   y = clip(x+3, 0, 6) / 6
  *
  * :param x: array of input values. Gets overwritten by output.
  * :param size: length of input array.
@@ -71,14 +69,15 @@ k2c_activationType * k2c_relu = k2c_relu_func;
 void k2c_hard_sigmoid_func(float * x, const size_t size) {
 
     for (size_t i=0; i < size; ++i) {
-        if (x[i] <= -2.5f) {
+        float val = x[i] + 3.0f;
+        if (val <= 0.0f) {
             x[i] = 0.0f;
         }
-        else if (x[i]>=2.5f) {
+        else if (val >= 6.0f) {
             x[i] = 1.0f;
         }
         else {
-            x[i] = 0.2f*x[i] + 0.5f;
+            x[i] = val / 6.0f;
         }
     }
 }

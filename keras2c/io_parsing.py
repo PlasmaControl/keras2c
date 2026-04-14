@@ -31,6 +31,78 @@ def layer_type(layer):
     return layer.__class__.__name__
 
 
+def get_model_layers(model):
+    """Gets all layers/operations in the model that need code generation.
+
+    In Keras 3, some operations (like Split) appear in model._operations
+    but not in model.layers. This function returns a combined list.
+
+    Args:
+        model (keras Model): model to parse
+
+    Returns:
+        layers (list): list of all layers/operations
+    """
+    layers = list(model.layers)
+    seen_names = {l.name for l in layers}
+    if hasattr(model, '_operations'):
+        for op in model._operations:
+            if op.name not in seen_names:
+                layers.append(op)
+                seen_names.add(op.name)
+    return layers
+
+
+def get_real_tensor_names(model):
+    """Gets the set of tensor names that are part of the real model graph.
+
+    Traces backward from model outputs through inbound nodes, collecting all
+    tensor names that are reachable. This filters out internal sub-layer
+    tensors (e.g., from Bidirectional's internal forward/backward calls).
+
+    Args:
+        model (keras Model): model to parse
+
+    Returns:
+        real_names (set): set of tensor names in the real model graph
+    """
+    visited = set()
+    queue = []
+    for t in model.outputs:
+        queue.append(t)
+    for t in model.inputs:
+        queue.append(t)
+
+    all_layers = get_model_layers(model)
+
+    while queue:
+        t = queue.pop(0)
+        tname = parse_io_name(t.name)
+        if tname in visited:
+            continue
+        visited.add(tname)
+        for layer in all_layers:
+            for node in getattr(layer, '_inbound_nodes', []):
+                out_t = getattr(node, 'output_tensors', None)
+                if out_t is None:
+                    continue
+                if not isinstance(out_t, (list, tuple)):
+                    out_t = [out_t]
+                matched = False
+                for ot in out_t:
+                    if parse_io_name(ot.name) == tname:
+                        matched = True
+                        break
+                if matched:
+                    inp_t = node.input_tensors
+                    if inp_t is not None:
+                        if not isinstance(inp_t, (list, tuple)):
+                            inp_t = [inp_t]
+                        for it in inp_t:
+                            queue.append(it)
+    return visited
+
+
 def get_all_io_names(model):
     """Gets names of all  node names in the model
 
@@ -41,7 +113,8 @@ def get_all_io_names(model):
         io (list): names of all the nodes in the model
     """
 
-    a = [get_layer_io_names(layer) for layer in model.layers]
+    valid = get_real_tensor_names(model)
+    a = [get_layer_io_names(layer, valid) for layer in get_model_layers(model)]
     return list(set(flatten(a)))
 
 def parse_io_name(name):
@@ -89,11 +162,14 @@ def get_layer_num_io(layer):
     return num_inputs, num_outputs
 
 
-def get_layer_io_names(layer):
+def get_layer_io_names(layer, valid_tensors=None):
     """Gets the names of the inputs and outputs of a layer
 
     Args:
         layer (keras Layer): layer you want to parse
+        valid_tensors (set, optional): if provided, only include nodes whose
+            output tensors are in this set. Used to filter out internal
+            sub-layer nodes (e.g., from Bidirectional wrappers).
 
     Returns:
         inputs (list): names of all the input nodes to the layer
@@ -110,28 +186,38 @@ def get_layer_io_names(layer):
         # is the input a list?
         node_inputs = node.input_tensors
         if node_inputs is None:
-            inputs.append([])
+            node_inp = []
         else:
             if isinstance(node_inputs, (list, tuple)):
                 if len(node_inputs) == 1:
-                    inputs.append(parse_io_name(node_inputs[0].name))
+                    node_inp = parse_io_name(node_inputs[0].name)
                 else:
-                    inputs.append([parse_io_name(t.name) for t in node_inputs])
+                    node_inp = [parse_io_name(t.name) for t in node_inputs]
             else:
                 # single tensor
-                inputs.append(parse_io_name(node_inputs.name))
+                node_inp = parse_io_name(node_inputs.name)
 
         node_outputs = getattr(node, "output_tensors", None)
         if node_outputs is None:
-            outputs.append([])
+            node_out = []
         else:
             if isinstance(node_outputs, (list, tuple)):
                 if len(node_outputs) == 1:
-                    outputs.append(parse_io_name(node_outputs[0].name))
+                    node_out = parse_io_name(node_outputs[0].name)
                 else:
-                    outputs.append([parse_io_name(t.name) for t in node_outputs])
+                    node_out = [parse_io_name(t.name) for t in node_outputs]
             else:
-                outputs.append(parse_io_name(node_outputs.name))
+                node_out = parse_io_name(node_outputs.name)
+
+        # Filter: if valid_tensors provided, only include nodes whose outputs
+        # are in the valid set (filters out internal sub-layer nodes)
+        if valid_tensors is not None:
+            flat_out = flatten([node_out]) if node_out else []
+            if not any(o in valid_tensors for o in flat_out):
+                continue
+
+        inputs.append(node_inp)
+        outputs.append(node_out)
 
     return inputs, outputs
 

@@ -9,7 +9,7 @@ Checks a model before conversion to flag unsupported features
 
 # imports
 import numpy as np
-from keras2c.io_parsing import layer_type, flatten
+from keras2c.io_parsing import layer_type, flatten, get_model_layers
 from keras2c.weights2c import Weights2C
 from keras2c.layer2c import Layers2C
 
@@ -52,7 +52,7 @@ def name_check(model):
 
     valid = True
     log = ''
-    for layer in model.layers:
+    for layer in get_model_layers(model):
         if not is_valid_c_name(layer.name.replace('.', '_')):
             valid = False
             log += "layer name '" + layer.name + "' is not a valid C name. \n"
@@ -85,7 +85,7 @@ def layers_supported_check(model):
 
     valid = True
     log = ''
-    for layer in model.layers:
+    for layer in get_model_layers(model):
         flag, templog = check_layer(layer)
         valid = valid and flag
         log += templog
@@ -105,7 +105,7 @@ def activation_supported_check(model):
 
     supported_activations = ['linear', 'relu', 'softmax', 'softplus',
                              'softsign', 'relu', 'tanh', 'sigmoid', 'swish',
-                             'hard_sigmoid', 'exponential']
+                             'silu', 'hard_sigmoid', 'exponential']
 
     def check_layer(layer):
         valid = True
@@ -132,7 +132,7 @@ def activation_supported_check(model):
 
     valid = True
     log = ''
-    for layer in model.layers:
+    for layer in get_model_layers(model):
         flag, templog = check_layer(layer)
         valid = valid and flag
         log += templog
@@ -203,7 +203,7 @@ def config_supported_check(model):
 
     valid = True
     log = ''
-    for layer in model.layers:
+    for layer in get_model_layers(model):
         flag, templog = check_layer(layer)
         valid = valid and flag
         log += templog

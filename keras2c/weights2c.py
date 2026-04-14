@@ -9,7 +9,7 @@ Gets weights and other parameters from each layer and writes to C file
 
 # imports
 import numpy as np
-from keras2c.io_parsing import layer_type, get_layer_io_names, get_model_io_names
+from keras2c.io_parsing import layer_type, get_layer_io_names, get_model_io_names, get_model_layers, get_real_tensor_names
 import tensorflow as tf
 
 
@@ -45,6 +45,7 @@ class Weights2C():
         self.stack_vars = ''
         self.malloc_vars = {}
         self.static_vars = {}
+        self.valid_tensors = get_real_tensor_names(self.model)
 
     @staticmethod
     def array2c(array, name, malloc=False):
@@ -122,7 +123,7 @@ class Weights2C():
                 - **static_vars** (*str*): code fora C struct containing static variables
                     (eg, states of a stateful RNN)
         """
-        for layer in self.model.layers:
+        for layer in get_model_layers(self.model):
             method = getattr(self, '_write_weights_' + layer_type(layer))
             method(layer)
         return self.stack_vars, self.malloc_vars, self._write_static_vars()
@@ -139,7 +140,7 @@ class Weights2C():
         return s
 
     def _write_outputs(self, layer):
-        _, outputs = get_layer_io_names(layer)
+        _, outputs = get_layer_io_names(layer, self.valid_tensors)
         if isinstance(outputs, list):
             for i, outp in enumerate(outputs):
                 if isinstance(outp, list):
@@ -209,7 +210,7 @@ class Weights2C():
                     str(ax) + '; \n'
 
         else:
-            output_names = get_layer_io_names(layer)[1][0]
+            output_names = get_layer_io_names(layer, self.valid_tensors)[1][0]
             subname = layer.forward_layer.name
             self.stack_vars += 'k2c_tensor * ' + \
                 output_names[0] + ' = ' + subname + '_output; \n'
@@ -618,7 +619,7 @@ class Weights2C():
                                         layer.name + '_padded_input')
             self.stack_vars += 'size_t ' + layer.name + '_pad[2] = {' + str(pad_top) + ','\
                 + str(pad_bottom) + '}; \n'
-            self.stack_vars += 'float ' + layer.name + '_fill = -HUGE_VALF; \n'
+            self.stack_vars += 'float ' + layer.name + '_fill = -3.4e+38f; \n'
         self.stack_vars += '\n\n'
 
     def _write_weights_MaxPooling2D(self, layer, **kwargs):
@@ -657,7 +658,7 @@ class Weights2C():
                                         '_padded_input')
             self.stack_vars += 'size_t ' + layer.name + \
                 '_pad[4] = {' + ','.join([str(i) for i in pad]) + '}; \n'
-            self.stack_vars += 'float ' + layer.name + '_fill = -HUGE_VALF; \n'
+            self.stack_vars += 'float ' + layer.name + '_fill = -3.4e+38f; \n'
         self.stack_vars += '\n\n'
 
     def _write_weights_GlobalMaxPooling1D(self, layer, **kwargs):
@@ -704,7 +705,7 @@ class Weights2C():
     def _write_weights_Merge(self, layer, skip_outputs=False):
         if not skip_outputs:
             self._write_outputs(layer)
-        inputs, outputs = get_layer_io_names(layer)
+        inputs, outputs = get_layer_io_names(layer, self.valid_tensors)
         for i, (inp, outp) in enumerate(zip(inputs, outputs)):
             num_tensors = len(inp)
             self.stack_vars += 'size_t ' + layer.name + '_num_tensors' + str(i) + \
@@ -713,7 +714,7 @@ class Weights2C():
 
     def _write_weights_Concatenate(self, layer, ):
         cfg = layer.get_config()
-        inputs, outputs = get_layer_io_names(layer)
+        inputs, outputs = get_layer_io_names(layer, self.valid_tensors)
         for i, (inp, outp) in enumerate(zip(inputs, outputs)):
             outshp = layer.output.shape[1:]
             num_tensors = len(inp)
@@ -964,7 +965,7 @@ class Weights2C():
         pass
 
     def _write_weights_Flatten(self, layer):
-        _, outputs = get_layer_io_names(layer)
+        _, outputs = get_layer_io_names(layer, self.valid_tensors)
         for i, outp in enumerate(outputs):
             inshp = layer.input.shape[1:]
             if outp not in self.model_io[1]:
@@ -991,3 +992,21 @@ class Weights2C():
         else:
             raise AssertionError('Unsupported TensorFlowOpLayer: ' + layer.name + '\n'
                                  + 'Currently only split operation is supported.')
+
+    def _write_weights_Split(self, layer, skip_outputs=False):
+        # Split layer (Keras 3 keras.ops.split) - no weights needed
+        if not skip_outputs:
+            _, outputs = get_layer_io_names(layer, self.valid_tensors)
+            if isinstance(outputs, list):
+                for i, outp in enumerate(outputs):
+                    if isinstance(outp, list):
+                        # Multi-output node: get shapes from inbound node tensors
+                        node = layer._inbound_nodes[i]
+                        out_tensors = getattr(node, 'output_tensors', [])
+                        if not isinstance(out_tensors, (list, tuple)):
+                            out_tensors = [out_tensors]
+                        for j, outpp in enumerate(outp):
+                            outshp = out_tensors[j].shape[1:]
+                            if outpp not in self.model_io[1]:
+                                self._write_weights_array2c(
+                                    np.zeros(outshp), outpp + '_output')

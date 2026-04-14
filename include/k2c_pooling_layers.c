@@ -134,12 +134,14 @@ void k2c_avgpool1d(k2c_tensor* output, const k2c_tensor* input, const size_t poo
         for (size_t j=0, k=0; j<output->numel; j+=channels, k+=stride*channels) {
             int count = 0;
             for (size_t l=0; l<pool_size*channels; l+=channels) {
-                if (input->array[k+i+l] > -HUGE_VALF) {
+                if (input->array[k+i+l] > -3.4e+38f) {
                     output->array[j+i] += input->array[k+i+l];
                     ++count;
                 }
             }
-            output->array[i+j] /= (float)count;
+            if (count > 0) {
+                output->array[i+j] /= (float)count;
+            }
         }
     }
 }
@@ -168,13 +170,15 @@ void k2c_avgpool2d(k2c_tensor* output, const k2c_tensor* input, const size_t * p
                 for (size_t n=0; n<pool_size[1]*channels; n+=channels) {
                     for (size_t p=0; p<pool_size[0]*channels*input->shape[1];
                             p+=channels*input->shape[1]) {
-                        if (-HUGE_VALF < input->array[m+k+i+n+p]) {
+                        if (input->array[m+k+i+n+p] > -3.4e+38f) {
                             output->array[l+j+i] += input->array[m+k+i+n+p];
                             ++count;
                         }
                     }
                 }
-                output->array[l+j+i] /= (float)count;
+                if (count > 0) {
+                    output->array[l+j+i] /= (float)count;
+                }
             }
         }
     }
