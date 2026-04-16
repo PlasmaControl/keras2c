@@ -154,12 +154,12 @@ def model2c(model, function_name, malloc=False, verbose=True, skip_layers=None):
     layers = Layers2C(model, malloc).write_layers(verbose, skip_layers)
 
     function_signature = 'void ' + function_name + '('
-    function_signature += ', '.join(['k2c_tensor* ' +
+    function_signature += ', '.join(['k2c_tensor* __restrict ' +
                                      in_nm + '_input' for in_nm in model_inputs]) + ', '
-    function_signature += ', '.join(['k2c_tensor* ' +
+    function_signature += ', '.join(['k2c_tensor* __restrict ' +
                                      out_nm + '_output' for out_nm in model_outputs])
     if len(malloc_vars.keys()):
-        function_signature += ',' + ','.join(['float* ' +
+        function_signature += ',' + ','.join(['float* __restrict ' +
                                               key for key in malloc_vars.keys()])
     function_signature += ')'
 
