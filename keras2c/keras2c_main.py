@@ -148,7 +148,7 @@ def model2c(model, function_name, malloc=False, verbose=True, skip_layers=None):
 
     if verbose:
         print('Gathering Weights')
-    stack_vars, malloc_vars, static_vars = Weights2C(
+    stack_vars, malloc_vars, static_vars, file_scope_vars = Weights2C(
         model, function_name, malloc).write_weights(verbose, skip_layers)
     stateful = len(static_vars) > 0
     layers = Layers2C(model, malloc).write_layers(verbose, skip_layers)
@@ -170,6 +170,7 @@ def model2c(model, function_name, malloc=False, verbose=True, skip_layers=None):
     with open(function_name + '.c', 'x+') as source:
         source.write(includes)
         source.write(static_vars + '\n\n')
+        source.write(file_scope_vars + '\n\n')
         source.write(function_signature)
         source.write(' { \n\n')
         source.write(stack_vars)

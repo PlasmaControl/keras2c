@@ -450,7 +450,7 @@ class Layers2C():
         if is_model_input:
             inp = inputs + '->'
         else:
-            inp = inputs + '.'
+            inp = inputs.lstrip('&') + '.'
 
         if layer_type(layer) == 'LeakyReLU':
             self.layers += 'k2c_LeakyReLU(' + inp + 'array,' + \
