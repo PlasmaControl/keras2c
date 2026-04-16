@@ -60,17 +60,24 @@ void k2c_matmul(float * C, const float * A, const float * B, const size_t outrow
 void k2c_affine_matmul(float * C, const float * A, const float * B, const float * d,
                        const size_t outrows,const size_t outcols, const size_t innerdim) {
 
-    // make sure output is empty
-    memset(C, 0, outrows*outcols*sizeof(C[0]));
+    // Initialize C with bias vector (fuses memset + bias addition)
+    for (size_t i = 0; i < outrows; ++i) {
+        const size_t outrowidx = i * outcols;
+        for (size_t j = 0; j < outcols; ++j) {
+            C[outrowidx + j] = d[j];
+        }
+    }
 
+    // matmul in i->k->j order for cache-friendly sequential access to B and C
     for (size_t i = 0 ; i < outrows; ++i) {
         const size_t outrowidx = i*outcols;
         const size_t inneridx = i*innerdim;
-        for (size_t j = 0;  j < outcols; ++j) {
-            for (size_t k = 0; k < innerdim; ++k) {
-                C[outrowidx+j] += A[inneridx+k] * B[k*outcols+j];
+        for (size_t k = 0; k < innerdim; ++k) {
+            const float Aik = A[inneridx+k];
+            const size_t Bidx = k*outcols;
+            for (size_t j = 0;  j < outcols; ++j) {
+                C[outrowidx+j] += Aik * B[Bidx+j];
             }
-            C[outrowidx+j] += d[j];
         }
     }
 }

@@ -11,7 +11,7 @@ Converts keras model to C code
 from keras2c.layer2c import Layers2C
 from keras2c.weights2c import Weights2C
 from keras2c.io_parsing import layer_type, get_all_io_names, get_layer_io_names, \
-    get_model_io_names, flatten
+    get_model_io_names, flatten, get_model_layers, get_real_tensor_names
 from keras2c.check_model import check_model
 from keras2c.make_test_suite import make_test_suite
 import numpy as np
@@ -31,7 +31,95 @@ __author__ = "Anchal Gupta"
 __email__ = "guptaa@fusion.gat.com"
 
 
-def model2c(model, function_name, malloc=False, verbose=True):
+def fold_batch_norms(model, verbose=True):
+    """Folds BatchNormalization layers into following Dense/Conv1D layers.
+    Modifies model weights in-place. Returns set of folded layer names."""
+    valid = get_real_tensor_names(model)
+    consumers = {}
+    for layer in get_model_layers(model):
+        inputs, _ = get_layer_io_names(layer, valid)
+        if isinstance(inputs, list):
+            for inp in inputs:
+                if isinstance(inp, list):
+                    for ii in inp:
+                        consumers.setdefault(ii, []).append(layer)
+                elif isinstance(inp, str):
+                    consumers.setdefault(inp, []).append(layer)
+    folded_layers = set()
+    for bn_layer in get_model_layers(model):
+        if layer_type(bn_layer) != 'BatchNormalization':
+            continue
+        _, outputs = get_layer_io_names(bn_layer, valid)
+        out_name = outputs[0] if isinstance(outputs, list) else outputs
+        if isinstance(out_name, list):
+            out_name = out_name[0]
+        next_layers = consumers.get(out_name, [])
+        if len(next_layers) != 1:
+            continue
+        next_layer = next_layers[0]
+        next_type = layer_type(next_layer)
+        if next_type not in ('Dense', 'Conv1D'):
+            continue
+        cfg = bn_layer.get_config()
+        center = cfg['center']
+        scale = cfg['scale']
+        epsilon = cfg['epsilon']
+        if center and scale:
+            gamma, beta, mean, variance = bn_layer.get_weights()
+        elif center:
+            beta, mean, variance = bn_layer.get_weights()
+            gamma = np.ones_like(mean)
+        elif scale:
+            gamma, mean, variance = bn_layer.get_weights()
+            beta = np.zeros_like(mean)
+        else:
+            mean, variance = bn_layer.get_weights()
+            gamma = np.ones_like(mean)
+            beta = np.zeros_like(mean)
+        stdev = np.sqrt(variance + epsilon)
+        bn_scale = gamma / stdev
+        bn_offset = beta - mean * bn_scale
+        if next_type == 'Dense':
+            weights = next_layer.get_weights()
+            W = weights[0]
+            b = weights[1] if len(weights) > 1 else np.zeros(W.shape[1])
+            W_new = W * bn_scale[:, np.newaxis]
+            b_new = bn_offset @ W + b
+            if len(weights) > 1:
+                next_layer.set_weights([W_new, b_new])
+            else:
+                if np.any(np.abs(b_new) > 1e-10):
+                    continue
+                next_layer.set_weights([W_new])
+        elif next_type == 'Conv1D':
+            weights = next_layer.get_weights()
+            K = weights[0]
+            b = weights[1] if len(weights) > 1 else np.zeros(K.shape[-1])
+            K_new = K * bn_scale[np.newaxis, :, np.newaxis]
+            b_new = np.tensordot(bn_offset, K, axes=([0], [1])).sum(axis=0) + b
+            if len(weights) > 1:
+                next_layer.set_weights([K_new, b_new])
+            else:
+                if np.any(np.abs(b_new) > 1e-10):
+                    continue
+                next_layer.set_weights([K_new])
+        identity_var = np.ones_like(variance) * (1.0 - epsilon)
+        if center and scale:
+            bn_layer.set_weights([np.ones_like(gamma), np.zeros_like(beta),
+                                  np.zeros_like(mean), identity_var])
+        elif center:
+            bn_layer.set_weights([np.zeros_like(beta), np.zeros_like(mean), identity_var])
+        elif scale:
+            bn_layer.set_weights([np.ones_like(gamma), np.zeros_like(mean), identity_var])
+        else:
+            bn_layer.set_weights([np.zeros_like(mean), identity_var])
+        folded_layers.add(bn_layer.name)
+        if verbose:
+            print(f'Folded {bn_layer.name} into {next_layer.name}')
+    return folded_layers
+
+
+def model2c(model, function_name, malloc=False, verbose=True, skip_layers=None):
     """Generates C code for model
 
     Writes main function definition to "function_name.c" and a public header
@@ -48,6 +136,9 @@ def model2c(model, function_name, malloc=False, verbose=True):
         stateful (bool): whether the model must maintain state between calls
     """
 
+    if skip_layers is None:
+        skip_layers = set()
+
     model_inputs, model_outputs = get_model_io_names(model)
     includes = '#include <math.h> \n '
     includes += '#include <string.h> \n'
@@ -58,9 +149,9 @@ def model2c(model, function_name, malloc=False, verbose=True):
     if verbose:
         print('Gathering Weights')
     stack_vars, malloc_vars, static_vars = Weights2C(
-        model, function_name, malloc).write_weights(verbose)
+        model, function_name, malloc).write_weights(verbose, skip_layers)
     stateful = len(static_vars) > 0
-    layers = Layers2C(model, malloc).write_layers(verbose)
+    layers = Layers2C(model, malloc).write_layers(verbose, skip_layers)
 
     function_signature = 'void ' + function_name + '('
     function_signature += ', '.join(['k2c_tensor* ' +
@@ -220,8 +311,12 @@ def k2c(model, function_name, malloc=False, num_tests=10, verbose=True):
     if verbose:
         print('All checks passed')
 
+    folded = fold_batch_norms(model, verbose)
+    if verbose and folded:
+        print(f'Folded {len(folded)} batch normalization layers')
+
     malloc_vars, stateful = model2c(
-        model, function_name, malloc, verbose)
+        model, function_name, malloc, verbose, skip_layers=folded)
 
     s = 'Done \n'
     s += "C code is in '" + function_name + \
