@@ -89,3 +89,143 @@ class TestAdvancedActivation(unittest.TestCase):
         keras2c_main.k2c(model, name)
         rcode = build_and_run(name)
         self.assertEqual(rcode, 0)
+
+    def test_selu(self):
+        inshp = (8, 6, 5)
+        a = keras.layers.Input(inshp)
+        b = keras.layers.Activation('selu')(a)
+        model = keras.models.Model(inputs=a, outputs=b)
+        name = 'test___SILU' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)
+
+    def test_elu_activation(self):
+        inshp = (10, 7, 4)
+        a = keras.layers.Input(inshp)
+        b = keras.layers.Dense(12, activation='elu')(a)
+        model = keras.models.Model(inputs=a, outputs=b)
+        name = 'test___elu_act' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)
+
+    def test_gelu(self):
+        inshp = (7, 11, 3)
+        a = keras.layers.Input(inshp)
+        b = keras.layers.Activation('gelu')(a)
+        model = keras.models.Model(inputs=a, outputs=b)
+        name = 'test___gelu' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)
+
+    def test_hard_silu(self):
+        inshp = (6, 9, 4)
+        a = keras.layers.Input(inshp)
+        b = keras.layers.Activation('hard_silu')(a)
+        model = keras.models.Model(inputs=a, outputs=b)
+        name = 'test___hard_silu' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)
+
+    def test_mish(self):
+        inshp = (5, 8, 7)
+        a = keras.layers.Input(inshp)
+        b = keras.layers.Activation('mish')(a)
+        model = keras.models.Model(inputs=a, outputs=b)
+        name = 'test___mish' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)
+
+    def test_relu6(self):
+        inshp = (10, 6, 3)
+        a = keras.layers.Input(inshp)
+        b = keras.layers.Activation('relu6')(a)
+        model = keras.models.Model(inputs=a, outputs=b)
+        name = 'test___relu6' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)
+
+    def test_log_softmax(self):
+        inshp = (8, 12)
+        a = keras.layers.Input(inshp)
+        b = keras.layers.Activation('log_softmax')(a)
+        model = keras.models.Model(inputs=a, outputs=b)
+        name = 'test___log_softmax' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)
+
+    def test_leaky_relu_activation(self):
+        inshp = (7, 5, 9)
+        a = keras.layers.Input(inshp)
+        b = keras.layers.Dense(8, activation='leaky_relu')(a)
+        model = keras.models.Model(inputs=a, outputs=b)
+        name = 'test___leaky_relu_act' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)
+
+    def test_celu(self):
+        inshp = (6, 10, 4)
+        a = keras.layers.Input(inshp)
+        b = keras.layers.Activation('celu')(a)
+        model = keras.models.Model(inputs=a, outputs=b)
+        name = 'test___celu' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)
+
+    def test_hard_tanh(self):
+        inshp = (9, 7, 5)
+        a = keras.layers.Input(inshp)
+        b = keras.layers.Activation('hard_tanh')(a)
+        model = keras.models.Model(inputs=a, outputs=b)
+        name = 'test___hard_tanh' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)
+
+    def test_hard_shrink(self):
+        inshp = (8, 6, 3)
+        a = keras.layers.Input(inshp)
+        b = keras.layers.Activation('hard_shrink')(a)
+        model = keras.models.Model(inputs=a, outputs=b)
+        name = 'test___hard_shrink' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)
+
+    def test_soft_shrink(self):
+        inshp = (7, 5, 4)
+        a = keras.layers.Input(inshp)
+        b = keras.layers.Activation('soft_shrink')(a)
+        model = keras.models.Model(inputs=a, outputs=b)
+        name = 'test___soft_shrink' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)
+
+    def test_squareplus(self):
+        inshp = (5, 9, 3)
+        a = keras.layers.Input(inshp)
+        b = keras.layers.Activation('squareplus')(a)
+        model = keras.models.Model(inputs=a, outputs=b)
+        name = 'test___squareplus' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)
+
+    def test_sparse_plus(self):
+        inshp = (6, 8, 4)
+        a = keras.layers.Input(inshp)
+        b = keras.layers.Activation('sparse_plus')(a)
+        model = keras.models.Model(inputs=a, outputs=b)
+        name = 'test___sparse_plus' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)
