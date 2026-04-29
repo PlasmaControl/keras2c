@@ -251,6 +251,40 @@ class TestNormalization(unittest.TestCase):
         rcode = build_and_run(name)
         self.assertEqual(rcode, 0)
 
+    def test_BatchNorm_negative_axis_3D(self):
+        inshp = (10, 11, 12)
+        axis = -1
+        init = keras.initializers.RandomUniform(minval=0.1, maxval=1.0)
+        a = keras.layers.Input(inshp)
+        b = keras.layers.BatchNormalization(axis=axis,
+                                            beta_initializer=init,
+                                            gamma_initializer=init,
+                                            moving_mean_initializer=init,
+                                            moving_variance_initializer=init,
+                                            scale=True, center=True)(a)
+        model = keras.models.Model(inputs=a, outputs=b)
+        name = 'test___BatchNorm_negax3D' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)
+
+    def test_BatchNorm_negative_axis_4D(self):
+        inshp = (10, 11, 12, 13)
+        axis = -1
+        init = keras.initializers.RandomUniform(minval=0.1, maxval=1.0)
+        a = keras.layers.Input(inshp)
+        b = keras.layers.BatchNormalization(axis=axis,
+                                            beta_initializer=init,
+                                            gamma_initializer=init,
+                                            moving_mean_initializer=init,
+                                            moving_variance_initializer=init,
+                                            scale=True, center=True)(a)
+        model = keras.models.Model(inputs=a, outputs=b)
+        name = 'test___BatchNorm_negax4D' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)
+
 
 class TestSharedLayers(unittest.TestCase):
     """tests for shared layers"""
