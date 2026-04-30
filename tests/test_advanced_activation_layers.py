@@ -12,6 +12,15 @@ import time
 from test_core_layers import build_and_run
 
 
+def _has_activation(name):
+    """True if the installed Keras recognizes the given activation identifier."""
+    try:
+        keras.activations.get(name)
+        return True
+    except (ValueError, TypeError):
+        return False
+
+
 __author__ = "Rory Conlin"
 __copyright__ = "Copyright 2020, Rory Conlin"
 __license__ = "MIT"
@@ -90,6 +99,18 @@ class TestAdvancedActivation(unittest.TestCase):
         rcode = build_and_run(name)
         self.assertEqual(rcode, 0)
 
+    def test_ReLU_after_Dense(self):
+        # Regression: advanced-activation layer fed by a non-input layer must
+        # emit `tensor.array`, not `&tensor.array`, in the generated C call.
+        a = keras.layers.Input((4,))
+        b = keras.layers.Dense(8)(a)
+        c = keras.layers.ReLU()(b)
+        model = keras.models.Model(inputs=a, outputs=c)
+        name = 'test___ReLU_after_Dense' + str(int(time.time()))
+        keras2c_main.k2c(model, name)
+        rcode = build_and_run(name)
+        self.assertEqual(rcode, 0)
+
     def test_selu(self):
         inshp = (8, 6, 5)
         a = keras.layers.Input(inshp)
@@ -120,6 +141,7 @@ class TestAdvancedActivation(unittest.TestCase):
         rcode = build_and_run(name)
         self.assertEqual(rcode, 0)
 
+    @unittest.skipUnless(_has_activation('hard_silu'), "Keras < 3.x lacks 'hard_silu'")
     def test_hard_silu(self):
         inshp = (6, 9, 4)
         a = keras.layers.Input(inshp)
@@ -170,6 +192,7 @@ class TestAdvancedActivation(unittest.TestCase):
         rcode = build_and_run(name)
         self.assertEqual(rcode, 0)
 
+    @unittest.skipUnless(_has_activation('celu'), "Keras version lacks 'celu'")
     def test_celu(self):
         inshp = (6, 10, 4)
         a = keras.layers.Input(inshp)
@@ -180,6 +203,7 @@ class TestAdvancedActivation(unittest.TestCase):
         rcode = build_and_run(name)
         self.assertEqual(rcode, 0)
 
+    @unittest.skipUnless(_has_activation('hard_tanh'), "Keras version lacks 'hard_tanh'")
     def test_hard_tanh(self):
         inshp = (9, 7, 5)
         a = keras.layers.Input(inshp)
@@ -190,6 +214,7 @@ class TestAdvancedActivation(unittest.TestCase):
         rcode = build_and_run(name)
         self.assertEqual(rcode, 0)
 
+    @unittest.skipUnless(_has_activation('hard_shrink'), "Keras version lacks 'hard_shrink'")
     def test_hard_shrink(self):
         inshp = (8, 6, 3)
         a = keras.layers.Input(inshp)
@@ -200,6 +225,7 @@ class TestAdvancedActivation(unittest.TestCase):
         rcode = build_and_run(name)
         self.assertEqual(rcode, 0)
 
+    @unittest.skipUnless(_has_activation('soft_shrink'), "Keras version lacks 'soft_shrink'")
     def test_soft_shrink(self):
         inshp = (7, 5, 4)
         a = keras.layers.Input(inshp)
@@ -210,6 +236,7 @@ class TestAdvancedActivation(unittest.TestCase):
         rcode = build_and_run(name)
         self.assertEqual(rcode, 0)
 
+    @unittest.skipUnless(_has_activation('squareplus'), "Keras version lacks 'squareplus'")
     def test_squareplus(self):
         inshp = (5, 9, 3)
         a = keras.layers.Input(inshp)
@@ -220,6 +247,7 @@ class TestAdvancedActivation(unittest.TestCase):
         rcode = build_and_run(name)
         self.assertEqual(rcode, 0)
 
+    @unittest.skipUnless(_has_activation('sparse_plus'), "Keras version lacks 'sparse_plus'")
     def test_sparse_plus(self):
         inshp = (6, 8, 4)
         a = keras.layers.Input(inshp)
