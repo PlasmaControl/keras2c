@@ -420,12 +420,23 @@ class Layers2C():
     def _write_layer_Activation(self, layer, inputs, outputs, i):
         _, _, inputs, outputs, is_model_input, is_model_output = self._format_io_names(
             layer, inputs, outputs, True)
-        activation = 'k2c_' + _normalize_activation(layer.get_config()['activation'])
+        activation_name = _normalize_activation(layer.get_config()['activation'])
+        activation = 'k2c_' + activation_name
         if is_model_input:
             inp = inputs + '->'
         else:
             inp = inputs[1:] + '.'
-        self.layers += activation + '(' + inp + 'array,' + inp + 'numel); \n'
+        # softmax / log_softmax in Keras operate over the last axis, not the
+        # whole flattened tensor — emit a per-row loop for multi-dim inputs.
+        if activation_name in ('softmax', 'log_softmax'):
+            self.layers += '{ \n'
+            self.layers += 'size_t k2c_last_dim = ' + inp + 'shape[' + inp + 'ndim - 1]; \n'
+            self.layers += 'for (size_t k2c_off = 0; k2c_off < ' + inp + 'numel; k2c_off += k2c_last_dim) { \n'
+            self.layers += activation + '(&' + inp + 'array[k2c_off], k2c_last_dim); \n'
+            self.layers += '} \n'
+            self.layers += '} \n'
+        else:
+            self.layers += activation + '(' + inp + 'array,' + inp + 'numel); \n'
         self._write_dummy_layer(layer, inputs, outputs, i,
                                 is_model_input, is_model_output)
 
@@ -450,7 +461,7 @@ class Layers2C():
         if is_model_input:
             inp = inputs + '->'
         else:
-            inp = inputs.lstrip('&') + '.'
+            inp = inputs[1:] + '.'
 
         if layer_type(layer) == 'LeakyReLU':
             self.layers += 'k2c_LeakyReLU(' + inp + 'array,' + \

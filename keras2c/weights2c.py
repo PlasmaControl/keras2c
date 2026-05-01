@@ -310,14 +310,16 @@ class Weights2C():
         scale = cfg['scale']
         ndim = len(layer.output.shape)  # includes batch dim
         if isinstance(cfg['axis'], (list, tuple, np.ndarray)):
-            raw_axis = cfg['axis'][0]
+            axis_cfg = cfg['axis'][0]
         else:
-            raw_axis = cfg['axis']
-        # Resolve negative axis relative to full shape, then subtract 1 for batch dim
-        if raw_axis < 0:
-            axis = raw_axis % ndim - 1
+            axis_cfg = cfg['axis']
+        if isinstance(layer.input, (list, tuple)):
+            ndim = len(layer.input[0].shape)
         else:
-            axis = raw_axis - 1
+            ndim = len(layer.input.shape)
+        if axis_cfg < 0:
+            axis_cfg = ndim + axis_cfg
+        axis = axis_cfg - 1
 
         epsilon = cfg['epsilon']
 
