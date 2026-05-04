@@ -1,4 +1,0 @@
-tensorflow>=2.0
-keras
-numpy
-pydantic
