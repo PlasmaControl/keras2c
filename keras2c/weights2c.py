@@ -119,7 +119,9 @@ class Weights2C():
         stack = ''
 
         if is_zero:
-            file_scope += 'static float ' + name + '_array[' + str(size) + ']; \n'
+            # Mutable scratch buffer — give each calling thread its own copy
+            # so concurrent inference calls don't trample each other.
+            file_scope += 'static K2C_THREAD_LOCAL float ' + name + '_array[' + str(size) + ']; \n'
             stack += 'k2c_tensor ' + name + ' = {&' + name + \
                 '_array[0],' + str(int(ndim)) + ',' + str(int(size)) + ',{' + \
                 shp_str + '}}; \n'
@@ -185,7 +187,9 @@ class Weights2C():
 
     def _write_static_vars(self):
         if len(self.static_vars) > 0:
-            s = 'static struct ' + self.function_name + '_static_vars \n'
+            # Stateful RNN cell state is mutable shared storage — make it
+            # thread-local so concurrent callers each get their own state.
+            s = 'static K2C_THREAD_LOCAL struct ' + self.function_name + '_static_vars \n'
             s += '{ \n'
             for k, v in self.static_vars.items():
                 s += 'float ' + k + '[' + str(v) + ']; \n'
