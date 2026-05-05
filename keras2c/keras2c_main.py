@@ -92,6 +92,19 @@ def fold_batch_norms(model, verbose=True):
                     continue
                 next_layer.set_weights([W_new])
         elif next_type == 'Conv1D':
+            cfg_conv = next_layer.get_config()
+            padding = cfg_conv.get('padding', 'valid')
+            kernel_size = cfg_conv.get('kernel_size', 1)
+            if isinstance(kernel_size, (list, tuple)):
+                kernel_size = kernel_size[0]
+            # The folded bias adds bn_offset's contribution across the full
+            # kernel window. With 'same'/'causal' padding the conv pads edges
+            # with zeros, so edge outputs would receive too much bn_offset.
+            # Only safe when padding is 'valid', when kernel_size is 1 (no real
+            # padding), or when bn_offset is effectively zero.
+            bn_offset_zero = np.max(np.abs(bn_offset)) < 1e-10
+            if padding != 'valid' and kernel_size != 1 and not bn_offset_zero:
+                continue
             weights = next_layer.get_weights()
             K = weights[0]
             b = weights[1] if len(weights) > 1 else np.zeros(K.shape[-1])
@@ -307,23 +320,28 @@ def k2c(model, function_name, malloc=False, num_tests=10, verbose=True):
                          'either be an instance of keras.models.Model, ' +
                          'or a filepath to a saved .h5 model')
 
+    # Operate on a clone so codegen-time transforms (BN folding) do not mutate
+    # the caller's model. The caller can keep using the original model after k2c.
+    work_model = keras.models.clone_model(model)
+    work_model.set_weights(model.get_weights())
+
     # check that the model can be converted
-    check_model(model, function_name)
+    check_model(work_model, function_name)
     if verbose:
         print('All checks passed')
 
-    folded = fold_batch_norms(model, verbose)
+    folded = fold_batch_norms(work_model, verbose)
     if verbose and folded:
         print(f'Folded {len(folded)} batch normalization layers')
 
     malloc_vars, stateful = model2c(
-        model, function_name, malloc, verbose, skip_layers=folded)
+        work_model, function_name, malloc, verbose, skip_layers=folded)
 
     s = 'Done \n'
     s += "C code is in '" + function_name + \
         ".c' with header file '" + function_name + ".h' \n"
     if num_tests > 0:
-        make_test_suite(model, function_name, malloc_vars,
+        make_test_suite(work_model, function_name, malloc_vars,
                         num_tests, stateful, verbose)
         s += "Tests are in '" + function_name + "_test_suite.c' \n"
     if malloc:
