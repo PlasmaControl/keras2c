@@ -43,6 +43,7 @@ class Weights2C():
         self.model_io = get_model_io_names(self.model)
         self.malloc = malloc
         self.stack_vars = ''
+        self.file_scope_vars = ''
         self.malloc_vars = {}
         self.static_vars = {}
         self.valid_tensors = get_real_tensor_names(self.model)
@@ -96,23 +97,72 @@ class Weights2C():
                     1:-1] + '}}; \n'
             return s
 
+    @staticmethod
+    def array2c_static(array, name):
+        """Generates C code with static storage for a k2c_tensor.
+
+        Constant weight arrays become static const (in .rodata).
+        Zero-initialized scratch arrays become static (allocated once).
+
+        Returns:
+            tuple of (file_scope_code, function_body_code)
+        """
+        temp = array.flatten(order='C')
+        size = array.size
+        shp = array.shape
+        ndim = len(shp)
+        shp = np.concatenate((shp, np.ones(maxndim-ndim)))
+        shp_str = np.array2string(shp.astype(int), separator=',')[1:-1]
+
+        is_zero = np.max(np.abs(temp)) < 1e-16
+        file_scope = ''
+        stack = ''
+
+        if is_zero:
+            file_scope += 'static float ' + name + '_array[' + str(size) + ']; \n'
+            stack += 'k2c_tensor ' + name + ' = {&' + name + \
+                '_array[0],' + str(int(ndim)) + ',' + str(int(size)) + ',{' + \
+                shp_str + '}}; \n'
+        else:
+            count = 0
+            file_scope += 'static const float ' + name + '_array[' + str(size) + '] = {\n'
+            for i in range(size):
+                if temp[i] == np.inf:
+                    file_scope += "HUGE_VALF,"
+                elif temp[i] == -np.inf:
+                    file_scope += "-HUGE_VALF,"
+                else:
+                    file_scope += "{:+.8e}f".format(temp[i]) + ','
+                count += 1
+                if (count) % 5 == 0:
+                    file_scope += '\n'
+            file_scope += '}; \n'
+            file_scope += 'static const k2c_tensor ' + name + ' = {(float*)&' + name + \
+                '_array[0],' + str(int(ndim)) + ',' + str(int(size)) + ',{' + \
+                shp_str + '}}; \n'
+
+        return file_scope, stack
+
     def _write_weights_array2c(self, array, name):
-        temp = self.array2c(array, name, self.malloc)
         if self.malloc:
+            temp = self.array2c(array, name, self.malloc)
             self.stack_vars += temp[0]
             self.malloc_vars.update(temp[1])
         else:
-            self.stack_vars += temp
+            file_scope, stack = self.array2c_static(array, name)
+            self.file_scope_vars += file_scope
+            self.stack_vars += stack
 
     def _write_weights_layer(self, layer, **kwargs):
         method = getattr(self, '_write_weights_' + layer_type(layer))
         return method(layer, **kwargs)
 
-    def write_weights(self, verbose=True):
+    def write_weights(self, verbose=True, skip_layers=None):
         """Parses and generates code for model weights and other parameters
 
         Args:
             verbose (bool): whether to print progress
+            skip_layers (set): set of layer names to skip (just write outputs)
 
         Returns:
             (tuple): tuple containing
@@ -123,10 +173,15 @@ class Weights2C():
                 - **static_vars** (*str*): code fora C struct containing static variables
                     (eg, states of a stateful RNN)
         """
+        if skip_layers is None:
+            skip_layers = set()
         for layer in get_model_layers(self.model):
+            if layer.name in skip_layers:
+                self._write_outputs(layer)
+                continue
             method = getattr(self, '_write_weights_' + layer_type(layer))
             method(layer)
-        return self.stack_vars, self.malloc_vars, self._write_static_vars()
+        return self.stack_vars, self.malloc_vars, self._write_static_vars(), self.file_scope_vars
 
     def _write_static_vars(self):
         if len(self.static_vars) > 0:
@@ -253,6 +308,7 @@ class Weights2C():
         cfg = layer.get_config()
         center = cfg['center']
         scale = cfg['scale']
+        ndim = len(layer.output.shape)  # includes batch dim
         if isinstance(cfg['axis'], (list, tuple, np.ndarray)):
             axis_cfg = cfg['axis'][0]
         else:

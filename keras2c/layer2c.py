@@ -48,8 +48,11 @@ class Layers2C():
         self.malloc = malloc
         self.valid_tensors = get_real_tensor_names(self.model)
 
-    def write_layers(self, verbose=True):
+    def write_layers(self, verbose=True, skip_layers=None):
         """Writes layers in the correct graph order."""
+        if skip_layers is None:
+            skip_layers = set()
+        self.skip_layers = skip_layers
         written_io = set(self.model_inputs)
         all_io = set(flatten(get_all_io_names(self.model)))
         unwritten_io = all_io - written_io
@@ -83,11 +86,21 @@ class Layers2C():
                                     f"Writing layer {layer.name} node {i}: {inp} -> {outp}"
                                 )
 
-                            # dispatch to the proper layer writer
-                            method = getattr(self, "_write_layer_" + layer_type(layer))
-                            method(
-                                layer, inp, outp, i
-                            )  # Pass node index as last parameter
+                            if layer.name in self.skip_layers:
+                                nm, pnm, inp_nm, outp_nm, is_model_in, is_model_out = \
+                                    self._format_io_names(layer, inp, outp, model_io=True)
+                                in_s = inp_nm.lstrip('&')
+                                out_s = outp_nm.lstrip('&')
+                                in_op = '->' if is_model_in else '.'
+                                out_op = '->' if is_model_out else '.'
+                                self.layers += 'memcpy(' + out_s + out_op + 'array,' + \
+                                    in_s + in_op + 'array,' + in_s + in_op + 'numel*sizeof(float)); \n'
+                            else:
+                                # dispatch to the proper layer writer
+                                method = getattr(self, "_write_layer_" + layer_type(layer))
+                                method(
+                                    layer, inp, outp, i
+                                )  # Pass node index as last parameter
 
                             # mark inputs and outputs as written
                             written_io |= flat_inputs

@@ -51,9 +51,7 @@ k2c_activationType * k2c_exponential = k2c_exponential_func;
 void k2c_relu_func(float * x, const size_t size) {
 
     for (size_t i=0; i < size; ++i) {
-        if (x[i] <= 0.0f) {
-            x[i] = 0.0f;
-        }
+        x[i] = x[i] > 0.0f ? x[i] : 0.0f;
     }
 }
 k2c_activationType * k2c_relu = k2c_relu_func;
@@ -294,12 +292,10 @@ void k2c_ReLU(float * x, const size_t size, const float max_value,
               const float alpha, const float theta) {
 
     for (size_t i=0; i<size; ++i) {
-        if (x[i] >= max_value) {
-            x[i] = max_value;
-        }
-        else if (x[i] < theta) {
-            x[i] = alpha*(x[i] - theta);
-        }
+        float val = x[i];
+        val = val < theta ? alpha*(val - theta) : val;
+        val = val > max_value ? max_value : val;
+        x[i] = val;
     }
 }
 

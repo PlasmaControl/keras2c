@@ -25,7 +25,8 @@ https://github.com/f0uriest/keras2c
  * :param outcols: number of cols of C and B.
  * :param innderdim: number of cols of A and rows of B
  */
-void k2c_matmul(float * C, const float * A, const float * B, const size_t outrows,
+__attribute__((hot))
+void k2c_matmul(float * __restrict C, const float * __restrict A, const float * __restrict B, const size_t outrows,
                 const size_t outcols, const size_t innerdim) {
 
     // make sure output is empty
@@ -57,20 +58,28 @@ void k2c_matmul(float * C, const float * A, const float * B, const size_t outrow
  * :param outcols: number of cols of C, B and d.
  * :param innderdim: number of cols of A and rows of B
  */
-void k2c_affine_matmul(float * C, const float * A, const float * B, const float * d,
+__attribute__((hot))
+void k2c_affine_matmul(float * __restrict C, const float * __restrict A, const float * __restrict B, const float * __restrict d,
                        const size_t outrows,const size_t outcols, const size_t innerdim) {
 
-    // make sure output is empty
-    memset(C, 0, outrows*outcols*sizeof(C[0]));
+    // Initialize C with bias vector (fuses memset + bias addition)
+    for (size_t i = 0; i < outrows; ++i) {
+        const size_t outrowidx = i * outcols;
+        for (size_t j = 0; j < outcols; ++j) {
+            C[outrowidx + j] = d[j];
+        }
+    }
 
+    // matmul in i->k->j order for cache-friendly sequential access to B and C
     for (size_t i = 0 ; i < outrows; ++i) {
         const size_t outrowidx = i*outcols;
         const size_t inneridx = i*innerdim;
-        for (size_t j = 0;  j < outcols; ++j) {
-            for (size_t k = 0; k < innerdim; ++k) {
-                C[outrowidx+j] += A[inneridx+k] * B[k*outcols+j];
+        for (size_t k = 0; k < innerdim; ++k) {
+            const float Aik = A[inneridx+k];
+            const size_t Bidx = k*outcols;
+            for (size_t j = 0;  j < outcols; ++j) {
+                C[outrowidx+j] += Aik * B[Bidx+j];
             }
-            C[outrowidx+j] += d[j];
         }
     }
 }
@@ -129,8 +138,9 @@ void k2c_idx2sub(const size_t idx, size_t * sub, const size_t * shape, const siz
  * :param normalize: (0,1) whether to L2-normalize samples along the dot product axis before taking the dot product. If set to 1, then the output of the dot product is the cosine proximity between the two samples.
  * :param fwork: array of working space, size(fwork) = size(A) + size(B)
  */
-void k2c_dot(k2c_tensor* C, const k2c_tensor* A, const k2c_tensor* B, const size_t * axesA,
-             const size_t * axesB, const size_t naxes, const int normalize, float * fwork) {
+__attribute__((hot))
+void k2c_dot(k2c_tensor* __restrict C, const k2c_tensor* __restrict A, const k2c_tensor* __restrict B, const size_t * __restrict axesA,
+             const size_t * __restrict axesB, const size_t naxes, const int normalize, float * __restrict fwork) {
 
     size_t permA[K2C_MAX_NDIM];
     size_t permB[K2C_MAX_NDIM];
@@ -268,7 +278,7 @@ void k2c_dot(k2c_tensor* C, const k2c_tensor* A, const k2c_tensor* B, const size
  * :param A: input tensor. Overwritten with outputs.
  * :param b: bias tensor.
  */
-void k2c_bias_add(k2c_tensor* A, const k2c_tensor* b) {
+void k2c_bias_add(k2c_tensor* __restrict A, const k2c_tensor* __restrict b) {
 
     for (size_t i=0; i<A->numel; i+=b->numel) {
         for (size_t j=0; j<b->numel; ++j) {
@@ -286,7 +296,7 @@ void k2c_bias_add(k2c_tensor* A, const k2c_tensor* b) {
  * :param axis: axis along which to flip
  */
 
-void k2c_flip(k2c_tensor *A, const size_t axis) {
+void k2c_flip(k2c_tensor * __restrict A, const size_t axis) {
     const size_t ndim = A->ndim;
     const size_t * shape = A->shape;
     const size_t numel = A->numel;

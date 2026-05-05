@@ -33,12 +33,19 @@ void k2c_batch_norm(k2c_tensor* outputs, const k2c_tensor* inputs, const k2c_ten
         offset *= inputs->shape[i];
     }
     const size_t step = inputs->shape[axis];
+    const size_t numel = inputs->numel;
+    const size_t block = step * offset;
 
-    for (size_t i=0; i<inputs->numel; ++i) {
-        size_t idx = (i/offset)%step;
-        outputs->array[i] = (inputs->array[i] - mean->array[idx]) /
-                            stdev->array[idx] *
-                            gamma->array[idx] +
-                            beta->array[idx];
+    // Precompute: out = in * (gamma/stdev) + (beta - mean*gamma/stdev)
+    // Reduces 4 ops per element to 2 (multiply + add), eliminates integer division
+    for (size_t base = 0; base < numel; base += block) {
+        for (size_t idx = 0; idx < step; ++idx) {
+            const float scale = gamma->array[idx] / stdev->array[idx];
+            const float bias = beta->array[idx] - mean->array[idx] * scale;
+            const size_t start = base + idx * offset;
+            for (size_t j = 0; j < offset; ++j) {
+                outputs->array[start + j] = inputs->array[start + j] * scale + bias;
+            }
+        }
     }
 }
