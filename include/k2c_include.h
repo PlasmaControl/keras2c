@@ -13,6 +13,19 @@ Modified by Anchal Gupta
 #include <stdlib.h>
 #include "k2c_tensor_include.h"
 
+/* File-scope scratch buffers in generated code are mutable shared state.
+ * If two threads call the inference function concurrently they would
+ * trample each other. K2C_THREAD_LOCAL gives each thread its own copy.
+ * GCC and Clang support __thread under -std=c99; for unknown compilers
+ * we fall back to nothing and warn so the user can decide.
+ */
+#if defined(__GNUC__) || defined(__clang__)
+#define K2C_THREAD_LOCAL __thread
+#else
+#warning "K2C_THREAD_LOCAL: unknown compiler; generated scratch buffers are not thread-local"
+#define K2C_THREAD_LOCAL
+#endif
+
 // Activations
 void k2c_linear_func(float *x, const size_t size);
 void k2c_exponential_func(float *x, const size_t size);
